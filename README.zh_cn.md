@@ -117,7 +117,7 @@ put 20线程 && get 20线程
 ######base:
 
 | jdk类 | cxxjdk类 |
-| -- | -- |
+| ----- | ----- |
 |	Object[]                        |  EA                              |
 |	AbstractCollection              |  EAbstractCollection             |
 |	AbstractList                    |  EAbstractList                   |
@@ -281,7 +281,7 @@ put 20线程 && get 20线程
 ######concurrent:
 
 | jdk类 | cxxjdk类 |
-| -- | -- |
+| ----- | ----- |
 | synchronized                              |  SYNCHRONIZED                    |
 | AbstractConcurrentCollection              |   EAbstractConcurrentCollection        |
 | AbstractConcurrentQueue                   |   EAbstractConcurrentQueue             |
@@ -349,7 +349,7 @@ put 20线程 && get 20线程
 ######nio:
 
 | jdk类 | cxxjdk类 |
-| -- | -- |
+| ----- | ----- |
 | AlreadyConnectedException       |  EAlreadyConnectedException         |
 | AsynchronousCloseException      |  EAsynchronousCloseException        |
 | BufferOverflowException         |  EBufferOverflowException           |
@@ -387,7 +387,7 @@ put 20线程 && get 20线程
 ######other:
 
 | cxxjdk类 | 类描述 |
-| -- | -- |
+| ----- | ----- |
 | EConfig               | Foundation for application configuration |
 | EByteBuffer           | Byte array buffer |
 | ESharedPtr            | Smart Pointer |

@@ -116,7 +116,7 @@ Total Number of Cores:	2
 ######base:
 
 | jdk class | cxxjdk class |
-| -- | -- |
+| ----- | ----- |
 |	Object[]                        |  EA                              |
 |	AbstractCollection              |  EAbstractCollection             |
 |	AbstractList                    |  EAbstractList                   |
@@ -280,7 +280,7 @@ Total Number of Cores:	2
 ######concurrent:
 
 | jdk class | cxxjdk class |
-| -- | -- |
+| ----- | ----- |
 | synchronized                              |  SYNCHRONIZED                    |
 | AbstractConcurrentCollection              |   EAbstractConcurrentCollection        |
 | AbstractConcurrentQueue                   |   EAbstractConcurrentQueue             |
@@ -348,7 +348,7 @@ Total Number of Cores:	2
 ######nio:
 
 | jdk class | cxxjdk class |
-| -- | -- |
+| ----- | ----- |
 | AlreadyConnectedException       |  EAlreadyConnectedException         |
 | AsynchronousCloseException      |  EAsynchronousCloseException        |
 | BufferOverflowException         |  EBufferOverflowException           |
@@ -386,7 +386,7 @@ Total Number of Cores:	2
 ######other:
 
 | cxxjdk class | class description |
-| -- | -- |
+| ----- | ----- |
 | EConfig               | Foundation for application configuration |
 | EByteBuffer           | Byte array buffer |
 | ESharedPtr            | Smart Pointer |
