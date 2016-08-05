@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ESOCKETTIMEOUTEXCEPTION        ESocketTimeoutException(__FILE__, __LINE__, errno)
-#define ESOCKETTIMEOUTEXCEPTIONS(msg)  ESocketTimeoutException(msg, __FILE__, __LINE__, errno)
+#define ESOCKETTIMEOUTEXCEPTIONS(msg)  ESocketTimeoutException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that a timeout has occurred on a socket read or accept.
@@ -39,14 +39,13 @@ public:
 	 * Constructs an <code>ESocketTimeoutException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ESocketTimeoutException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-				EInterruptedIOException(s, _file_, _line_, errn) {
+	ESocketTimeoutException(const char *_file_,
+			int _line_, const char *s) :
+				EInterruptedIOException(_file_, _line_, s) {
 	}
 };
 

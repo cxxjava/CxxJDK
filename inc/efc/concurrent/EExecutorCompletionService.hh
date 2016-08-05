@@ -89,14 +89,13 @@ class EExecutorCompletionService : public ECompletionService<V> {
 private:
     EExecutor *executor;
     sp<EBlockingQueue<EFuture<V> > > completionQueue;
-    boolean owns;
 
     /**
      * FutureTask extension to enqueue upon completion
      */
     class QueueingFuture : public EFutureTask<V> {
     public:
-        QueueingFuture(ERunnableFuture<V> *task, sp<EBlockingQueue<EFuture<V> > > queue) : EFutureTask<V>(task, null) {
+        QueueingFuture(sp<ERunnableFuture<V> > task, sp<EBlockingQueue<EFuture<V> > > queue) : EFutureTask<V>(task, null) {
             this->task = task;
             this->completionQueue = queue;
         }
@@ -105,25 +104,23 @@ private:
         	completionQueue->add(task);
         }
     private:
-        EFuture<V> *task;
+        sp<EFuture<V> > task;
         sp<EBlockingQueue<EFuture<V> > > completionQueue;
     };
 
 protected:
-    ERunnableFuture<V>* newTaskFor(ECallable<V> *task) {
+    ERunnableFuture<V>* newTaskFor(sp<ECallable<V> > task) {
 		return new EFutureTask<V>(task);
     }
 
 private:
-    ERunnableFuture<V>* newTaskFor(ERunnable *task, sp<V> result) {
+    ERunnableFuture<V>* newTaskFor(sp<ERunnable> task, sp<V> result) {
 		return new EFutureTask<V>(task, result);
     }
 
 public:
     virtual ~EExecutorCompletionService() {
-    	if (!owns) {
-    		completionQueue.detach();
-    	}
+    	//
     }
 
     /**
@@ -139,7 +136,6 @@ public:
             throw ENullPointerException(__FILE__, __LINE__);
         this->executor = executor;
         this->completionQueue = new ELinkedBlockingQueue<EFuture<V> >();
-        this->owns = true;
     }
 
     /**
@@ -156,22 +152,21 @@ public:
      * @throws NullPointerException if executor or completionQueue are {@code null}
      */
     EExecutorCompletionService(EExecutor *executor,
-                                     EBlockingQueue<EFuture<V> > *completionQueue) {
+                                     sp<EBlockingQueue<EFuture<V> > > completionQueue) {
         if (executor == null || completionQueue == null)
             throw ENullPointerException(__FILE__, __LINE__);
         this->executor = executor;
         this->completionQueue = completionQueue;
-        this->owns = false;
     }
 
-    sp<EFuture<V> > submit(ECallable<V> *task) {
+    sp<EFuture<V> > submit(sp<ECallable<V> > task) {
         if (task == null) throw ENullPointerException(__FILE__, __LINE__);
         sp<ERunnableFuture<V> > f = new QueueingFuture(newTaskFor(task), completionQueue);
         executor->execute(f);
         return f;
     }
 
-    sp<EFuture<V> > submit(ERunnable *task, sp<V> result) {
+    sp<EFuture<V> > submit(sp<ERunnable> task, sp<V> result) {
         if (task == null) throw ENullPointerException(__FILE__, __LINE__);
         sp<ERunnableFuture<V> > f = new QueueingFuture(newTaskFor(task, result), completionQueue);
         executor->execute(f);

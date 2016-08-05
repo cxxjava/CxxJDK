@@ -16,7 +16,6 @@ public:
 	virtual ~EByteBuffer();
 	EByteBuffer(uint initialCapacity=10, uint growSize=32);
 	
-	//TODO:
 	EByteBuffer(const EByteBuffer& that);
 	EByteBuffer& operator= (const EByteBuffer& that);
 

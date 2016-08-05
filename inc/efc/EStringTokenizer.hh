@@ -74,7 +74,6 @@ namespace efc {
  *     test
  * </pre></blockquote>
  *
- * @author  unascribed
  * @version 1.35, 11/17/05
  * @see     java.io.StreamTokenizer
  * @since   JDK1.0

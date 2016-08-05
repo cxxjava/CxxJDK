@@ -11,6 +11,7 @@
 #include "EObject.hh"
 #include "ERunnable.hh"
 #include "EString.hh"
+#include "ESharedPtr.hh"
 #include "EIllegalStateException.hh"
 #include "ERuntimeException.hh"
 #include "EInterruptedException.hh"
@@ -24,9 +25,13 @@ public:
 	
 	EFork(boolean needLock=false);
 	EFork(const char *name, boolean needLock=false);
-	EFork(ERunnable* target, boolean needLock=false);
-	EFork(ERunnable* target, const char *name, boolean needLock=false);
+	EFork(sp<ERunnable> target, boolean needLock=false);
+	EFork(sp<ERunnable> target, const char *name, boolean needLock=false);
 	
+	// unsupported.
+	EFork(const EFork& that);
+	EFork& operator= (const EFork& that);
+
 	/**
 	 * Marks this process as either a daemon process or a user process.
 	 * <p>
@@ -133,7 +138,7 @@ public:
 	 *
 	 * @return  a string representation of this process.
 	 */
-	EString toString();
+	EStringBase toString();
 	
 	/**
 	 * Wait for any current child process to die and return information 
@@ -166,7 +171,7 @@ private:
 	es_proc_t    m_Process;
 
 	/* What will be run. */
-	ERunnable   *m_Target;
+	sp<ERunnable> m_Target;
 
 	/* Thread name */
 	EString      m_Name;
@@ -177,7 +182,7 @@ private:
 	/* Process Lock */
 	es_proc_mutex_t *m_Lock;
 	
-	void init(ERunnable* target, const char *name, boolean needLock);
+	void init(sp<ERunnable> target, const char *name, boolean needLock);
 };
 
 } /* namespace efc */

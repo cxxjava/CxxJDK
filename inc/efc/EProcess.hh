@@ -50,6 +50,10 @@ public:
 	 */
 	EProcess(const char* program, const char* args[]);
 
+	// unsupported.
+	EProcess(const EProcess& that);
+	EProcess& operator= (const EProcess& that);
+
 	/**
 	 * Sets this process builder's operating system program and
 	 * arguments.  This method does <i>not</i> make a copy of the

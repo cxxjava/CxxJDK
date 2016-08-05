@@ -16,7 +16,6 @@ namespace efc {
  * An interface representing a data checksum.
  *
  * @version 	1.17, 11/17/05
- * @author 	David Connelly
  */
 interface EChecksum {
 	virtual ~EChecksum() {

@@ -8,8 +8,8 @@
 #ifndef ELIST_HH_
 #define ELIST_HH_
 
-#include "EBase.hh"
 #include "ECollection.hh"
+#include "EListIterator.hh"
 
 namespace efc {
 
@@ -77,8 +77,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.49, 04/21/06
  * @see Collection
  * @see Set
@@ -202,6 +200,25 @@ interface EList : virtual public ECollection<E>
      *         list does not permit null elements (optional)
      */
     virtual int lastIndexOf(E o) = 0;
+
+    // List Iterators
+
+    /**
+     * Returns a list iterator over the elements in this list (in proper
+     * sequence), starting at the specified position in the list.
+     * The specified index indicates the first element that would be
+     * returned by an initial call to {@link ListIterator#next next}.
+     * An initial call to {@link ListIterator#previous previous} would
+     * return the element with the specified index minus one.
+     *
+     * @param index index of the first element to be returned from the
+     *        list iterator (by a call to {@link ListIterator#next next})
+     * @return a list iterator over the elements in this list (in proper
+     *         sequence), starting at the specified position in the list
+     * @throws IndexOutOfBoundsException if the index is out of range
+     *         ({@code index < 0 || index > size()})
+     */
+    virtual EListIterator<E>* listIterator(int index = 0) = 0;
 };
 
 } /* namespace efc */

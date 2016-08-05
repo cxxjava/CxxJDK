@@ -32,7 +32,6 @@ namespace efc {
  * can configure itself to create sockets appropriate to the local
  * firewall.
  *
- * @author  unascribed
  * @version 1.115, 09/05/07
  * @see     java.net.Socket#setSocketImplFactory(java.net.SocketImplFactory)
  * @see     java.net.SocketImpl
@@ -756,7 +755,7 @@ public:
      *
      * @return  a string representation of this socket.
      */
-    virtual EString toString();
+    virtual EStringBase toString();
 
     /**
      * Returns the connection state of the socket.

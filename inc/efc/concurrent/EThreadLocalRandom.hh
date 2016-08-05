@@ -13,6 +13,9 @@
 
 namespace efc {
 
+namespace tlr {
+    class ThreadLocal;
+}
 
 /**
  * A random number generator isolated to the current thread.  Like the
@@ -36,7 +39,6 @@ namespace efc {
  * generation methods.
  *
  * @since 1.7
- * @author Doug Lea
  */
 
 class EThreadLocalRandom : public ERandom {
@@ -162,7 +164,7 @@ private:
 	/**
 	 * The actual ThreadLocal
 	 */
-	static EThreadLocal<EThreadLocalRandom*>* localRandom;
+	static EThreadLocalVariable<tlr::ThreadLocal, EThreadLocalRandom>* localRandom;
 };
 
 } /* namespace efc */

@@ -18,7 +18,6 @@ namespace efc {
  * types to an output stream in a portable way. An application can
  * then use a data input stream to read the data back in.
  *
- * @author  unascribed
  * @version 1.44, 11/17/05
  * @see     java.io.DataInputStream
  * @since   JDK1.0
@@ -38,6 +37,10 @@ public:
 	 * @see     java.io.FilterOutputStream#out
 	 */
 	EDataOutputStream(EOutputStream* out);
+
+	//TODO:
+	EDataOutputStream(const EDataOutputStream& that);
+	EDataOutputStream& operator= (const EDataOutputStream& that);
 
 	/**
 	 * Writes the specified byte (the low eight bits of the argument

@@ -110,7 +110,6 @@ namespace efc {
  * will never change.
  *
  * @version 1.142, 04/01/09
- * @author  unascribed
  * @since   JDK1.0
  */
 
@@ -228,10 +227,6 @@ public:
 	 *          If <code>child</code> is <code>null</code>
 	 */
 	EFile(EFile *parent, const char *child);
-
-	//TODO:
-	EFile(const EFile& that);
-	EFile& operator= (const EFile& that);
 
 	/**
 	 * Converts this abstract pathname into a pathname string.  The resulting
@@ -764,7 +759,7 @@ public:
 	 *
 	 * @since   1.2
 	 */
-	int compareTo(EFile* pathname);
+	virtual int compareTo(EFile* pathname);
 
 	/**
 	 * Tests this abstract pathname for equality with the given object.
@@ -781,6 +776,7 @@ public:
 	 *          <code>false</code> otherwise
 	 */
 	boolean equals(EFile* obj);
+	virtual boolean equals(EObject* obj);
 
 	/**
 	 * Computes a hash code for this abstract pathname.  Because equality of
@@ -796,7 +792,7 @@ public:
 	 *
 	 * @return  A hash code for this abstract pathname
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Returns the pathname string of this abstract pathname.  This is just the
@@ -804,7 +800,7 @@ public:
 	 *
 	 * @return  The string form of this abstract pathname
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 private:
 	/**

@@ -60,7 +60,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch and Doug Lea
  * @since   1.6
  * @param <E> the type of elements held in this collection
  */
@@ -120,11 +119,26 @@ private:
 		void remove() {
 			if (lastRet < 0)
 				throw EIllegalStateException(__FILE__, __LINE__);
-			if (ad->deleteAt(lastRet)) { // if left-shifted, undo increment in next()
+			boolean flag;
+			delete ad->deleteAt(lastRet, &flag);
+			if (flag) { // if left-shifted, undo increment in next()
 				cursor = (cursor - 1) & (ad->elements->length() - 1);
 				fence = ad->tail;
 			}
 			lastRet = -1;
+		}
+
+		E moveOut() {
+			if (lastRet < 0)
+				throw EIllegalStateException(__FILE__, __LINE__);
+			boolean flag;
+			E o = ad->deleteAt(lastRet, &flag);
+			if (flag) { // if left-shifted, undo increment in next()
+				cursor = (cursor - 1) & (ad->elements->length() - 1);
+				fence = ad->tail;
+			}
+			lastRet = -1;
+			return o;
 		}
 	};
 
@@ -167,11 +181,17 @@ private:
 		void remove() {
 			if (lastRet < 0)
 				throw EIllegalStateException(__FILE__, __LINE__);
-			if (!ad->deleteAt(lastRet)) {
+			boolean flag;
+			delete ad->deleteAt(lastRet, &flag);
+			if (!flag) {
 				cursor = (cursor + 1) & (ad->elements->length() - 1);
 				fence = ad->head;
 			}
 			lastRet = -1;
+		}
+
+		E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 	};
 
@@ -215,9 +235,29 @@ public:
 		EAbstractCollection<E>::addAll(c);
 	}
 
-	//TODO:
-	EArrayDeque(const EArrayDeque<E>& that);
-	EArrayDeque<E>& operator= (const EArrayDeque<E>& that);
+	EArrayDeque(const EArrayDeque<E>& that) {
+		EArrayDeque<E>* t = (EArrayDeque<E>*)&that;
+
+		elements = new EA<E>(*(t->elements));
+		head = t->head;
+		tail = t->tail;
+	}
+
+	EArrayDeque<E>& operator= (const EArrayDeque<E>& that) {
+		if (this == &that) return *this;
+
+		EArrayDeque<E>* t = (EArrayDeque<E>*)&that;
+
+		//1.
+		delete elements;
+
+		//2.
+		elements = new EA<E>(*(t->elements));
+		head = t->head;
+		tail = t->tail;
+
+		return *this;
+	}
 
 	// The main insertion and extraction methods are addFirst,
 	// addLast, pollFirst, pollLast. The other methods are defined in
@@ -365,7 +405,7 @@ public:
 		E x;
 		while ( (x = (*elements)[i]) != null) {
 			if (o->equals(x)) {
-				deleteAt(i);
+				delete deleteAt(i, null);
 				return true;
 			}
 			i = (i + 1) & mask;
@@ -393,7 +433,7 @@ public:
 		E x;
 		while ( (x = (*elements)[i]) != null) {
 			if (o->equals(x)) {
-				deleteAt(i);
+				delete deleteAt(i, null);
 				return true;
 			}
 			i = (i - 1) & mask;
@@ -689,7 +729,7 @@ private:
 		int r = n - p; // number of elements to the right of p
 		int newCapacity = n << 1;
 		if (newCapacity < 0)
-			throw EIllegalStateException("Sorry, deque too big", __FILE__, __LINE__);
+			throw EIllegalStateException(__FILE__, __LINE__, "Sorry, deque too big");
 		EA<E>* a = new EA<E>(newCapacity);
 		ESystem::arraycopy((*elements), p, (*a), 0, r);
 		ESystem::arraycopy((*elements), 0, (*a), r, p);
@@ -716,9 +756,10 @@ private:
      * <p>This method is called delete rather than remove to emphasize
      * that its semantics differ from those of {@link List#remove(int)}.
      *
-     * @return true if elements moved backwards
+     * @param flag true if elements moved backwards
+     * @return the deleted element
      */
-    boolean deleteAt(int i) {
+    E deleteAt(int i, boolean* flag) {
         checkInvariants();
         EA<E>* elements = this->elements;
         int mask = elements->length() - 1;
@@ -731,6 +772,8 @@ private:
         if (front >= ((t - h) & mask))
             throw EConcurrentModificationException(__FILE__, __LINE__);
 
+    	E o = (*elements)[i]; //1
+
         // Optimize for least element motion
         if (front < back) {
             if (h <= i) {
@@ -742,7 +785,7 @@ private:
             }
             (*elements)[h] = null;
             head = (h + 1) & mask;
-            return false;
+            if (flag) *flag = false;
         } else {
             if (i < t) { // Copy the null tail as well
             	ESystem::arraycopy((*elements), i + 1, (*elements), i, back);
@@ -753,9 +796,11 @@ private:
                 ESystem::arraycopy((*elements), 1, (*elements), 0, t);
                 tail = (t - 1) & mask;
             }
-            return true;
+            if (flag) *flag = true;
         }
-    }
+
+        return o; //!
+   }
 };
 
 } /* namespace efc */

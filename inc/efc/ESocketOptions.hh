@@ -25,7 +25,6 @@ namespace efc {
  * DatagramSocket and MulticastSocket.
  * <P>
  * @version 1.33, 11/17/05
- * @author David Brown
  */
 
 interface ESocketOptions : virtual public EObject {

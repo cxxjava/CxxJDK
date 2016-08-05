@@ -16,7 +16,6 @@ namespace efc {
 /**
  * This class implements a stream filter for writing compressed data in
  * the GZIP file format.
- * @author      David Connelly
  *
  */
 
@@ -40,6 +39,10 @@ public:
      * @since 1.7
 	 */
 	EGZIPOutputStream(EOutputStream* out, int size=512, boolean syncFlush=false) THROWS(EIOException);
+
+	//TODO:
+	EGZIPOutputStream(const EGZIPOutputStream& that);
+	EGZIPOutputStream& operator= (const EGZIPOutputStream& that);
 
 	/**
 	 * Writes array of bytes to the compressed output stream. This method

@@ -27,7 +27,6 @@ namespace efc {
  * such as image data. For writing streams of characters, consider using
  * <code>FileWriter</code>.
  *
- * @author  Arthur van Hoff
  * @version 1.58, 11/17/05
  * @see     java.io.File
  * @see     java.io.FileDescriptor

@@ -17,7 +17,6 @@ class EFile;
  *
  * @class FilenameFilter
  * @version $Id: FilenameFilter.h,v 1.4 2003-09-13 08:46:07 florian Exp $
- * @author Florian 'Overflo' Wolff (florian@donuz.de)
  */
 
 interface EFilenameFilter : virtual public EObject

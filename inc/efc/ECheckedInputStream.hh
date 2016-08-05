@@ -24,6 +24,10 @@ public:
 	 */
 	ECheckedInputStream(EInputStream *in, EChecksum *cksum);
 
+	//TODO...
+	ECheckedInputStream(const ECheckedInputStream& that);
+	ECheckedInputStream& operator= (const ECheckedInputStream& that);
+
 	/**
 	 * Reads a byte. Will block if no input is available.
 	 * @return the byte read, or -1 if the end of the stream is reached.
@@ -53,7 +57,7 @@ public:
 	 * @return the actual number of bytes skipped
 	 * @exception IOException if an I/O error has occurred
 	 */
-	llong skip(llong n) THROWS(EIOException);
+	long skip(long n) THROWS(EIOException);
 
 	/**
 	 * Returns the Checksum for this input stream.

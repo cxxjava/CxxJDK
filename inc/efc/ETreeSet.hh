@@ -68,7 +68,6 @@ namespace efc {
  *
  * @param <E> the type of elements maintained by this set
  *
- * @author  Josh Bloch
  * @see     Collection
  * @see     Set
  * @see     HashSet
@@ -162,6 +161,10 @@ public:
 		map_ = new ETreeMap<E, EObject*>(s->comparator, false, false);
 		addAll(s);
 	}
+
+	//TODO:
+	ETreeSet(const ETreeSet<E>& that);
+	ETreeSet<E>& operator= (const ETreeSet<E>& that);
 
 	/**
 	 * Returns an iterator over the elements in this set.  The elements

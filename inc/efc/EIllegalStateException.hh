@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EILLEGALSTATEEXCEPTION        EIllegalStateException(__FILE__, __LINE__, errno)
-#define EILLEGALSTATEEXCEPTIONS(msg)  EIllegalStateException(msg, __FILE__, __LINE__, errno)
+#define EILLEGALSTATEEXCEPTIONS(msg)  EIllegalStateException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that a method has been invoked at an illegal or
@@ -21,7 +21,6 @@ namespace efc {
  * Java application is not in an appropriate state for the requested
  * operation.
  *
- * @author  Jonni Kanerva
  * @version 1.16, 11/17/05
  * @since   JDK1.1
  */
@@ -44,14 +43,43 @@ public:
 	 * Constructs an <code>EIllegalStateException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EIllegalStateException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	EIllegalStateException(const char *_file_,
+			int _line_, const char *s) :
+			EException(_file_, _line_, s) {
+	}
+
+	/**
+	 * Constructs an <code>EIllegalStateException</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EIllegalStateException(const char *_file_, int _line_, EThrowable* cause) :
+			EException(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+	 * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EIllegalStateException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+			EException(_file_, _line_, s, cause) {
 	}
 };
 

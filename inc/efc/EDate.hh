@@ -64,8 +64,14 @@ public:
 	 */
 	EDate(llong date);
 
-	//TODO:
+	/**
+	 *
+	 */
 	EDate(const EDate& that);
+
+	/**
+	 *
+	 */
 	EDate& operator= (const EDate& that);
 
 	/**
@@ -158,7 +164,7 @@ public:
 	 * @return  a string representation of this date.
 	 * @since CLDC 1.1
 	 */
-	EString toString();
+	EStringBase toString();
 
 	/**
 	 * Returns a hash code value for this object. The result is the
@@ -198,14 +204,14 @@ public:
 	 *          represented by the string argument.
 	 * @see     java.text.DateFormat
 	 * @format:
-	 *	%b     locale¡¯s abbreviated month name (e.g., Jan)
+	 *	%b     localeÂ¡Â¯s abbreviated month name (e.g., Jan)
 	 *	%d     day of month (01..31)
 	 *	%H     hour (00..23)
 	 *	%I     hour (01..12)
 	 *	%m     month (01..12)
 	 *	%M     minute (00..59)
 	 *	%S     second (00..60)
-	 *	%p     locale¡¯s equivalent of either AM or PM; blank if not known
+	 *	%p     localeÂ¡Â¯s equivalent of either AM or PM; blank if not known
 	 *	%P     like %p, but lower case
 	 *	%Y     year
 	 *	%y     last two digits of year (00-99)

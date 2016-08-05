@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EALREADYBOUNDEXCEPTION       EAlreadyBoundException(__FILE__, __LINE__, errno)
-#define EALREADYBOUNDEXCEPTIONS(msg) EAlreadyBoundException(msg, __FILE__, __LINE__, errno)
+#define EALREADYBOUNDEXCEPTIONS(msg) EAlreadyBoundException(__FILE__, __LINE__, msg)
 
 /**
  * An <code>AlreadyBoundException</code> is thrown if an attempt
@@ -21,8 +21,6 @@ namespace efc {
  * has an associated binding.
  *
  * @since   JDK1.1
- * @author  Ann Wollrath
- * @author  Roger Riggs
  * @see     java.rmi.Naming#bind(String, java.rmi.Remote)
  * @see     java.rmi.registry.Registry#bind(String, java.rmi.Remote)
  */
@@ -45,14 +43,12 @@ public:
 	 * Constructs an <code>EAlreadyBoundException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EAlreadyBoundException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EException(s, _file_, _line_, errn) {
+	EAlreadyBoundException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EException(_file_, _line_, s, errn) {
 	}
 };
 

@@ -36,7 +36,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
  * @see Collection
  * @see List
  * @see Iterator
@@ -139,6 +138,7 @@ interface EListIterator : public EIterator<E>
 	 *         {@code next} or {@code previous}
 	 */
 	virtual void remove() = 0;
+	virtual E moveOut() = 0;
 
 	/**
 	 * Replaces the last element returned by {@link #next} or

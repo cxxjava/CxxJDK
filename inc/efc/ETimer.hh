@@ -68,7 +68,6 @@ namespace efc {
  *
  * <p>Implementation note: All constructors start a timer thread.
  *
- * @author  Josh Bloch
  * @see     TimerTask
  * @see     Object#wait(long)
  * @since   1.3

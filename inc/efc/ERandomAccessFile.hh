@@ -40,7 +40,6 @@ namespace efc {
  * than <code>EOFException</code> is thrown. In particular, an 
  * <code>IOException</code> may be thrown if the stream has been closed.
  *
- * @author  unascribed
  * @version 1.81, 04/10/06
  * @since   JDK1.0
  */
@@ -170,6 +169,10 @@ public:
      * @spec JSR-51
      */
     ERandomAccessFile(EFile *file, const char *mode) THROWS(EFileNotFoundException);
+
+    // TODO:
+    ERandomAccessFile(const ERandomAccessFile& that);
+    ERandomAccessFile& operator= (const ERandomAccessFile& that);
 
     /**
      * Returns the opaque file descriptor object associated with this
@@ -653,9 +656,11 @@ public:
 private:
     es_os_file_t mFD;
     es_file_t *mFile;
-    boolean sync;
+    boolean mSync;
     
     void open0(const char *name, const char *mode) THROWS(EFileNotFoundException);
+
+    void fsync0() THROWS(EIOException);
 };
 
 } /* namespace efc */

@@ -29,6 +29,10 @@ public:
 	 */
 	EMatcher(EPattern* parent, const char* text);
 
+	//TODO:
+	EMatcher(const EMatcher& that);
+	EMatcher& operator= (const EMatcher& that);
+
 	/**
 	 * Returns the pattern that is interpreted by this matcher.
 	 *

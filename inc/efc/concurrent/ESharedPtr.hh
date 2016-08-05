@@ -34,7 +34,7 @@ inline T* GETRC(T* volatile& p0)
 		int* refs = (int*)((char*)p + sizeof(T));
 		(*refs)++;
 		return p;
-	}}
+	}
 }
 
 //placement delete class with reference count
@@ -50,7 +50,7 @@ inline void DELRC(T* volatile& p0)
 		}
 		int* refs = (int*)((char*)p + sizeof(T));
 		n = (*refs)--;
-	}}
+	}
 	if (n == 0) {
 		p->~T();
 		eso_free(p);
@@ -59,6 +59,7 @@ inline void DELRC(T* volatile& p0)
 
 } // namespace efc
 
+//=============================================================================
 
 /**
  *
@@ -68,7 +69,9 @@ namespace efc {
 template<class T> class sp;
 template<class T> class wp;
 template<class T> class enable_shared_from_this;
+/*
 class enable_shared_from_raw;
+ */
 
 //
 // Enum values are chosen so that code that needs to insert
@@ -124,14 +127,18 @@ template<class T> inline void checked_delete(T * x)
     // intentionally complex - simplification causes regressions
     typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
     (void) sizeof(type_must_be_complete);
-    delete x;
+    if ((unsigned long)x > 10) { //!!! reserve some points for internal flags.
+    	delete x;
+    }
 }
 
 template<class T> inline void checked_array_delete(T * x)
 {
     typedef char type_must_be_complete[ sizeof(T)? 1: -1 ];
     (void) sizeof(type_must_be_complete);
-    delete [] x;
+    if ((unsigned long)x > 10) { //!!! reserve some points for internal flags.
+    	delete [] x;
+    }
 }
 
 template<class T> struct checked_deleter
@@ -223,9 +230,6 @@ template< class Y, class T > struct sp_enable_if_convertible: public sp_enable_i
 };
 
 } // namespace detail
-
-
-
 
 
 namespace detail
@@ -361,7 +365,7 @@ public:
 
     virtual void dispose() = 0; // nothrow
 
-    virtual void detach() = 0; // nothrow
+    virtual void dismiss() = 0; // nothrow
 
     // destroy() is called when weak_count_ drops to zero.
 
@@ -438,7 +442,7 @@ public:
         checked_delete( px_ );
     }
 
-    virtual void detach() // nothrow
+    virtual void dismiss() // nothrow
     {
     	px_ = null;
     }
@@ -473,7 +477,7 @@ public:
         del( ptr );
     }
 
-    virtual void detach() // nothrow
+    virtual void dismiss() // nothrow
 	{
     	ptr = null;
 	}
@@ -509,7 +513,7 @@ public:
         d_( p_ );
     }
 
-    virtual void detach() // nothrow
+    virtual void dismiss() // nothrow
 	{
 		p_ = null;
 	}
@@ -700,9 +704,9 @@ public:
         return pi_ == 0;
     }
 
-    void detach() const
+    void dismiss() const
     {
-    	pi_->detach();
+    	if (pi_) pi_->dismiss();
     }
 
     friend inline bool operator==(shared_count const & a, shared_count const & b)
@@ -807,7 +811,7 @@ inline shared_count::shared_count( weak_count const & r ): pi_( r.pi_ )
 {
     if( pi_ == 0 || !pi_->add_ref_lock() )
     {
-    	throw EException("bad_weak_ptr", __FILE__, __LINE__);
+    	throw EException(__FILE__, __LINE__, "bad_weak_ptr");
     }
 }
 
@@ -823,6 +827,16 @@ inline shared_count::shared_count( weak_count const & r, sp_nothrow_tag ): pi_( 
 
 
 namespace detail {
+
+#if defined( __clang__ ) && !defined( _LIBCPP_VERSION )
+
+    typedef decltype(nullptr) sp_nullptr_t;
+
+#else
+
+    typedef std::nullptr_t sp_nullptr_t;
+
+#endif
 
 // sp_element, element_type
 
@@ -935,7 +949,9 @@ template< class X, class Y, class T > inline void sp_enable_shared_from_this( sp
     }
 }
 
+/*
 template< class X, class Y > inline void sp_enable_shared_from_this( sp<X> * ppx, Y const * py, enable_shared_from_raw const * pe );
+*/
 
 inline void sp_enable_shared_from_this( ... )
 {
@@ -989,6 +1005,7 @@ template< class T, long N, class Y > inline void sp_deleter_construct( sp< T[N] 
 
 } //namespace detail
 
+//=============================================================================
 
 //
 //  sp
@@ -1011,13 +1028,17 @@ public:
 
     static sp nullPtr() {return sp();}
 
-    sp() : px( 0 ), pn() // never throws in 1.30+
+    sp() throw() : px( 0 ), pn() // never throws in 1.30+
     {
     }
 
-    sp(T* p) : px( p ), pn() // never throws in 1.30+
+    sp( T* p ) : px( p ), pn() // never throws in 1.30+
 	{
     	detail::sp_pointer_construct( this, p, pn );
+	}
+
+    sp( detail::sp_nullptr_t ) throw() : px( 0 ), pn() // never throws
+	{
 	}
 
     template<class Y>
@@ -1038,6 +1059,10 @@ public:
         detail::sp_deleter_construct( this, p );
     }
 
+    template<class D> sp( detail::sp_nullptr_t p, D d ): px( p ), pn( p, d )
+	{
+	}
+
     // As above, but with allocator. A's copy constructor shall not throw.
 
     template<class Y, class D, class A>
@@ -1046,7 +1071,17 @@ public:
         detail::sp_deleter_construct( this, p );
     }
 
-//  generated copy constructor, destructor are fine...
+    template<class D, class A> sp( detail::sp_nullptr_t p, D d, A a ): px( p ), pn( p, d, a )
+	{
+	}
+
+    //  generated copy constructor, destructor are fine...
+
+    // ... except in C++0x, move disables the implicit copy
+
+    sp( sp const & r ) throw() : px( r.px ), pn( r.pn )
+	{
+	}
 
     template<class Y>
     explicit sp( wp<Y> const & r ): pn( r.pn ) // may throw
@@ -1058,7 +1093,7 @@ public:
     }
 
     template<class Y>
-    sp( wp<Y> const & r, detail::sp_nothrow_tag ) : px( 0 ), pn( r.pn, detail::sp_nothrow_tag() )
+    sp( wp<Y> const & r, detail::sp_nothrow_tag ) throw() : px( 0 ), pn( r.pn, detail::sp_nothrow_tag() )
     {
         if( !pn.empty() )
         {
@@ -1068,20 +1103,20 @@ public:
 
     template<class Y>
     sp( sp<Y> const & r, typename detail::sp_enable_if_convertible<Y,T>::type = detail::sp_empty() )
-     : px( r.px ), pn( r.pn )
+    throw() : px( r.px ), pn( r.pn )
     {
         detail::sp_assert_convertible< Y, T >();
     }
 
     // aliasing
     template< class Y >
-    sp( sp<Y> const & r, element_type * p ) : px( p ), pn( r.pn )
+    sp( sp<Y> const & r, element_type * p ) throw() : px( p ), pn( r.pn )
     {
     }
 
     // assignment
 
-    sp & operator=( sp const & r )
+    sp & operator=( sp const & r ) throw()
     {
         this_type(r).swap(*this);
         return *this;
@@ -1090,7 +1125,7 @@ public:
 #if !defined(_MSC_VER) || (_MSC_VER >= 1400)
 
     template<class Y>
-    sp & operator=(sp<Y> const & r)
+    sp & operator=(sp<Y> const & r) throw()
     {
         this_type(r).swap(*this);
         return *this;
@@ -1098,16 +1133,54 @@ public:
 
 #endif
 
-    sp & operator=( T* p ) // never throws
+    sp & operator=( T* p ) throw() // never throws
 	{
     	sp t(p);
 		t.swap(*this);
 		return *this;
 	}
 
-// Move support
+    sp & operator=( detail::sp_nullptr_t ) throw() // never throws
+	{
+		sp t;
+		t.swap(*this);
+		return *this;
+	}
 
-    void reset() // never throws in 1.30+
+    // Move support
+
+#ifdef CPP11_SUPPORT
+    sp( sp && r ) throw() : px( r.px ), pn()
+	{
+		pn.swap( r.pn );
+		r.px = 0;
+	}
+
+	template<class Y>
+	sp( sp<Y> && r, typename detail::sp_enable_if_convertible<Y,T>::type = detail::sp_empty() )
+	throw() : px( r.px ), pn()
+	{
+		detail::sp_assert_convertible< Y, T >();
+
+		pn.swap( r.pn );
+		r.px = 0;
+	}
+
+	sp & operator=( sp && r ) throw()
+	{
+		this_type( static_cast< sp && >( r ) ).swap( *this );
+		return *this;
+	}
+
+	template<class Y>
+	sp & operator=( sp<Y> && r ) throw()
+	{
+		this_type( static_cast< sp<Y> && >( r ) ).swap( *this );
+		return *this;
+	}
+#endif
+
+    void reset() throw() // never throws in 1.30+
     {
         this_type().swap(*this);
     }
@@ -1177,12 +1250,12 @@ public:
         pn.swap(other.pn);
     }
 
-    template<class Y> bool owner_before( sp<Y> const & rhs ) const
+    template<class Y> bool owner_before( sp<Y> const & rhs ) const throw()
     {
         return pn < rhs.pn;
     }
 
-    template<class Y> bool owner_before( wp<Y> const & rhs ) const
+    template<class Y> bool owner_before( wp<Y> const & rhs ) const throw()
     {
         return pn < rhs.pn;
     }
@@ -1197,18 +1270,6 @@ public:
         return (px == other->get()) ? true : (px ? px->equals(other->get()) : false);
     }
 
-    inline bool operator==(T* p)
-    {
-    	sp<T> t(p);
-        return px == t.get();
-    }
-
-    inline bool operator!=(T* p)
-	{
-		sp<T> t(p);
-		return px != t.get();
-	}
-
     inline bool operator!() const
 	{
 		return px == 0;
@@ -1219,8 +1280,8 @@ public:
         return px == r.px && pn == r.pn;
     }
 
-    element_type* detach() {
-    	pn.detach();
+    element_type* dismiss() {
+    	pn.dismiss();
     	return px;
     }
 
@@ -1236,9 +1297,29 @@ private:
     detail::shared_count pn;    // reference counter
 };
 
+template<class T, class U> inline bool operator==(sp<T> const & a, U const * b)
+{
+    return a.get() == b;
+}
+
+template<class T> inline bool operator==(sp<T> const & a, detail::sp_nullptr_t)
+{
+    return a.get() == null;
+}
+
 template<class T, class U> inline bool operator==(sp<T> const & a, sp<U> const & b)
 {
     return a.get() == b.get();
+}
+
+template<class T, class U> inline bool operator!=(sp<T> const & a, U const * b)
+{
+    return a.get() != b;
+}
+
+template<class T> inline bool operator!=(sp<T> const & a, detail::sp_nullptr_t)
+{
+    return a.get() != null;
 }
 
 template<class T, class U> inline bool operator!=(sp<T> const & a, sp<U> const & b)
@@ -1314,7 +1395,7 @@ template<class T> sp<T> atomic_load( sp<T> const * p )
 {
 	SCOPED_SLOCK0(p) {
     return *p;
-	}}
+	}
 }
 
 template<class T> inline sp<T> atomic_load_explicit( sp<T> const * p, memory_order /*mo*/ )
@@ -1326,7 +1407,15 @@ template<class T> void atomic_store( sp<T> * p, sp<T> r )
 {
 	SCOPED_SLOCK0(p) {
     p->swap( r );
-	}}
+	}
+}
+
+template<class T> void atomic_store( sp<T> * p, detail::sp_nullptr_t )
+{
+	SCOPED_SLOCK0(p) {
+	sp<T> r;
+    p->swap( r );
+	}
 }
 
 template<class T> inline void atomic_store_explicit( sp<T> * p, sp<T> r, memory_order /*mo*/ )
@@ -1336,7 +1425,7 @@ template<class T> inline void atomic_store_explicit( sp<T> * p, sp<T> r, memory_
 
 template<class T> sp<T> atomic_exchange( sp<T> * p, sp<T> r )
 {
-    ELock* l = EReentrantLockPool<0>::lockFor(p);
+    ELock* l = ESpinLockPool<0>::lockFor(p);
 
     l->lock();
     p->swap( r );
@@ -1352,24 +1441,19 @@ template<class T> sp<T> atomic_exchange_explicit( sp<T> * p, sp<T> r, memory_ord
 
 template<class T> bool atomic_compare_exchange( sp<T> * p, sp<T> * v, sp<T> w )
 {
-	ELock* l = EReentrantLockPool<0>::lockFor(p);
+	ELock* l = ESpinLockPool<0>::lockFor(p);
 
     l->lock();
-
     if( p->_internal_equiv( *v ) )
     {
         p->swap( w );
-
         l->unlock();
-
         return true;
     }
     else
     {
         sp<T> tmp( *p );
-
         l->unlock();
-
         tmp.swap( *v );
         return false;
     }
@@ -1379,6 +1463,377 @@ template<class T> inline bool atomic_compare_exchange_explicit( sp<T> * p, sp<T>
 {
     return atomic_compare_exchange( p, v, w ); // std::move( w )
 }
+
+//=============================================================================
+
+// wp
+
+template<class T>
+class wp
+{
+private:
+
+    // Borland 5.5.1 specific workarounds
+    typedef wp<T> this_type;
+
+public:
+
+    typedef typename detail::sp_element< T >::type element_type;
+
+    wp() : px(0), pn() // never throws in 1.30+
+    {
+    }
+
+//  generated copy constructor, assignment, destructor are fine...
+
+// ... except in C++0x, move disables the implicit copy
+
+    wp( wp const & r ) : px( r.px ), pn( r.pn )
+    {
+    }
+
+    wp & operator=( wp const & r )
+    {
+        px = r.px;
+        pn = r.pn;
+        return *this;
+    }
+
+    wp & operator=( detail::sp_nullptr_t )
+	{
+    	wp r;
+		px = r.px;
+		pn = r.pn;
+		return *this;
+	}
+
+//
+//  The "obvious" converting constructor implementation:
+//
+//  template<class Y>
+//  wp(wp<Y> const & r): px(r.px), pn(r.pn) // never throws
+//  {
+//  }
+//
+//  has a serious problem.
+//
+//  r.px may already have been invalidated. The px(r.px)
+//  conversion may require access to *r.px (virtual inheritance).
+//
+//  It is not possible to avoid spurious access violations since
+//  in multithreaded programs r.px may be invalidated at any point.
+//
+
+    template<class Y>
+    wp( wp<Y> const & r, typename detail::sp_enable_if_convertible<Y,T>::type = detail::sp_empty() )
+     : px(r.lock().get()), pn(r.pn)
+    {
+        detail::sp_assert_convertible< Y, T >();
+    }
+
+#ifdef CPP11_SUPPORT
+    template<class Y>
+    wp( wp<Y> && r, typename detail::sp_enable_if_convertible<Y,T>::type = detail::sp_empty() )
+     : px( r.lock().get() ), pn( static_cast< detail::weak_count && >( r.pn ) )
+    {
+        detail::sp_assert_convertible< Y, T >();
+        r.px = 0;
+    }
+
+    // for better efficiency in the T == Y case
+    wp( wp && r )
+     : px( r.px ), pn( static_cast< detail::weak_count && >( r.pn ) )
+    {
+        r.px = 0;
+    }
+
+    // for better efficiency in the T == Y case
+    wp & operator=( wp && r )
+    {
+        this_type( static_cast< wp && >( r ) ).swap( *this );
+        return *this;
+    }
+#endif
+
+    template<class Y>
+    wp( sp<Y> const & r, typename detail::sp_enable_if_convertible<Y,T>::type = detail::sp_empty() )
+     : px( r.px ), pn( r.pn )
+    {
+        detail::sp_assert_convertible< Y, T >();
+    }
+
+    template<class Y>
+    wp & operator=( wp<Y> const & r )
+    {
+        detail::sp_assert_convertible< Y, T >();
+
+        px = r.lock().get();
+        pn = r.pn;
+
+        return *this;
+    }
+
+#ifdef CPP11_SUPPORT
+    template<class Y>
+    wp & operator=( wp<Y> && r )
+    {
+        this_type( static_cast< wp<Y> && >( r ) ).swap( *this );
+        return *this;
+    }
+#endif
+
+    template<class Y>
+    wp & operator=( sp<Y> const & r )
+    {
+        detail::sp_assert_convertible< Y, T >();
+
+        px = r.px;
+        pn = r.pn;
+
+        return *this;
+    }
+
+    sp<T> lock() const
+    {
+        return sp<T>( *this, detail::sp_nothrow_tag() );
+    }
+
+    long use_count() const
+    {
+        return pn.use_count();
+    }
+
+    bool expired() const
+    {
+        return pn.use_count() == 0;
+    }
+
+    bool _empty() const // extension, not in std::weak_ptr
+    {
+        return pn.empty();
+    }
+
+    void reset() // never throws in 1.30+
+    {
+        this_type().swap(*this);
+    }
+
+    void swap(this_type & other)
+    {
+        std::swap(px, other.px);
+        pn.swap(other.pn);
+    }
+
+    template<typename Y>
+    void _internal_aliasing_assign(wp<Y> const & r, element_type * px2)
+    {
+        px = px2;
+        pn = r.pn;
+    }
+
+    template<class Y> bool owner_before( wp<Y> const & rhs ) const
+    {
+        return pn < rhs.pn;
+    }
+
+    template<class Y> bool owner_before( sp<Y> const & rhs ) const
+    {
+        return pn < rhs.pn;
+    }
+
+// Tasteless as this may seem, making all members public allows member templates
+// to work in the absence of member template friends. (Matthew Langston)
+
+private:
+    template<class Y> friend class wp;
+    template<class Y> friend class sp;
+
+    element_type * px;            // contained pointer
+    detail::weak_count pn; // reference counter
+
+};  // wp
+
+template<class T, class U> inline bool operator<(wp<T> const & a, wp<U> const & b)
+{
+    return a.owner_before( b );
+}
+
+template<class T> void swap(wp<T> & a, wp<T> & b)
+{
+    a.swap(b);
+}
+
+//=============================================================================
+
+// enable_shared_from_this
+
+template<class T> class enable_shared_from_this
+{
+protected:
+
+    enable_shared_from_this() throw()
+    {
+    }
+
+    enable_shared_from_this(enable_shared_from_this const &) throw()
+    {
+    }
+
+    enable_shared_from_this & operator=(enable_shared_from_this const &) throw()
+    {
+        return *this;
+    }
+
+    ~enable_shared_from_this() throw() // ~weak_ptr<T> newer throws, so this call also must not throw
+    {
+    }
+
+public:
+
+    sp<T> shared_from_this()
+    {
+        sp<T> p( weak_this_ );
+        ES_ASSERT( p.get() == this );
+        return p;
+    }
+
+    sp<T const> shared_from_this() const
+    {
+        sp<T const> p( weak_this_ );
+        ES_ASSERT( p.get() == this );
+        return p;
+    }
+
+public: // actually private, but avoids compiler template friendship issues
+
+    // Note: invoked automatically by shared_ptr; do not call
+    template<class X, class Y> void _internal_accept_owner( sp<X> const * ppx, Y * py ) const
+    {
+        if( weak_this_.expired() )
+        {
+            weak_this_ = sp<T>( *ppx, py );
+        }
+    }
+
+protected:
+
+    mutable wp<T> weak_this_;
+};
+
+//=============================================================================
+
+// enable_shared_from_raw
+
+/*
+template<typename T> sp<T> shared_from_raw(T *);
+template<typename T> wp<T> weak_from_raw(T *);
+
+class enable_shared_from_raw
+{
+protected:
+
+    enable_shared_from_raw()
+    {
+    }
+
+    enable_shared_from_raw( enable_shared_from_raw const & )
+    {
+    }
+
+    enable_shared_from_raw & operator=( enable_shared_from_raw const & )
+    {
+        return *this;
+    }
+
+    ~enable_shared_from_raw()
+    {
+    	ES_ASSERT( shared_this_.use_count() <= 1 ); // make sure no dangling shared_ptr objects exist
+    }
+
+private:
+
+    void init_weak_once() const
+    {
+        if( weak_this_.expired() )
+        {
+            shared_this_.reset( static_cast<void*>(0), detail::esft2_deleter_wrapper() );
+            weak_this_ = shared_this_;
+        }
+    }
+
+private:
+    template<class Y> friend class sp;
+    template<typename T> friend sp<T> shared_from_raw(T *);
+    template<typename T> friend wp<T> weak_from_raw(T *);
+    template< class X, class Y > friend inline void detail::sp_enable_shared_from_this( sp<X> * ppx, Y const * py, enable_shared_from_raw const * pe );
+
+    sp<void> shared_from_this()
+    {
+        init_weak_once();
+        return sp<void>( weak_this_ );
+    }
+
+    sp<const void> shared_from_this() const
+    {
+        init_weak_once();
+        return sp<const void>( weak_this_ );
+    }
+
+    // Note: invoked automatically by shared_ptr; do not call
+    template<class X, class Y> void _internal_accept_owner( sp<X> const * ppx, Y * py ) const
+    {
+    	ES_ASSERT( ppx != 0 );
+
+        if( weak_this_.expired() )
+        {
+            weak_this_ = *ppx;
+        }
+        else if( shared_this_.use_count() != 0 )
+        {
+        	ES_ASSERT( ppx->unique() ); // no weak_ptrs should exist either, but there's no way to check that
+
+            detail::esft2_deleter_wrapper * pd = get_deleter<detail::esft2_deleter_wrapper>( shared_this_ );
+            ES_ASSERT( pd != 0 );
+
+            pd->set_deleter( *ppx );
+
+            ppx->reset( shared_this_, ppx->get() );
+            shared_this_.reset();
+        }
+    }
+
+    mutable wp<void> weak_this_;
+private:
+    mutable sp<void> shared_this_;
+};
+
+template<typename T>
+sp<T> shared_from_raw(T *p)
+{
+    ES_ASSERT(p != 0);
+    return sp<T>(p->enable_shared_from_raw::shared_from_this(), p);
+}
+
+template<typename T>
+wp<T> weak_from_raw(T *p)
+{
+	ES_ASSERT(p != 0);
+    wp<T> result;
+    result._internal_aliasing_assign(p->enable_shared_from_raw::weak_this_, p);
+    return result;
+}
+
+namespace detail
+{
+	template< class X, class Y > inline void sp_enable_shared_from_this( sp<X> * ppx, Y const * py, enable_shared_from_raw const * pe )
+	{
+		if( pe != 0 )
+		{
+			pe->_internal_accept_owner( ppx, const_cast< Y* >( py ) );
+		}
+	}
+} // namepsace detail
+*/
 
 } // namespace efc
 

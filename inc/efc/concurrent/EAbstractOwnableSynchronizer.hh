@@ -22,7 +22,6 @@ namespace efc {
  * and provide diagnostics.
  *
  * @since 1.6
- * @author Doug Lea
  */
 
 abstract class EAbstractOwnableSynchronizer : virtual public EObject {

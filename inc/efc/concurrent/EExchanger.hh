@@ -77,7 +77,6 @@ namespace efc {
  * in the other thread.
  *
  * @since 1.5
- * @author Doug Lea and Bill Scherer and Michael Scott
  * @param <V> The type of objects that may be exchanged
  */
 
@@ -248,7 +247,7 @@ public:
 		NCPU = ERuntime::getRuntime()->availableProcessors();
 		FULL = (NCPU >= (MMASK << 1)) ? MMASK : (uint)NCPU >> 1;
 
-		participant = new Participant();
+		participant = new EThreadLocalVariable<Participant, Node>();
 	}
 
 	/**
@@ -426,15 +425,15 @@ private:
 	};
 
 	/** The corresponding thread local class */
-	class Participant : public EThreadLocal<Node*> {
+	class Participant : public EThreadLocal {
 	public:
-		Node* initialValue() { return new Node(); }
+		virtual EObject* initialValue() { return new Node(); }
 	};
 
 	/**
 	 * Per-thread state
 	 */
-	Participant* participant;
+	EThreadLocalVariable<Participant, Node>* participant;
 
 	/**
 	 * Elimination array; null until enabled (within slotExchange).

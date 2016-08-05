@@ -49,7 +49,6 @@ namespace efc {
  * &#252; is encoded as two bytes C3 (hex) and BC (hex), and the
  * character @ is encoded as one byte 40 (hex).
  *
- * @author  Herb Jellinek
  * @version 1.32, 04/22/06
  * @since   JDK1.0
  */

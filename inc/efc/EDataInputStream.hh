@@ -23,7 +23,6 @@ namespace efc {
  * Thread safety is optional and is the responsibility of users of
  * methods in this class.
  *
- * @author  Arthur van Hoff
  * @version 1.77, 06/07/06
  * @see     java.io.DataOutputStream
  * @since   JDK1.0
@@ -40,6 +39,10 @@ public:
 	 * @param  in   the specified input stream
 	 */
 	EDataInputStream(EInputStream* in);
+
+	//TODO:
+	EDataInputStream(const EDataInputStream& that);
+	EDataInputStream& operator= (const EDataInputStream& that);
 
 	/**
 	 * Reads up to <code>len</code> bytes of data from the contained

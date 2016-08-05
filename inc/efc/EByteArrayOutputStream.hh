@@ -30,7 +30,6 @@ namespace efc {
  * this class can be called after the stream has been closed without
  * generating an <tt>IOException</tt>.
  *
- * @author  Arthur van Hoff
  * @version 1.53, 06/07/06
  * @since   JDK1.0
  */
@@ -47,6 +46,10 @@ public:
      * @exception  IllegalArgumentException if size is negative.
      */
     EByteArrayOutputStream(int size=32);
+
+    //TODO...
+    EByteArrayOutputStream(const EByteArrayOutputStream& that);
+    EByteArrayOutputStream& operator= (const EByteArrayOutputStream& that);
 	
     /**
      * Writes <code>len</code> bytes from the specified byte array 
@@ -119,7 +122,7 @@ public:
      * @return String decoded from the buffer's contents.
      * @since  JDK1.1
      */
-	virtual synchronized EString toString();
+	virtual synchronized EStringBase toString();
     
 protected:
     /**

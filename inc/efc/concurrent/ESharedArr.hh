@@ -36,16 +36,32 @@ public:
 		_array = new sp<E>[_length]();
 	}
 
-	ea(ea<E>& that) {
-		_length = that.length();
+	ea(const ea<E>& that) {
+		ea<E>* t = (ea<E>*)&that;
+
+		_length = t->_length;
 		_array = new sp<E>[_length];
 		for (int i = 0; i < _length; i++) {
-			_array[i] = that[i];
+			_array[i] = (*t)[i];
 		}
 	}
 
-	ea(const ea<E>& that) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	ea<E>& operator= (const ea<E>& that) {
+		if (this == &that) return *this;
+
+		ea<E>* t = (ea<E>*)&that;
+
+		//1.
+		delete[] _array;
+
+		//2.
+		_length = t->_length;
+		_array = new sp<E>[_length];
+		for (int i = 0; i < _length; i++) {
+			_array[i] = (*t)[i];
+		}
+
+		return *this;
 	}
 
 	int length() {
@@ -85,6 +101,37 @@ public:
 		}
 
 		return newEA;
+	}
+
+	sp<E>& getAt(int index) THROWS(EIndexOutOfBoundsException) {
+		if (index < 0 || index >= _length) {
+			throw EINDEXOUTOFBOUNDSEXCEPTION;
+		}
+		return _array[index];
+	}
+
+	/**
+	 * Replaces the element at the specified position in this list with
+	 * the specified element.
+	 *
+	 * @param index index of the element to replace
+	 * @param element element to be stored at the specified position
+	 * @return the element previously at the specified position
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	sp<E> setAt(int index, sp<E> element) THROWS(EIndexOutOfBoundsException) {
+		if (index < 0 || index >= _length) {
+			throw EINDEXOUTOFBOUNDSEXCEPTION;
+		}
+		sp<E> old = _array[index];
+		_array[index] = element;
+		return old;
+	}
+
+	void clear() {
+		for (int i=0; i<_length; i++) {
+			_array[i] = null;
+		}
 	}
 
 	void sort(int off=0, int len=-1) {
@@ -175,17 +222,17 @@ private:
 		EString msg;
 		if (fromIndex > toIndex) {
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (fromIndex < 0) {
 			msg.format("fromIndex(%d)", fromIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (toIndex > _length) {
 			msg.format("toIndex(%d)", toIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 	}
 

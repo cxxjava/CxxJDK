@@ -20,7 +20,6 @@ namespace efc {
  * output stream without necessarily causing a call to the underlying
  * system for each byte written.
  *
- * @author  Arthur van Hoff
  * @since   JDK1.0
  */
 class EBufferedOutputStream: public EFilterOutputStream, public ESynchronizeable {
@@ -37,6 +36,10 @@ public:
 	 * @exception IllegalArgumentException if size &lt;= 0.
 	 */
 	EBufferedOutputStream(EOutputStream* out, int size=8192, boolean owned=false);
+
+	//TODO...
+	EBufferedOutputStream(const EBufferedOutputStream& that);
+	EBufferedOutputStream& operator= (const EBufferedOutputStream& that);
 
 	/**
 	 * Writes the specified byte to this buffered output stream.

@@ -8,7 +8,7 @@
 #ifndef ECOLLECTION_HH_
 #define ECOLLECTION_HH_
 
-#include "EObject.hh"
+#include "EIterable.hh"
 #include "EIterator.hh"
 
 namespace efc {
@@ -91,8 +91,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.55, 04/21/06
  * @see	    Set
  * @see	    List
@@ -111,7 +109,7 @@ namespace efc {
  */
 
 template<typename E>
-interface ECollection : virtual public EObject
+interface ECollection : virtual public EIterable<E>
 {
 	virtual ~ECollection(){}
 

@@ -12,10 +12,12 @@
 
 namespace efc {
 
-class EThrowable
+class EThrowable: public EObject
 {
 public:
-	/**
+	virtual ~EThrowable();
+
+    /**
      * Constructs a new <code>Throwable</code> with <code>null</code> as
      * its error message string.
      *
@@ -26,22 +28,126 @@ public:
 	EThrowable(const char *_file_, int _line_, int errn=0);
 
 	/**
+	 * Constructs a new throwable with the specified detail message.  The
+	 * cause is not initialized, and may subsequently be initialized by
+	 * a call to {@link #initCause}.
+	 *
+	 * <p>The {@link #fillInStackTrace()} method is called to initialize
+	 * the stack trace data in the newly created throwable.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   message   the detail message. The detail message is saved for
+	 *          later retrieval by the {@link #getMessage()} method.
+	 */
+	EThrowable(const char *_file_, int _line_, const char *message, int errn = 0);
+
+	/**
+	 * Constructs a new throwable with the specified cause and a detail
+	 * message of {@code (cause==null ? null : cause.toString())} (which
+	 * typically contains the class and detail message of {@code cause}).
+	 * This constructor is useful for throwables that are little more than
+	 * wrappers for other throwables (for example, {@link
+	 * java.security.PrivilegedActionException}).
+	 *
+	 * <p>The {@link #fillInStackTrace()} method is called to initialize
+	 * the stack trace data in the newly created throwable.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param  cause the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 * @since  1.4
+	 */
+	EThrowable(const char *_file_, int _line_, EThrowable* cause);
+
+	/**
      * Constructs a new <code>Throwable</code> with the specified error
      * message.
      *
+ 	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
      * @param   message   the error message. The error message is saved for
      *          later retrieval by the {@link #getMessage()} method.
-	 * @param   _file_   __FILE__
-	 * @param   _line_   __LINE__
-	 * @param   errn     errno
+	 * @param   cause    the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A {@code null} value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
      */
-	EThrowable(const char *message, const char *_file_, int _line_, int errn=0);
+	EThrowable(const char *_file_, int _line_, const char *message, EThrowable* cause);
 	
+	/**
+	 * Copy constructor.
+	 */
+	EThrowable(const EThrowable& that);
+
+	/**
+	 * Returns the cause of this throwable or {@code null} if the
+	 * cause is nonexistent or unknown.  (The cause is the throwable that
+	 * caused this throwable to get thrown.)
+	 *
+	 * <p>This implementation returns the cause that was supplied via one of
+	 * the constructors requiring a {@code Throwable}, or that was set after
+	 * creation with the {@link #initCause(Throwable)} method.  While it is
+	 * typically unnecessary to override this method, a subclass can override
+	 * it to return a cause set by some other means.  This is appropriate for
+	 * a "legacy chained throwable" that predates the addition of chained
+	 * exceptions to {@code Throwable}.  Note that it is <i>not</i>
+	 * necessary to override any of the {@code PrintStackTrace} methods,
+	 * all of which invoke the {@code getCause} method to determine the
+	 * cause of a throwable.
+	 *
+	 * @return  the cause of this throwable or {@code null} if the
+	 *          cause is nonexistent or unknown.
+	 * @since 1.4
+	 */
+	virtual synchronized EThrowable* getCause();
+
+	/**
+	 * Initializes the <i>cause</i> of this throwable to the specified value.
+	 * (The cause is the throwable that caused this throwable to get thrown.)
+	 *
+	 * <p>This method can be called at most once.  It is generally called from
+	 * within the constructor, or immediately after creating the
+	 * throwable.  If this throwable was created
+	 * with {@link #Throwable(Throwable)} or
+	 * {@link #Throwable(String,Throwable)}, this method cannot be called
+	 * even once.
+	 *
+	 * <p>An example of using this method on a legacy throwable type
+	 * without other support for setting the cause is:
+	 *
+	 * <pre>
+	 * try {
+	 *     lowLevelOp();
+	 * } catch (LowLevelException le) {
+	 *     throw (HighLevelException)
+	 *           new HighLevelException().initCause(le); // Legacy constructor
+	 * }
+	 * </pre>
+	 *
+	 * @param  cause the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 * @return  a reference to this {@code Throwable} instance.
+	 * @throws IllegalArgumentException if {@code cause} is this
+	 *         throwable.  (A throwable cannot be its own cause.)
+	 * @throws IllegalStateException if this throwable was
+	 *         created with {@link #Throwable(Throwable)} or
+	 *         {@link #Throwable(String,Throwable)}, or this method has already
+	 *         been called on this throwable.
+	 * @since  1.4
+	 */
+	virtual synchronized EThrowable* initCause(EThrowable* cause);
+
 	/**
 	 * Get source file name and line of this <code>Throwable</code> object for debug.
 	 */
-	char* getSourceFile();
-	int getSourceLine();
+	virtual const char* getSourceFile();
+	virtual int getSourceLine();
 
 	/**
 	 * Returns the errno of this <code>Throwable</code> object.
@@ -181,7 +287,7 @@ public:
 	 *  #define ENOMEDIUM 123 // No medium found
 	 *  #define EMEDIUMTYPE 124 // Wrong medium type
 	 */
-	int getErrno();
+	virtual int getErrno();
 
 	/**
      * Returns the error message string of this <code>Throwable</code> object.
@@ -192,8 +298,18 @@ public:
      *          {@link #Throwable() created} with no error message.
      *
      */
-    char* getMessage();
+    virtual const char* getMessage();
     
+    /**
+     * Returns the stacktrace string of this <code>Throwable</code> object.
+     *
+     * @return  the stacktrace string of this <code>Throwable</code>
+     *          object if it was {@link #Throwable(String) created} with an
+     *          stacktrace string; or <code>null</code> if it was
+     *          {@link #Throwable() created} with no stacktrace.
+     */
+    virtual const char* getStackTrace();
+
     /**
      * Returns a short description of this <code>Throwable</code> object.
      * If this <code>Throwable</code> object was
@@ -210,7 +326,7 @@ public:
      *
      * @return  a string representation of this <code>Throwable</code>.
      */
-    EString toString();
+    virtual EStringBase toString();
     
     /**
      * Prints this <code>Throwable</code> and its backtrace to the
@@ -223,9 +339,9 @@ public:
      * The format of the backtrace information depends on the implementation.
      */
 
-    void printStackTrace();
+    virtual void printStackTrace();
     
-private:
+protected:
 	/**
 	 * It is set by system calls and some library functions in the event of
 	 * an error to indicate what went wrong.
@@ -251,6 +367,64 @@ private:
 	 * Saves some indication of the stack backtrace in this slot.
      */
 	EString backtrace;
+
+	/**
+	 * The throwable that caused this throwable to get thrown, or null if this
+	 * throwable was not caused by another throwable, or if the causative
+	 * throwable is unknown.  If this field is equal to this throwable itself,
+	 * it indicates that the cause of this throwable has not yet been
+	 * initialized.
+	 *
+	 * @serial
+	 * @since 1.4
+	 */
+	EThrowable* cause;// = this;
+
+private:
+	class SpinLock {
+	public:
+		SpinLock() {
+			m_Spin = eso_thread_spin_create();
+		}
+		~SpinLock() {
+			eso_thread_spin_destroy(&m_Spin);
+		}
+		void lock(){
+			eso_thread_spin_lock(m_Spin);
+		}
+		void unlock(){
+			eso_thread_spin_unlock(m_Spin);
+		}
+	private:
+		es_thread_spin_t *m_Spin;
+	};
+
+	class Sentry {
+	public:
+		Sentry(SpinLock* lock): m_lock(lock) {
+			if (m_lock) {
+				m_lock->lock();
+			}
+		}
+		~Sentry() {
+			if (m_lock) {
+				m_lock->unlock();
+			}
+		}
+	private:
+		SpinLock* m_lock;
+	};
+
+private:
+
+	SpinLock spin;
+
+	EThrowable& operator=(const EThrowable& estr); //not support.
+
+	/**
+	 *
+	 */
+	void initStackTrace();
 };
 
 } /* namespace efc */

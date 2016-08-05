@@ -20,7 +20,6 @@ class ERandom;
  *
  * @class Math
  * @version $Id: Math.h,v 1.16 2003-08-26 19:50:16 florian Exp $
- * @author Florian 'Overflo' Wolff (florian@donuz.de)
  */
 class EMath : public EObject {
 public:

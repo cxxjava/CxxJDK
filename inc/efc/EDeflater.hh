@@ -59,7 +59,6 @@ namespace efc {
  *
  * @see		Inflater
  * @version 	1.45, 04/07/06
- * @author 	David Connelly
  */
 
 class EDeflater {

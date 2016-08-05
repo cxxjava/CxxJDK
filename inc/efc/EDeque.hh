@@ -162,8 +162,6 @@ namespace efc {
  * href="{@docRoot}/../technotes/guides/collections/index.html"> Java Collections
  * Framework</a>.
  *
- * @author Doug Lea
- * @author Josh Bloch
  * @since  1.6
  * @param <E> the type of elements held in this collection
  */

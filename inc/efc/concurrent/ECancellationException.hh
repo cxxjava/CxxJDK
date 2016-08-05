@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ECANCELLATIONEXCEPTION       ECancellationException(__FILE__, __LINE__, errno)
-#define ECANCELLATIONEXCEPTIONS(msg) ECancellationException(msg, __FILE__, __LINE__, errno)
+#define ECANCELLATIONEXCEPTIONS(msg) ECancellationException(__FILE__, __LINE__, msg)
 
 /**
  * Unchecked exception thrown when an attempt is made to read
@@ -38,14 +38,13 @@ public:
 	 * Constructs an <code>ECancellationException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ECancellationException(const char *s, const char *_file_, int _line_,
-			int errn = 0) :
-			EIllegalStateException(s, _file_, _line_, errn) {
+	ECancellationException(const char *_file_, int _line_,
+			const char *s) :
+			EIllegalStateException(_file_, _line_, s) {
 	}
 };
 

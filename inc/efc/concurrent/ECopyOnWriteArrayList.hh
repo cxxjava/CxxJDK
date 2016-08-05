@@ -51,7 +51,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
 
@@ -278,7 +277,7 @@ public:
 			DELRC(elements);
 
 			return oldValue;
-		}}
+		}
 	}
 
 	/**
@@ -303,7 +302,7 @@ public:
 			DELRC(elements);
 
 			return true;
- 		}}
+ 		}
     }
 
 	/**
@@ -331,8 +330,10 @@ public:
 				newElements = arrayClone(elements, 0, len + 1);
 			else {
 				newElements = NEWRC(ea<E>)(len + 1);
-//				System.arraycopy(elements, 0, newElements, 0, index);
-//				System.arraycopy(elements, index, newElements, index + 1, numMoved);
+				/* @see:
+				System.arraycopy(elements, 0, newElements, 0, index);
+				System.arraycopy(elements, index, newElements, index + 1, numMoved);
+				*/
 				for (int i=0; i<index; i++) {
 					(*newElements)[i] = (*elements)[i];
 				}
@@ -344,7 +345,7 @@ public:
 			setArray(newElements);
 
 			DELRC(elements);
-        }}
+        }
     }
 
     /**
@@ -366,8 +367,10 @@ public:
 					setArray(arrayClone(elements, 0, len - 1));
 				else {
 					ea<E>* newElements = NEWRC(ea<E>)(len - 1);
-//	                System.arraycopy(elements, 0, newElements, 0, index);
-//	                System.arraycopy(elements, index + 1, newElements, index, numMoved);
+					/* @see:
+	                System.arraycopy(elements, 0, newElements, 0, index);
+	                System.arraycopy(elements, index + 1, newElements, index, numMoved);
+	                */
 					for (int i=0; i<index; i++) {
 						(*newElements)[i] = (*elements)[i];
 					}
@@ -376,7 +379,7 @@ public:
 					}
 					setArray(newElements);
 				}
-    		}catch(...) {
+    		} catch (...) {
 				DELRC(elements);
 				throw;
 			} finally {
@@ -384,7 +387,7 @@ public:
 			}
 
             return oldValue;
-        }}
+        }
     }
 
     /**
@@ -437,7 +440,7 @@ public:
             DELRC(elements);
 
             return result;
-        }}
+        }
     }
 
     /**
@@ -462,6 +465,7 @@ public:
             for (int i = 0; i < len; ++i) {
                 if (eq(e.get(), (*elements)[i].get())) {
                 	DELRC(elements);
+                	delete newElements;
                     return false; // exit, throwing away copy
                 }
                 else
@@ -473,7 +477,7 @@ public:
             DELRC(elements);
 
             return true;
-        }}
+        }
     }
 
     /**
@@ -484,7 +488,7 @@ public:
     	SYNCBLOCK(&lock_) {
     		ea<E>* elements = NEWRC(ea<E>)(0);
     		setArray(elements);
-        }}
+        }
     }
 
     /**
@@ -502,6 +506,23 @@ public:
     	EConcurrentIterator<E>* iter = new COWIterator(elements, 0);
     	DELRC(elements);
     	return iter;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>The returned iterator provides a snapshot of the state of the list
+     * when the iterator was constructed. No synchronization is needed while
+     * traversing the iterator. The iterator does <em>NOT</em> support the
+     * {@code remove}, {@code set} or {@code add} methods.
+     *
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    sp<EConcurrentListIterator<E> > listIterator(int index = 0) {
+    	ea<E>* elements = GETRC(array_);
+    	EConcurrentListIterator<E>* iter = new COWIterator(elements, index);
+		DELRC(elements);
+		return iter;
     }
 
 protected:

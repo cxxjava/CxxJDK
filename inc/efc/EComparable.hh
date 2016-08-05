@@ -75,13 +75,12 @@ namespace efc {
  *
  * @param <T> the type of objects that this object may be compared to
  *
- * @author  Josh Bloch
  * @version 1.26, 04/21/06
  * @see java.util.Comparator
  * @since 1.2
  */
 
-template<typename _TEComparable>
+template<typename E>
 interface EComparable : virtual public EObject {
 	virtual ~EComparable() {
 	}
@@ -124,7 +123,7 @@ interface EComparable : virtual public EObject {
 	 * @throws ClassCastException if the specified object's type prevents it
 	 *         from being compared to this object.
 	 */
-	virtual int compareTo(_TEComparable o) = 0;
+	virtual int compareTo(E o) = 0;
 };
 
 } /* namespace efc */

@@ -12,7 +12,6 @@
 #include "EComparable.hh"
 #include "EIndexOutOfBoundsException.hh"
 #include "EIllegalArgumentException.hh"
-#include "EUnsupportedOperationException.hh"
 
 namespace efc {
 
@@ -36,9 +35,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
- * @author  John Rose
  * @since   1.2
  */
 
@@ -71,7 +67,7 @@ public:
 	static void sort(EA<T>* a, int fromIndex, int toIndex) {
 		if (fromIndex > toIndex) {
 			EString msg = EString::formatOf("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 		a->sort(fromIndex, toIndex-fromIndex);
 	}
@@ -132,7 +128,7 @@ public:
 	static EA<T>* copyOfRange(EA<T>* original, int fromIndex, int toIndex) {
 		if (fromIndex > toIndex) {
 			EString msg = EString::formatOf("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 		return original->clone(fromIndex, toIndex - fromIndex);
 	}

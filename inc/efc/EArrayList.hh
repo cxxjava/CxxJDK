@@ -12,7 +12,6 @@
 #include "EList.hh"
 #include "EAbstractList.hh"
 #include "EIndexOutOfBoundsException.hh"
-#include "EUnsupportedOperationException.hh"
 #include "EIllegalArgumentException.hh"
 
 namespace efc {
@@ -79,8 +78,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.56, 04/21/06
  * @see	    Collection
  * @see	    List
@@ -356,7 +353,6 @@ public:
 	 * @return a clone of this <tt>ArrayList</tt> instance
 	 */
 	virtual EArrayList<E>* clone(int fromIndex=0, int toIndex=-1) {
-		EArrayList<E> *ac = new EArrayList<E>();
 		int size_;
 
 		if (fromIndex == 0 && toIndex < 0) {
@@ -366,6 +362,8 @@ public:
 			RangeCheck2(fromIndex, toIndex);
 			size_ = toIndex - fromIndex;
 		}
+
+		EArrayList<E> *ac = new EArrayList<E>();
 
 		ac->arrayBuffer = eso_array_make(size_, sizeof(E));
 		for (int i = 0; i < size_; i++) {
@@ -405,7 +403,7 @@ private:
 		if (index >= _size) {
 			EString str;
 			str.format("Index: %d, Size: %d", index, _size);
-			throw EIndexOutOfBoundsException(str.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
 		}
 	}
 
@@ -417,17 +415,17 @@ private:
 		EString msg;
 		if (fromIndex > toIndex) {
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (fromIndex < 0) {
 			msg.format("fromIndex(%d)", fromIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (toIndex > this->size()) {
 			msg.format("toIndex(%d)", toIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 	}
 };
@@ -697,7 +695,7 @@ private:
 		if (index >= _size) {
 			EString str;
 			str.format("Index: %d, Size: %d", index, _size);
-			throw EIndexOutOfBoundsException(str.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
 		}
 	}
 
@@ -709,17 +707,17 @@ private:
 		EString msg;
 		if (fromIndex > toIndex) {
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (fromIndex < 0) {
 			msg.format("fromIndex(%d)", fromIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (toIndex > this->size()) {
 			msg.format("toIndex(%d)", toIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 	}
 };
@@ -989,7 +987,7 @@ private:
 		if (index >= _size) {
 			EString str;
 			str.format("Index: %d, Size: %d", index, _size);
-			throw EIndexOutOfBoundsException(str.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
 		}
 	}
 
@@ -1001,17 +999,17 @@ private:
 		EString msg;
 		if (fromIndex > toIndex) {
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (fromIndex < 0) {
 			msg.format("fromIndex(%d)", fromIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (toIndex > this->size()) {
 			msg.format("toIndex(%d)", toIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 	}
 };

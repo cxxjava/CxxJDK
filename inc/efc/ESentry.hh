@@ -29,10 +29,13 @@ namespace efc {
  */
 class ESentry {
 public:
-	ESentry(ELock* lock);
 	~ESentry();
+	ESentry(ELock* lock);
+	boolean begin();
+	void end();
 private:
 	ELock* _lock;
+	boolean _only;
 };
 
 } /* namespace efc */

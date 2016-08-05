@@ -41,8 +41,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.38, 06/16/06
  * @see Collection
  * @since 1.2

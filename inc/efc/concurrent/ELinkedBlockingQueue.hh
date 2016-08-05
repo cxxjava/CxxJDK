@@ -47,7 +47,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *
  */
@@ -209,7 +208,7 @@ public:
 		sp<E> x(e);
 		boolean r = offer(x, timeout, unit);
 		if (!r) {
-			x.detach();
+			x.dismiss();
 		}
 		return r;
 	}
@@ -261,7 +260,7 @@ public:
 		sp<E> x(e);
 		boolean r = offer(x);
 		if (!r) {
-			x.detach();
+			x.dismiss();
 		}
 		return r;
 	}
@@ -719,7 +718,7 @@ private:
 	void signalNotEmpty() {
 		SYNCBLOCK(&takeLock) {
 			notEmpty->signal();
-		}}
+		}
 	}
 
 	/**
@@ -728,7 +727,7 @@ private:
 	void signalNotFull() {
 		SYNCBLOCK(&putLock) {
 			notFull->signal();
-		}}
+		}
 	}
 
 	/**

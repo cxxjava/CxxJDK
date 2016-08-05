@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ENULLPOINTEREXCEPTION       ENullPointerException(__FILE__, __LINE__, errno)
-#define ENULLPOINTEREXCEPTIONS(msg) ENullPointerException(msg, __FILE__, __LINE__, errno)
+#define ENULLPOINTEREXCEPTIONS(msg) ENullPointerException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown when an application attempts to use <code>null</code> in a 
@@ -31,7 +31,6 @@ namespace efc {
  * Applications should throw instances of this class to indicate 
  * other illegal uses of the <code>null</code> object. 
  *
- * @author  unascribed
  * @version 1.20, 11/17/05
  * @since   JDK1.0
  */
@@ -54,14 +53,13 @@ public:
 	 * Constructs an <code>NullPointerException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ENullPointerException(const char *s, const char *_file_, int _line_,
-			int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	ENullPointerException(const char *_file_, int _line_,
+			const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 

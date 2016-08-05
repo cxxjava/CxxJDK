@@ -64,8 +64,6 @@ namespace efc {
  *
  * @param <E> the type of elements maintained by this set
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.37, 04/21/06
  * @see	    Collection
  * @see	    Set
@@ -85,8 +83,26 @@ public:
 	 * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
 	 * default initial capacity (16) and load factor (0.75).
 	 */
-	EHashSet(boolean autoFree = true) {
+	EHashSet() {
+		map_ = new EHashMap<E, EObject*>(16, true, true);
+	}
+	explicit
+	EHashSet(boolean autoFree) {
 		map_ = new EHashMap<E, EObject*>(autoFree, true);
+	}
+
+	/**
+	 * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
+	 * the specified initial capacity and the specified load factor.
+	 *
+	 * @param      initialCapacity   the initial capacity of the hash map
+	 * @param      loadFactor        the load factor of the hash map
+	 * @throws     IllegalArgumentException if the initial capacity is less
+	 *             than zero, or if the load factor is nonpositive
+	 */
+	explicit
+	EHashSet(int initialCapacity, float loadFactor/*0.75*/, boolean autoFree=true) {
+		map_ = new EHashMap<E, EObject*>(initialCapacity, loadFactor, autoFree, true);
 	}
 
 	/**
@@ -105,16 +121,28 @@ public:
 	}
 
 	/**
-	 * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
-	 * the specified initial capacity and the specified load factor.
 	 *
-	 * @param      initialCapacity   the initial capacity of the hash map
-	 * @param      loadFactor        the load factor of the hash map
-	 * @throws     IllegalArgumentException if the initial capacity is less
-	 *             than zero, or if the load factor is nonpositive
 	 */
-	EHashSet(int initialCapacity, float loadFactor = 0.75, boolean autoFree = true) {
-		map_ = new EHashMap<E, EObject*>(initialCapacity, loadFactor, autoFree, true);
+	EHashSet(const EHashSet<E>& that) {
+		EHashSet<E>* t = (EHashSet<E>*)&that;
+		map_ = new EHashMap<E, EObject*>(*t->map_);
+	}
+
+	/**
+	 *
+	 */
+	EHashSet<E>& operator= (const EHashSet<E>& that) {
+		if (this == &that) return *this;
+
+		EHashSet<E>* t = (EHashSet<E>*)&that;
+
+		//1.
+		delete map_;
+
+		//2.
+		map_ = new EHashMap<E, EObject*>(*t->map_);
+
+		return *this;
 	}
 
 	/**

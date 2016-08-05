@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EIOEXCEPTION       EIOException(__FILE__, __LINE__, errno)
-#define EIOEXCEPTIONS(msg) EIOException(msg, __FILE__, __LINE__, errno)
+#define EIOEXCEPTIONS(msg) EIOException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that an I/O exception of some sort has occurred. This
@@ -39,14 +39,42 @@ public:
 	 * Constructs an <code>EIOException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EIOException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EException(s, _file_, _line_, errn) {
+	EIOException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EException(_file_, _line_, s, errn) {
+	}
+
+	/**
+	 * Constructs an <code>EIOException</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EIOException(const char *_file_, int _line_, EThrowable* cause) :
+			EException(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+	 * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EIOException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+			EException(_file_, _line_, s, cause) {
 	}
 };
 

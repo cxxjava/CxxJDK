@@ -586,9 +586,6 @@ namespace efc {
  * @see java.lang.String#split(String, int)
  * @see java.lang.String#split(String)
  *
- * @author      Mike McCloskey
- * @author      Mark Reinhold
- * @author	JSR-51 Expert Group
  * @version 	1.124, 07/03/15
  * @since       1.4
  * @spec	JSR-51
@@ -611,6 +608,10 @@ public:
 	 *          If the expression's syntax is invalid
 	 */
 	EPattern(const char* regex, int opetion=0) THROWS(EPatternSyntaxException);
+
+	// unsupported.
+	EPattern(const EPattern& that);
+	EPattern& operator= (const EPattern& that);
 
 	/**
 	 * Splits the given input sequence around matches of this pattern.
@@ -690,7 +691,7 @@ public:
 	 * @return  The string representation of this pattern
 	 * @since 1.5
 	 */
-	EString toString();
+	EStringBase toString();
 
 	/**
 	 * Return c pcre ptr.

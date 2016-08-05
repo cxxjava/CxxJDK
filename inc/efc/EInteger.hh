@@ -9,6 +9,25 @@
 namespace efc {
 
 /**
+ * The {@code Integer} class wraps a value of the primitive type
+ * {@code int} in an object. An object of type {@code Integer}
+ * contains a single field whose type is {@code int}.
+ *
+ * <p>In addition, this class provides several methods for converting
+ * an {@code int} to a {@code String} and a {@code String} to an
+ * {@code int}, as well as other constants and methods useful when
+ * dealing with an {@code int}.
+ *
+ * <p>Implementation note: The implementations of the "bit twiddling"
+ * methods (such as {@link #highestOneBit(int) highestOneBit} and
+ * {@link #numberOfTrailingZeros(int) numberOfTrailingZeros}) are
+ * based on material from Henry S. Warren, Jr.'s <i>Hacker's
+ * Delight</i>, (Addison Wesley, 2002).
+ *
+ * @since JDK1.0
+ */
+
+/**
  * The minimum radix available for conversion to and from Strings.
  */
 #define INTEGER_MIN_RADIX   2
@@ -120,6 +139,19 @@ public:
 	 *          <code>false</code> otherwise.
 	 */
 	boolean equals(EInteger* obj);
+	virtual boolean equals(EObject* obj);
+
+	/**
+	 * Returns a {@code String} object representing this
+	 * {@code Integer}'s value. The value is converted to signed
+	 * decimal representation and returned as a string, exactly as if
+	 * the integer value were given as an argument to the {@link
+	 * java.lang.Integer#toString(int)} method.
+	 *
+	 * @return  a string representation of the value of this object in
+	 *          base&nbsp;10.
+	 */
+	virtual EStringBase toString();
 
 	/**
 	 * Returns a hash code for this <code>Integer</code>.
@@ -128,7 +160,7 @@ public:
 	 *          primitive <code>int</code> value represented by this
 	 *          <code>Integer</code> object.
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Compares two {@code Integer} objects numerically.
@@ -143,10 +175,40 @@ public:
 	 *           comparison).
 	 * @since   1.2
 	 */
-	int compareTo(EInteger* anotherInteger);
+	virtual int compareTo(EInteger* anotherInteger);
 
 public:
 	int value;
+
+	/**
+	 * Returns an {@code int} value with at most a single one-bit, in the
+	 * position of the highest-order ("leftmost") one-bit in the specified
+	 * {@code int} value.  Returns zero if the specified value has no
+	 * one-bits in its two's complement binary representation, that is, if it
+	 * is equal to zero.
+	 *
+	 * @param i the value whose highest one bit is to be computed
+	 * @return an {@code int} value with a single one-bit, in the position
+	 *     of the highest-order one-bit in the specified value, or zero if
+	 *     the specified value is itself equal to zero.
+	 * @since 1.5
+	 */
+	static int highestOneBit(int i);
+
+	/**
+	 * Returns an {@code int} value with at most a single one-bit, in the
+	 * position of the lowest-order ("rightmost") one-bit in the specified
+	 * {@code int} value.  Returns zero if the specified value has no
+	 * one-bits in its two's complement binary representation, that is, if it
+	 * is equal to zero.
+	 *
+	 * @param i the value whose lowest one bit is to be computed
+	 * @return an {@code int} value with a single one-bit, in the position
+	 *     of the lowest-order one-bit in the specified value, or zero if
+	 *     the specified value is itself equal to zero.
+	 * @since 1.5
+	 */
+	static int lowestOneBit(int i);
 };
 
 } /* namespace efc */

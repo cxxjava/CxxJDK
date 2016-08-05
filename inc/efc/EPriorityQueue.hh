@@ -69,7 +69,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Josh Bloch, Doug Lea
  * @param <E> the type of elements held in this collection
  */
 
@@ -91,26 +90,26 @@ public:
      */
 	explicit
     EPriorityQueue() :
-    	_size(0), _comparator(null), modCount(0), _autoFree(true) {
-        this->queue = new EA<EObject*>(DEFAULT_INITIAL_CAPACITY);
+    	_size(0), _comparator(null), modCount(0) {
+        this->queue = new EA<EObject*>(DEFAULT_INITIAL_CAPACITY, true);
     }
 
 	explicit
     EPriorityQueue(boolean autoFree) :
-    	_size(0), _comparator(null), modCount(0), _autoFree(autoFree) {
-        this->queue = new EA<EObject*>(DEFAULT_INITIAL_CAPACITY);
+    	_size(0), _comparator(null), modCount(0) {
+        this->queue = new EA<EObject*>(DEFAULT_INITIAL_CAPACITY, autoFree);
     }
 
 	explicit
     EPriorityQueue(int initialCapacity) :
-    	_size(0), _comparator(null), modCount(0), _autoFree(true) {
-        this->queue = new EA<EObject*>(initialCapacity);
+    	_size(0), _comparator(null), modCount(0) {
+        this->queue = new EA<EObject*>(initialCapacity, true);
     }
 
 	explicit
     EPriorityQueue(int initialCapacity, boolean autoFree) :
-    	_size(0), _comparator(null), modCount(0), _autoFree(autoFree) {
-        this->queue = new EA<EObject*>(initialCapacity);
+    	_size(0), _comparator(null), modCount(0) {
+        this->queue = new EA<EObject*>(initialCapacity, autoFree);
     }
     
 	/**
@@ -119,16 +118,51 @@ public:
      * {@linkplain Comparable natural ordering}.
      */
 	explicit
-	EPriorityQueue(int initialCapacity, EComparator<E>* comparator, boolean autoFree = true) :
-			_size(0), modCount(0), _autoFree(autoFree) {
+	EPriorityQueue(int initialCapacity, EComparator<E>* comparator, boolean autoFree=true) :
+			_size(0), modCount(0) {
     	// Note: This restriction of at least one is not actually needed,
         // but continues for 1.5 compatibility
         if (initialCapacity < 1)
             throw EIllegalArgumentException(__FILE__, __LINE__);
-        this->queue = new EA<E>(initialCapacity);
+        this->queue = new EA<E>(initialCapacity, autoFree);
         this->_comparator = comparator;
     }
 	
+	/**
+	 *
+	 */
+	EPriorityQueue(const EPriorityQueue& that) {
+		EPriorityQueue* t = (EPriorityQueue*)&that;
+		this->_size = t->_size;
+		this->modCount = 0;
+		this->queue = t->queue->clone();
+		this->queue->setAutoFree(t->queue->getAutoFree());
+		t->queue->setAutoFree(false);
+		this->_comparator = t->_comparator;
+	}
+
+	/**
+	 *
+	 */
+	EPriorityQueue& operator= (const EPriorityQueue& that) {
+		if (this == &that) return *this;
+
+		EPriorityQueue* t = (EPriorityQueue*)&that;
+
+		//1.
+		delete queue;
+
+		//2.
+		this->_size = t->_size;
+		this->modCount = 0;
+		this->queue = t->queue->clone();
+		this->queue->setAutoFree(t->queue->getAutoFree());
+		t->queue->setAutoFree(false);
+		this->_comparator = t->_comparator;
+
+		return *this;
+	}
+
 	/**
      * Inserts the specified element into this priority queue.
      *
@@ -231,12 +265,7 @@ public:
      */
     void clear() {
         modCount++;
-        for (int i = 0; i < _size; i++) {
-        	if (_autoFree) {
-        		delete (*queue)[i];
-        	}
-            (*queue)[i] = null;
-        }
+        queue->clear();
         _size = 0;
     }
 
@@ -270,6 +299,20 @@ public:
      */
     EComparator<E>* comparator() {
         return _comparator;
+    }
+
+    /**
+     *
+     */
+    void setAutoFree(boolean autoFree = true ) {
+    	queue->setAutoFree(autoFree);
+    }
+
+    /**
+     *
+     */
+    boolean getAutoFree() {
+    	return queue->getAutoFree();
     }
 
 private:
@@ -309,11 +352,6 @@ private:
      * <i>structurally modified</i>.  See AbstractList for gory details.
      */
     int modCount;// = 0;
-    
-    /**
-	 * Auto free object flag
-	 */
-	boolean _autoFree;
 	
 	class Itr : public EIterator<E> {
 	public:
@@ -367,6 +405,10 @@ private:
             expectedModCount = queue->modCount;
 		}
 		
+		E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+
 	private:
 		EPriorityQueue<E>* queue;
 		
@@ -435,7 +477,7 @@ private:
             newCapacity = hugeCapacity(minCapacity);
         EA<E>* old = queue;
         queue = EArrays::copyOf(queue, newCapacity);
-        queue->setAutoFree(true);
+        queue->setAutoFree(old->getAutoFree());
         old->setAutoFree(false);
         delete old; //!
     }

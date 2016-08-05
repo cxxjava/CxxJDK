@@ -20,7 +20,6 @@ namespace efc {
  * <p> Applications that need to define a subclass of <code>InputStream</code>
  * must always provide a method that returns the next byte of input.
  *
- * @author  Arthur van Hoff
  * @version 1.52, 06/07/06
  * @see     java.io.BufferedInputStream
  * @see     java.io.ByteArrayInputStream
@@ -105,7 +104,7 @@ public:
      * @exception  IOException  if the stream does not support seek,
      * 				or if some other I/O error occurs.
      */
-    virtual llong skip(llong n) THROWS(EIOException);
+    virtual long skip(long n) THROWS(EIOException);
     
     /**
      * Returns an estimate of the number of bytes that can be read (or 
@@ -133,7 +132,7 @@ public:
      *             it reaches the end of the input stream.
      * @exception  IOException if an I/O error occurs.
      */
-    virtual int available() THROWS(EIOException);
+    virtual long available() THROWS(EIOException);
     
     /**
      * Closes this input stream and releases any system resources associated

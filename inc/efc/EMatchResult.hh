@@ -20,7 +20,6 @@ namespace efc {
  * groups and group boundaries can be seen but not modified through
  * a <code>MatchResult</code>.
  *
- * @author  Michael McCloskey
  * @version 1.6 11/17/05
  * @see Matcher
  * @since 1.5

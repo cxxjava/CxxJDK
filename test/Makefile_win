@@ -1,0 +1,74 @@
+################OPTION###################
+# release or debug
+VERTYPE=RELEASE
+
+KERNEL:=$(shell uname)
+LIBDIR = win
+
+CCOMPILE = cl.exe
+LINK = link.exe
+
+!if $(VERTYPE) == RELEASE
+COMPILEOPTION = -c /Zi /nologo /W3 /WX- /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Gd /analyze- -D_WINDOWS -D_MBCS -D_LIB -DES_DECLARE_EXPORT
+TESTEFC = testefc.exe
+TESTC11 = testc11.exe
+TESTNIO = testnio.exe
+TESTBON = testbon.exe
+!else
+COMPILEOPTION = -c /Zi /nologo /W3 /WX- /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Gd /analyze- -D_WINDOWS -D_MBCS -D_LIB -DES_DECLARE_EXPORT
+TESTEFC = testefc_r.exe
+TESTC11 = testc11_r.exe
+TESTNIO = testnio_r.exe
+TESTBON = testbon_r.exe
+!endif
+
+LINKOPTION = /NOLOGO /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86
+
+INCLUDEDIR = -I..\inc \
+	-I..\inc\comm \
+	-I..\inc\efc \
+	-I..\inc\efc\concurrent \
+	-I..\inc\efc\nio \
+	-I..\inc\libc \
+
+LIBDIRS = ..\lib\$(LIBDIR)\eso8.lib ..\lib\$(LIBDIR)\efc8.lib "Ws2_32.lib" "kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib"
+
+BASE_OBJS = main.obj \
+
+TESTEFC_OBJS = testefc.obj
+
+TESTC11_OBJS = testc11.obj
+
+TESTNIO_OBJS = testnio.obj
+
+TESTBON_OBJS = testbon.obj
+
+$(TESTEFC): $(BASE_OBJS) $(TESTEFC_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTEFC) $(LIBDIRS) $(BASE_OBJS) $(TESTEFC_OBJS)
+
+$(TESTC11): $(BASE_OBJS) $(TESTC11_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTC11) $(LIBDIRS) $(BASE_OBJS) $(TESTC11_OBJS) 
+
+$(TESTNIO): $(BASE_OBJS) $(TESTNIO_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTNIO) $(LIBDIRS) $(BASE_OBJS) $(TESTNIO_OBJS) 
+
+$(TESTBON): $(BASE_OBJS) $(TESTBON_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTBON) $(LIBDIRS) $(BASE_OBJS) $(TESTBON_OBJS) 
+
+clean: 
+	del $(BASE_OBJS)
+	del $(TESTEFC_OBJS) 
+	del $(TESTC11_OBJS) 
+	del $(TESTNIO_OBJS) 
+	del $(TESTBON_OBJS)
+
+all: clean $(TESTEFC) $(TESTC11) $(TESTNIO) $(TESTBON) clean
+.PRECIOUS:%.cpp %.c %.C
+.SUFFIXES:
+.SUFFIXES:  .cpp .obj
+
+.cpp.obj:
+	$(CCOMPILE) -c -Fo$* -o $*.obj $(COMPILEOPTION) $(INCLUDEDIR) $*.cpp
+
+.c.o:
+	$(CCOMPILE) -c -Fo$* -o $*.obj $(CCOMPILEOPTION) $(INCLUDEDIR) $*.c

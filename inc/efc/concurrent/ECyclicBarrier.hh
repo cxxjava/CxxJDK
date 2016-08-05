@@ -108,8 +108,6 @@ namespace efc {
  *
  * @since 1.5
  * @see CountDownLatch
- *
- * @author Doug Lea
  */
 
 class ECyclicBarrier: public EObject {
@@ -128,7 +126,7 @@ public:
 	 *        tripped, or {@code null} if there is no action
 	 * @throws IllegalArgumentException if {@code parties} is less than 1
 	 */
-	ECyclicBarrier(uint parties, ERunnable* barrierAction);
+	ECyclicBarrier(uint parties, sp<ERunnable> barrierAction);
 
 	/**
 	 * Creates a new <tt>CyclicBarrier</tt> that will trip when the
@@ -324,7 +322,7 @@ private:
 	/** The number of parties */
 	uint parties;
 	/* The command to run when tripped */
-	ERunnable *barrierCommand;
+	sp<ERunnable> barrierCommand;
 	/** The current generation */
 	sp<Generation> generation;// = new Generation();
 
@@ -338,7 +336,7 @@ private:
 	/**
 	 * init
 	 */
-	void init(uint parties, ERunnable* barrierAction);
+	void init(uint parties, sp<ERunnable> barrierAction);
 
 	/**
 	 * Updates state on barrier trip and wakes up everyone.

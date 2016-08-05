@@ -101,7 +101,6 @@ namespace efc {
  * its execution begins, perhaps in another thread.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 interface EExecutor : virtual public EObject {

@@ -20,6 +20,11 @@ public:
 
 	EBonParser(EInputStream* is);
 
+	// unsupported.
+	EBonParser(const EBonParser& that);
+	// unsupported.
+	EBonParser& operator= (const EBonParser& that);
+
 	boolean nextBon(EBon* bon) THROWS(EDataFormateException);
 
 	virtual void parsing(es_bon_node_t* node) {};

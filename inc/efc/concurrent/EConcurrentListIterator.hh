@@ -36,7 +36,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
  * @see Collection
  * @see List
  * @see Iterator

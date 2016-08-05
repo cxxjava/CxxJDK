@@ -29,7 +29,6 @@ namespace efc {
  *
  * @see Executor
  * @since 1.5
- * @author Doug Lea
  * @param <V> the result type of method <tt>call</tt>
  */
 

@@ -124,7 +124,6 @@ using namespace idhm;
  * @see     Map
  * @see     HashMap
  * @see     TreeMap
- * @author  Doug Lea and Josh Bloch
  * @since   1.4
  */
 
@@ -163,7 +162,11 @@ public:
 	 * Constructs a new, empty identity hash map with a default expected
 	 * maximum size (21).
 	 */
-	EIdentityHashMap(boolean autoFree=true) {
+	EIdentityHashMap() {
+		init(IHM_DEFAULT_CAPACITY, true);
+	}
+	explicit
+	EIdentityHashMap(boolean autoFree) {
 		init(IHM_DEFAULT_CAPACITY, autoFree);
 	}
 
@@ -176,13 +179,18 @@ public:
 	 * @param expectedMaxSize the expected maximum size of the map
 	 * @throws IllegalArgumentException if <tt>expectedMaxSize</tt> is negative
 	 */
-	EIdentityHashMap(int expectedMaxSize, boolean autoFree=true) {
+	explicit
+	EIdentityHashMap(int expectedMaxSize, boolean autoFree) {
 		if (expectedMaxSize < 0)
-			throw EIllegalArgumentException(
+			throw EIllegalArgumentException(__FILE__, __LINE__,
 					EString::formatOf("expectedMaxSize is negative: %d",
-							expectedMaxSize).c_str(), __FILE__, __LINE__);
+							expectedMaxSize).c_str());
 		init(capacity(expectedMaxSize), autoFree);
 	}
+
+	// TODO...
+	EIdentityHashMap(const EIdentityHashMap<K, V>& that);
+	EIdentityHashMap<K, V>& operator= (const EIdentityHashMap<K, V>& that);
 
 	/**
 	 * Returns the number of key-value mappings in this identity hash map.
@@ -491,7 +499,7 @@ public:
 
 	void setAutoFree(boolean autoFreeKey = true, boolean autoFreeValue = true) {
 		if (autoFreeKey != autoFreeValue) {
-			throw EIllegalArgumentException("Only support autoFreeKey==autoFreeValue.", __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, "Only support autoFreeKey==autoFreeValue.");
 		}
 		_autoFree = autoFreeKey;
 	}
@@ -667,8 +675,7 @@ private:
 		int oldLength = oldTable.length();
 		if (oldLength == 2 * IHM_MAXIMUM_CAPACITY) { // can't expand any further
 			if (threshold == IHM_MAXIMUM_CAPACITY - 1)
-				throw EIllegalStateException("Capacity exhausted.", __FILE__,
-						__LINE__);
+				throw EIllegalStateException(__FILE__, __LINE__, "Capacity exhausted.");
 			threshold = IHM_MAXIMUM_CAPACITY - 1;  // Gigantic map!
 			return;
 		}
@@ -804,6 +811,10 @@ private:
 		void remove() {
 			throw EToDoException(__FILE__, __LINE__);
 		}
+
+		T moveOut() {
+			throw EToDoException(__FILE__, __LINE__);
+		}
 	};
 
 	class KeyIterator : public IdentityHashMapIterator<K> {
@@ -843,7 +854,7 @@ private:
 
 			// Provide a better exception than out of bounds index
 			if (lastReturnedIndex < 0)
-				throw EIllegalStateException("Entry was removed", __FILE__, __LINE__);
+				throw EIllegalStateException(__FILE__, __LINE__, "Entry was removed");
 
 			return dynamic_cast<K>(unmaskNull((*traversalTable)[lastReturnedIndex]));
 		}
@@ -854,7 +865,7 @@ private:
 
 			// Provide a better exception than out of bounds index
 			if (lastReturnedIndex < 0)
-				throw EIllegalStateException("Entry was removed", __FILE__, __LINE__);
+				throw EIllegalStateException(__FILE__, __LINE__, "Entry was removed");
 
 			return dynamic_cast<V>((*traversalTable)[lastReturnedIndex+1]);
 		}
@@ -865,7 +876,7 @@ private:
 
 			// It would be mean-spirited to proceed here if remove() called
 			if (lastReturnedIndex < 0)
-				throw EIllegalStateException("Entry was removed", __FILE__, __LINE__);
+				throw EIllegalStateException(__FILE__, __LINE__, "Entry was removed");
 			V oldValue = dynamic_cast<V>((*traversalTable)[lastReturnedIndex+1]);
 			(*traversalTable)[lastReturnedIndex+1] = value;
 			// if shadowing, force into main table

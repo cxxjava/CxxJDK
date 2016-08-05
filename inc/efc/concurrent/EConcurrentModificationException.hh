@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ECONCURRENTMODIFICATIONEXCEPTION        EConcurrentModificationException(__FILE__, __LINE__, errno)
-#define ECONCURRENTMODIFICATIONEXCEPTIONS(msg)  EConcurrentModificationException(msg, __FILE__, __LINE__, errno)
+#define ECONCURRENTMODIFICATIONEXCEPTIONS(msg)  EConcurrentModificationException(__FILE__, __LINE__, msg)
 
 /**
  * This exception may be thrown by methods that have detected concurrent
@@ -44,7 +44,6 @@ namespace efc {
  * exception for its correctness: <i><tt>ConcurrentModificationException</tt>
  * should be used only to detect bugs.</i>
  *
- * @author  Josh Bloch
  * @see     Collection
  * @see     Iterator
  * @see     ListIterator
@@ -75,14 +74,42 @@ public:
 	 * Constructs an <code>EConcurrentModificationException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EConcurrentModificationException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-				ERuntimeException(s, _file_, _line_, errn) {
+	EConcurrentModificationException(const char *_file_, int _line_, const char *s, int errn = 0) :
+		ERuntimeException(_file_, _line_, s, errn) {
+	}
+
+	/**
+	 * Constructs an <code>EConcurrentModificationException</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EConcurrentModificationException(const char *_file_, int _line_, EThrowable* cause) :
+		ERuntimeException(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+	 * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EConcurrentModificationException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+		ERuntimeException(_file_, _line_, s, cause) {
 	}
 };
 

@@ -39,9 +39,6 @@ namespace efc {
  * <p>A <code>BitSet</code> is not safe for multithreaded use without
  * external synchronization.
  *
- * @author  Arthur van Hoff
- * @author  Michael McCloskey
- * @author  Martin Buchholz
  * @version 1.67, 04/07/06
  * @since   JDK1.0
  */
@@ -72,6 +69,11 @@ public:
      * if len==-1 then len=strlen(bitset).
      */
     EBitSet(const char *bitset, int len=-1);
+
+    /**
+     *
+     */
+    EBitSet& operator= (const EBitSet& that);
 
     /**
      * Sets the bit at the specified index to the complement of its
@@ -316,7 +318,7 @@ public:
      *
      * @return  a hash code value for this bit set.
      */
-    int hashCode();
+    virtual int hashCode();
 
     /**
      * Returns the number of bits of space actually in use by this
@@ -343,6 +345,7 @@ public:
      * @see     java.util.BitSet#size()
      */
     boolean equals(EBitSet *set);
+    virtual boolean equals(EObject* obj);
 
     /**
      * Cloning this <code>BitSet</code> produces a new <code>BitSet</code>
@@ -380,7 +383,7 @@ public:
      *
      * @return  a string representation of this bit set.
      */
-    EString toString();
+    virtual EStringBase toString();
     
 private:
     es_byte_t *_bits;

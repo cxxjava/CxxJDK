@@ -27,7 +27,6 @@ namespace efc {
  * and may also provide additional methods
  * and fields.
  *
- * @author  Jonathan Payne
  * @version 1.33, 04/07/06
  * @since   JDK1.0
  */
@@ -64,7 +63,7 @@ public:
      * <p>
      * This method simply performs <code>in.skip(n)</code>.
      */
-	virtual llong skip(llong n) THROWS(EIOException);
+	virtual long skip(long n) THROWS(EIOException);
 
     /**
      * Returns an estimate of the number of bytes that can be read (or
@@ -79,7 +78,7 @@ public:
      *             over) from this input stream without blocking.
      * @exception  IOException  if an I/O error occurs.
      */
-	virtual int available() THROWS(EIOException);
+	virtual long available() THROWS(EIOException);
 
     /**
      * Closes this input stream and releases any system resources 

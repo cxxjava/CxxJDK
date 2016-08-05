@@ -20,8 +20,12 @@ namespace efc {
 
 class ESimpleLock : virtual public ELock{
 public:
-	ESimpleLock(int flag=ES_THREAD_MUTEX_DEFAULT);
 	~ESimpleLock();
+	ESimpleLock(int flag=ES_THREAD_MUTEX_DEFAULT);
+
+	//TODO:
+	ESimpleLock(const ESimpleLock& that);
+	ESimpleLock& operator= (const ESimpleLock& that);
 
 	/**
 	 * Acquires the lock.

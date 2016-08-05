@@ -13,13 +13,12 @@
 namespace efc {
 
 #define EEMPTYSTACKEXCEPTION        EEmptyStackException(__FILE__, __LINE__, errno)
-#define EEMPTYSTACKEXCEPTIONS(msg)  EEmptyStackException(msg, __FILE__, __LINE__, errno)
+#define EEMPTYSTACKEXCEPTIONS(msg)  EEmptyStackException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown by methods in the <code>Stack</code> class to indicate
  * that the stack is empty.
  *
- * @author  Jonathan Payne
  * @see     java.util.Stack
  * @since   JDK1.0
  */
@@ -42,14 +41,13 @@ public:
 	 * Constructs an <code>EEmptyStackException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EEmptyStackException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-				ERuntimeException(s, _file_, _line_, errn) {
+	EEmptyStackException(const char *_file_,
+			int _line_, const char *s) :
+				ERuntimeException(_file_, _line_, s) {
 	}
 };
 

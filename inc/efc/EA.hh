@@ -12,7 +12,6 @@
 #include "EComparable.hh"
 #include "EIndexOutOfBoundsException.hh"
 #include "EIllegalArgumentException.hh"
-#include "EUnsupportedOperationException.hh"
 
 namespace efc {
 
@@ -28,7 +27,7 @@ namespace efc {
 //EObject
 
 template<typename E>
-class EA
+class EA : public EObject
 {
 public:
 	virtual ~EA() {
@@ -44,11 +43,9 @@ public:
 	EA(const EA<E>& that) : _autoFree(true) {
 		EA<E>* t = (EA<E>*)&that;
 
-		_length = t->length();
+		_length = t->_length;
 		_array = new E[_length];
-		for (int i = 0; i < _length; i++) {
-			_array[i] = t->getAt(i);
-		}
+		eso_memcpy(_array, t->_array, _length*sizeof(E));
 		this->setAutoFree(t->getAutoFree());
 		t->setAutoFree(false);
 	}
@@ -67,11 +64,9 @@ public:
 		delete[] _array;
 
 		//2.
-		_length = t->length();
+		_length = t->_length;
 		_array = new E[_length];
-		for (int i = 0; i < _length; i++) {
-			_array[i] = t->getAt(i);
-		}
+		eso_memcpy(_array, t->_array, _length*sizeof(E));
 		this->setAutoFree(t->getAutoFree());
 		t->setAutoFree(false);
 
@@ -243,17 +238,17 @@ private:
 		EString msg;
 		if (fromIndex > toIndex) {
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex);
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (fromIndex < 0) {
 			msg.format("fromIndex(%d)", fromIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 
 		if (toIndex > _length) {
 			msg.format("toIndex(%d)", toIndex);
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str());
 		}
 	}
 
@@ -288,7 +283,7 @@ private:
 //Primitive Types.
 
 #define EA_DECLARE(E) template<> \
-class EA<E> \
+class EA<E> : public EObject \
 { \
 public: \
 	virtual ~EA() { \
@@ -474,17 +469,17 @@ private: \
 		EString msg; \
 		if (fromIndex > toIndex) { \
 			msg.format("fromIndex(%d) > toIndex(%d)", fromIndex, toIndex); \
-			throw EIllegalArgumentException(msg.c_str(), __FILE__, __LINE__); \
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg.c_str()); \
 		} \
  \
 		if (fromIndex < 0) { \
 			msg.format("fromIndex(%d)", fromIndex); \
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__); \
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str()); \
 		} \
  \
 		if (toIndex > _length) { \
 			msg.format("toIndex(%d)", toIndex); \
-			throw EIndexOutOfBoundsException(msg.c_str(), __FILE__, __LINE__); \
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, msg.c_str()); \
 		} \
 	} \
  \

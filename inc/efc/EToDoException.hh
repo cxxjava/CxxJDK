@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ETODOEXCEPTION       EToDoException(__FILE__, __LINE__, errno)
-#define ETODOEXCEPTIONS(msg) EToDoException(msg, __FILE__, __LINE__, errno)
+#define ETODOEXCEPTIONS(msg) EToDoException(__FILE__, __LINE__, msg)
 
 /**
  * <code>EToDoException</code> means this need to do.
@@ -37,14 +37,12 @@ public:
 	 * Constructs an <code>EToDoException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EToDoException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EException(s, _file_, _line_, errn) {
+	EToDoException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EException(_file_, _line_, s, errn) {
 	}
 };
 

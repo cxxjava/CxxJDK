@@ -21,7 +21,6 @@ class TimerThread;
 /**
  * A task that can be scheduled for one-time or repeated execution by a Timer.
  *
- * @author  Josh Bloch
  * @see     Timer
  * @since   1.3
  */

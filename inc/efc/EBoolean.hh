@@ -25,7 +25,6 @@ namespace efc {
  * constants and methods useful when dealing with a
  * {@code boolean}.
  *
- * @author  Arthur van Hoff
  * @since   JDK1.0
  */
 
@@ -132,7 +131,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Returns a hash code for this {@code Boolean} object.
@@ -141,7 +140,7 @@ public:
 	 * {@code true}; returns the integer {@code 1237} if this
 	 * object represents {@code false}.
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Returns {@code true} if and only if the argument is not
@@ -153,6 +152,7 @@ public:
 	 *          same value; {@code false} otherwise.
 	 */
 	boolean equals(EBoolean* obj);
+	virtual boolean equals(EObject* obj);
 
 	/**
 	 * Compares this {@code Boolean} instance with another.
@@ -166,7 +166,7 @@ public:
 	 * @see     Comparable
 	 * @since  1.5
 	 */
-	int compareTo(EBoolean* b);
+	virtual int compareTo(EBoolean* b);
 
 private:
 	/**

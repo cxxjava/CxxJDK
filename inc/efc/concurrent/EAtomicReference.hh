@@ -18,17 +18,12 @@ namespace efc {
  * java.util.concurrent.atomic} package specification for description
  * of the properties of atomic variables.
  * @since 1.5
- * @author Doug Lea
  * @param <V> The type of object referred to by this reference
  */
 
 template<typename E>
 class EAtomicReference: public EObject {
 public:
-	virtual ~EAtomicReference() {
-		delete value; //free the last one!
-	}
-
 	/**
 	 * Creates a new AtomicReference with the given initial value.
 	 *
@@ -123,8 +118,8 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value.
 	 */
-	EString toString() {
-		return EString::valueOf((llong)get());
+	EStringBase toString() {
+		return EStringBase::valueOf((llong)get());
 	}
 
 public:

@@ -38,7 +38,6 @@ interface EExecutorService;
  * </ul>
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class EExecutors : public EObject {
@@ -326,7 +325,7 @@ public:
 	 * @throws NullPointerException if task null
 	 */
 	template<typename T>
-	static ECallable<T>* callable(sp<ERunnable> task, sp<T> result) {
+	static sp<ECallable<T> > callable(sp<ERunnable> task, sp<T> result) {
 		if (task == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		return new RunnableAdapter<T>(task, result);
@@ -432,7 +431,7 @@ protected:
 	public:
 		virtual ~DefaultThreadFactory();
 		DefaultThreadFactory();
-		EThread* newThread(ERunnable* r);
+		EThread* newThread(sp<ERunnable> r);
 	};
 
 private:

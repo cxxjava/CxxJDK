@@ -30,7 +30,6 @@ class EAtomicLLong;
  * <p>
  * Many applications will find the method {@link Math#random} simpler to use.
  *
- * @author  Frank Yellin
  * @since   1.0
  */
 class ERandom : public ESynchronizeable
@@ -60,6 +59,10 @@ public:
 	 */
 	ERandom(llong seed);
 
+	// unsupported.
+	ERandom(const ERandom& that);
+	ERandom& operator= (const ERandom& that);
+
 public:
 	/**
 	 * Sets the seed of this random number generator using a single
@@ -80,7 +83,7 @@ public:
 	 *
 	 * @param seed the initial seed
 	 */
-	synchronized void setSeed(llong seed);
+	virtual synchronized void setSeed(llong seed);
 
 	/**
 	 * Generates random bytes and places them into a user-supplied
@@ -101,7 +104,8 @@ public:
 	 * @throws NullPointerException if the byte array is null
 	 * @since  1.1
 	 */
-	void nextBytes(EA<byte>* bytes);
+	virtual void nextBytes(EA<byte>* bytes);
+	virtual void nextBytes(byte* bytes, int size);
 
 	/**
 	 * Returns the next pseudorandom, uniformly distributed {@code int}
@@ -121,7 +125,7 @@ public:
 	 * @return the next pseudorandom, uniformly distributed {@code int}
 	 *         value from this random number generator's sequence
 	 */
-	int nextInt();
+	virtual int nextInt();
 
 	/**
 	 * Returns a pseudorandom, uniformly distributed {@code int} value
@@ -178,7 +182,7 @@ public:
 	 * @exception IllegalArgumentException if n is not positive
 	 * @since 1.2
 	 */
-	int nextInt(int n);
+	virtual int nextInt(int n);
 
 	/**
 	 * Returns the next pseudorandom, uniformly distributed {@code long}
@@ -199,7 +203,7 @@ public:
 	 * @return the next pseudorandom, uniformly distributed {@code long}
 	 *         value from this random number generator's sequence
 	 */
-	llong nextLLong();
+	virtual llong nextLLong();
 
 	/**
 	 * Returns the next pseudorandom, uniformly distributed
@@ -221,7 +225,7 @@ public:
 	 *         sequence
 	 * @since 1.2
 	 */
-	boolean nextBoolean();
+	virtual boolean nextBoolean();
 
 	/**
 	 * Returns the next pseudorandom, uniformly distributed {@code float}
@@ -262,7 +266,7 @@ public:
 	 *         value between {@code 0.0} and {@code 1.0} from this
 	 *         random number generator's sequence
 	 */
-	float nextFloat();
+	virtual float nextFloat();
 
 	/**
 	 * Returns the next pseudorandom, uniformly distributed
@@ -303,7 +307,7 @@ public:
 	 *         random number generator's sequence
 	 * @see Math#random
 	 */
-	double nextDouble();
+	virtual double nextDouble();
 
 	/**
 	 * Returns the next pseudorandom, Gaussian ("normally") distributed
@@ -350,10 +354,10 @@ public:
 	 *         standard deviation {@code 1.0} from this random number
 	 *         generator's sequence
 	 */
-	synchronized double nextGaussian();
+	virtual synchronized double nextGaussian();
 
 protected:
-/**
+	/**
 	 * Generates the next pseudorandom number. Subclasses should
 	 * override this, as this is used by all other methods.
 	 *
@@ -378,12 +382,12 @@ protected:
 	 *         generator's sequence
 	 * @since  1.1
 	 */
-	int next(int bits);
+	virtual int next(int bits);
 
 private:
-	static const llong multiplier = 0x5DEECE6DL;
+	static const llong multiplier = 0x5DEECE66DL;
 	static const llong addend = 0xBL;
-	static const llong mask = (1L << 24) - 1;
+	static const llong mask = (1L << 48) - 1;
 
 	/**
 	 * The internal state associated with this pseudorandom number generator.

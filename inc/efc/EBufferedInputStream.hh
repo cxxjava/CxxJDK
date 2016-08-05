@@ -32,7 +32,6 @@ namespace efc {
  * reread before new bytes are  taken from
  * the contained input stream.
  *
- * @author  Arthur van Hoff
  * @since   JDK1.0
  */
 
@@ -53,6 +52,10 @@ public:
 	 * @exception IllegalArgumentException if size <= 0.
 	 */
 	EBufferedInputStream(EInputStream* in, int size=8192, boolean owned=false);
+
+	//TODO...
+	EBufferedInputStream(const EBufferedInputStream& that);
+	EBufferedInputStream& operator= (const EBufferedInputStream& that);
 
 	/**
 	 * See
@@ -116,7 +119,7 @@ public:
 	 *                          invoking its {@link #close()} method, or an
 	 *                          I/O error occurs.
 	 */
-	virtual synchronized llong skip(llong n) THROWS(EIOException);
+	virtual synchronized long skip(long n) THROWS(EIOException);
 
 	/**
 	 * Returns an estimate of the number of bytes that can be read (or
@@ -135,7 +138,7 @@ public:
 	 *                          invoking its {@link #close()} method,
 	 *                          or an I/O error occurs.
 	 */
-	virtual synchronized int available() THROWS(EIOException);
+	virtual synchronized long available() THROWS(EIOException);
 
 	/**
 	 * See the general contract of the <code>mark</code>
@@ -211,7 +214,7 @@ protected:
 	 * </code>contain buffered input data obtained
 	 * from the underlying  input stream.
 	 */
-	int count;
+	long count;
 
 	/**
 	 * The current position in the buffer. This is the index of the next
@@ -228,7 +231,7 @@ protected:
 	 *
 	 * @see     java.io.BufferedInputStream#buf
 	 */
-	int pos;
+	long pos;
 
 	/**
 	 * The value of the <code>pos</code> field at the time the last
@@ -257,7 +260,7 @@ protected:
 	 * @see     java.io.BufferedInputStream#mark(int)
 	 * @see     java.io.BufferedInputStream#pos
 	 */
-	int markpos;// = -1;
+	long markpos;// = -1;
 
 	/**
 	 * The maximum read ahead allowed after a call to the
@@ -271,7 +274,7 @@ protected:
 	 * @see     java.io.BufferedInputStream#mark(int)
 	 * @see     java.io.BufferedInputStream#reset()
 	 */
-	int marklimit;
+	long marklimit;
 
 private:
 	/**

@@ -80,7 +80,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
@@ -148,15 +147,15 @@ public:
 	public:
 		sp<K> key;
 		sp<V> value; //volatile?
-		sp<HashEntry> next;
+		sp<HashEntry> next; //volatile?
 		int hash;
 
 		~HashEntry() {
 			//
 		}
 
-		HashEntry(sp<K> key, int hash,
-				sp<HashEntry> next,
+		HashEntry(sp<K>& key, int hash,
+				sp<HashEntry>& next,
 				sp<V> value) {
 			this->key = key;
 			this->hash = hash;
@@ -297,7 +296,7 @@ public:
 			sp<V> v;
 			SYNCBLOCK(this) {
 				v = atomic_load(&e->value);
-			}}
+			}
 			return v;
 		}
 
@@ -365,7 +364,7 @@ public:
 					e->value = newValue;
 				}
 				rv = replaced;
-			}}
+			}
 
 			return rv;
 		}
@@ -384,12 +383,12 @@ public:
 					e->value = newValue;
 				}
 				rv = oldValue;
-			}}
+			}
 
 			return rv;
 		}
 
-		sp<V> put(sp<K> key, int hash, sp<V> value, boolean onlyIfAbsent) {
+		sp<V> put(sp<K>& key, int hash, sp<V>& value, boolean onlyIfAbsent) {
 			SYNCBLOCK(this) {
 				int c = count;
 				if (c++ > threshold) // ensure capacity
@@ -416,7 +415,7 @@ public:
 				}
 				DELRC(tab);
 				return oldValue;
-			}}
+			}
 		}
 
 		void rehash() {
@@ -455,7 +454,7 @@ public:
 
 					//  Single node on list
 					if (next == null)
-						newTable->atomicSet(idx, e);
+						(*newTable)[idx] = e;
 
 					else {
 						// Reuse trailing consecutive sequence at same slot
@@ -470,14 +469,14 @@ public:
 								lastRun = last;
 							}
 						}
-						newTable->atomicSet(lastIdx, lastRun);
+						(*newTable)[lastIdx] = lastRun;
 
 						// Clone all remaining nodes
 						for (sp<HashEntry> p = e; p != lastRun; p = p->next) {
 							int k = p->hash & sizeMask;
-							sp<HashEntry> n = newTable->atomicGet(k);
+							sp<HashEntry> n = (*newTable)[k];
 							sp<HashEntry> newEntry(new HashEntry(p->key, p->hash, n, atomic_load(&p->value)));
-							newTable->atomicSet(k, newEntry);
+							(*newTable)[k] = newEntry;
 						}
 					}
 				}
@@ -524,7 +523,7 @@ public:
 				}
 				rv = oldValue;
 				DELRC(tab);
-			}}
+			}
 
 			return rv;
 		}
@@ -540,7 +539,7 @@ public:
 					++modCount;
 					count = 0; // write-volatile
 					DELRC(tab);
-				}}
+				}
 			}
 		}
 	};
@@ -658,7 +657,7 @@ public:
 		 * @param key the key represented by this entry
 		 * @param value the value represented by this entry
 		 */
-		WriteThroughEntry(sp<K> key, sp<V> value,
+		WriteThroughEntry(sp<K>& key, sp<V>& value,
 				EConcurrentHashMap<K, V>* chm) : chm(chm) {
 			this->key = key;
 			this->value = value;
@@ -936,10 +935,12 @@ public:
 		int* mc = new int[segments->length()]();
 		int mcsum = 0;
 		for (int i = 0; i < segments->length(); ++i) {
-			if ((*segments)[i]->count != 0)
+			if ((*segments)[i]->count != 0) {
+				delete[] mc;
 				return false;
-			else
+			} else {
 				mcsum += mc[i] = (*segments)[i]->modCount;
+			}
 		}
 		// If mcsum happens to be zero, then we know we got a snapshot
 		// before any modifications at all were made.  This is
@@ -947,9 +948,10 @@ public:
 		if (mcsum != 0) {
 			for (int i = 0; i < segments->length(); ++i) {
 				if ((*segments)[i]->count != 0 ||
-					mc[i] != (*segments)[i]->modCount)
+					mc[i] != (*segments)[i]->modCount) {
 					delete[] mc;
 					return false;
+				}
 			}
 		}
 		delete[] mc;

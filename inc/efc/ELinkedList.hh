@@ -14,6 +14,7 @@
 #include "EAbstractList.hh"
 #include "ENoSuchElementException.hh"
 #include "EIndexOutOfBoundsException.hh"
+#include "EIllegalStateException.hh"
 
 namespace efc {
 
@@ -72,7 +73,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
  * @version 1.67, 04/21/06
  * @see	    List
  * @see	    ArrayList
@@ -95,17 +95,17 @@ public:
 	 * Constructs an empty list.
 	 */
 	ELinkedList(boolean autoFree = true) : _autoFree(autoFree), listSize(0) {
-		header = new Entry<E>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 	}
 
     ELinkedList(const ELinkedList<E>& that) : listSize(0) {
     	ELinkedList<E>* t = (ELinkedList<E>*)&that;
 
-		header = new Entry<E>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<E> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -125,10 +125,10 @@ public:
 		delete header;
 
 		//2.
-		header = new Entry<E>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<E> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -271,7 +271,7 @@ public:
 	 * @return <tt>true</tt> if this list contained the specified element
 	 */
 	virtual boolean remove(E o) {
-		for (Entry<E> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (e->elem->equals(o)) {
 				E v = remove(e);
 				if (_autoFree && v) {
@@ -287,9 +287,9 @@ public:
 	 * Removes all of the elements from this list.
 	 */
 	virtual void clear() {
-		Entry<E> *e = header->next;
+		Entry *e = header->next;
 		while (e != header) {
-			Entry<E> *next = e->next;
+			Entry *next = e->next;
 			if (_autoFree && e) {
 				delete e->elem;
 			}
@@ -323,7 +323,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
 	virtual E setAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
-        Entry<E> *e = entry(index);
+		Entry *e = entry(index);
         E oldVal = e->elem;
         e->elem = element;
         return oldVal;
@@ -370,7 +370,7 @@ public:
 	 */
 	virtual int indexOf(E o) {
 		int index = 0;
-		for (Entry<E> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (o->equals(e->elem))
 				return index;
 			index++;
@@ -391,7 +391,7 @@ public:
 	 */
 	virtual int lastIndexOf(E o) {
 		int index = listSize;
-		for (Entry<E> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			index--;
 			if (o->equals(e->elem))
 				return index;
@@ -577,7 +577,7 @@ public:
 	 * @since 1.6
 	 */
 	virtual boolean removeLastOccurrence(E o) {
-		for (Entry<E> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			if (o->equals(e->elem)) {
 				remove(e);
 				return true;
@@ -608,15 +608,40 @@ public:
 	 * @see List#listIterator(int)
 	 */
 	virtual EIterator<E>* iterator(int index = 0) {
-		return EAbstractList<E>::iterator(index);
+		return new ListItr(this, index);
 	}
 
-	virtual boolean isEmpty() {
-		return listSize==0;
+	/**
+	 * Returns a list-iterator of the elements in this list (in proper
+	 * sequence), starting at the specified position in the list.
+	 * Obeys the general contract of {@code List.listIterator(int)}.<p>
+	 *
+	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
+	 * modified at any time after the Iterator is created, in any way except
+	 * through the list-iterator's own {@code remove} or {@code add}
+	 * methods, the list-iterator will throw a
+	 * {@code ConcurrentModificationException}.  Thus, in the face of
+	 * concurrent modification, the iterator fails quickly and cleanly, rather
+	 * than risking arbitrary, non-deterministic behavior at an undetermined
+	 * time in the future.
+	 *
+	 * @param index index of the first element to be returned from the
+	 *              list-iterator (by a call to {@code next})
+	 * @return a ListIterator of the elements in this list (in proper
+	 *         sequence), starting at the specified position in the list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 * @see List#listIterator(int)
+	 */
+	virtual EListIterator<E>* listIterator(int index = 0) {
+		return new ListItr(this, index);
 	}
 
 	virtual EIterator<E>* descendingIterator() {
 		return null;
+	}
+
+	virtual boolean isEmpty() {
+		return listSize==0;
 	}
 
 	/**
@@ -629,22 +654,21 @@ public:
 		ELinkedList<E>* ll = new ELinkedList<E>(false);
 
 		// Initialize clone with our elements
-		for (Entry<E>* x = header->next; x != header; x = x->next)
+		for (Entry* x = header->next; x != header; x = x->next)
 			ll->add(x->elem);
 
 		return ll;
 	}
 
 private:
-	template<typename _TELinkedListEntry>
 	class Entry {
 	public:
 		E elem;
-		Entry<_TELinkedListEntry> *next;
-		Entry<_TELinkedListEntry> *prev;
+		Entry *next;
+		Entry *prev;
 
-		Entry(_TELinkedListEntry element, Entry<_TELinkedListEntry> *next,
-				Entry<_TELinkedListEntry> *previous) {
+		Entry(E element, Entry *next,
+				Entry *previous) {
 			this->elem = element;
 			this->next = next;
 			this->prev = previous;
@@ -654,13 +678,116 @@ private:
 		}
 	};
 
-	Entry<E> *header;
+	class ListItr : public EListIterator<E> {
+	private:
+		ELinkedList<E>* self;
+
+		Entry* lastReturned;
+		Entry* next_;
+        int nextIndex_;
+	public:
+        ListItr(ELinkedList<E>* list, int index) : self(list), lastReturned(null), next_(null) {
+            // assert isPositionIndex(index);
+        	if (index < 0 || index > self->listSize)
+				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
+
+        	next_ = (index == self->listSize) ? null : self->entry(index);
+        	nextIndex_ = index;
+        }
+
+        boolean hasNext() {
+            return nextIndex_ < self->listSize;
+        }
+
+        E next() {
+            if (!hasNext())
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            lastReturned = next_;
+            next_ = next_->next;
+            nextIndex_++;
+            return lastReturned->elem;
+        }
+
+        boolean hasPrevious() {
+            return nextIndex_ > 0;
+        }
+
+        E previous() {
+            if (!hasPrevious())
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
+            nextIndex_--;
+            return lastReturned->elem;
+        }
+
+        int nextIndex() {
+            return nextIndex_;
+        }
+
+        int previousIndex() {
+            return nextIndex_ - 1;
+        }
+
+        void remove() {
+            if (lastReturned == null)
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            Entry* lastNext = lastReturned->next;
+            E v = self->remove(lastReturned);
+            if (self->getAutoFree() && v) {
+				delete v;
+			}
+            if (next_ == lastReturned)
+            	next_ = lastNext;
+            else
+            	nextIndex_--;
+            lastReturned = null;
+        }
+
+        E moveOut() {
+        	if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			E v = self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+			return v;
+		}
+
+        void set(E e) {
+            if (lastReturned == null)
+                throw EIllegalStateException(__FILE__, __LINE__);
+            E v = lastReturned->elem;
+            if (self->getAutoFree() && v) {
+				delete v;
+			}
+            lastReturned->elem = e;
+        }
+
+        void add(E e) {
+            lastReturned = null;
+            if (next_ == null)
+            	self->addLast(e);
+            else
+            	self->addBefore(e, next_);
+            nextIndex_++;
+        }
+    };
+
+	Entry *header;
 	boolean _autoFree;
 	int listSize;
 
-	Entry<E>* addBefore(E e,
-			Entry<E> *entry) {
-		Entry<E> *newEntry = new Entry<E>(e, entry,
+	Entry* addBefore(E e,
+			Entry *entry) {
+		Entry *newEntry = new Entry(e, entry,
 				entry->prev);
 		newEntry->prev->next = newEntry;
 		newEntry->next->prev = newEntry;
@@ -668,7 +795,7 @@ private:
 		return newEntry;
 	}
 
-	E remove(Entry<E> *e) {
+	E remove(Entry *e) {
 		if (e == header)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 
@@ -684,12 +811,11 @@ private:
 	/**
 	 * Returns the indexed entry.
 	 */
-	Entry<E>* entry(int index) {
+	Entry* entry(int index) {
 		if (index < 0 || index >= listSize)
-			throw EIndexOutOfBoundsException(
-					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str(),
-					__FILE__, __LINE__);
-		Entry<E> *e = header;
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str());
+		Entry *e = header;
 		if (index < (listSize >> 1)) {
 			for (int i = 0; i <= index; i++)
 				e = e->next;
@@ -717,17 +843,17 @@ public:
 	 * Constructs an empty list.
 	 */
 	ELinkedList() : listSize(0) {
-		header = new Entry<int>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 	}
 
     ELinkedList(const ELinkedList<int>& that) : listSize(0) {
     	ELinkedList<int>* t = (ELinkedList<int>*)&that;
 
-		header = new Entry<int>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<int> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -744,10 +870,10 @@ public:
 		delete header;
 
 		//2.
-		header = new Entry<int>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<int> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -879,7 +1005,7 @@ public:
 	 * @return <tt>true</tt> if this list contained the specified element
 	 */
 	virtual boolean remove(int o) {
-		for (Entry<int> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (e->elem == (o)) {
 				remove(e);
 				return true;
@@ -892,9 +1018,9 @@ public:
 	 * Removes all of the elements from this list.
 	 */
 	virtual void clear() {
-		Entry<int> *e = header->next;
+		Entry *e = header->next;
 		while (e != header) {
-			Entry<int> *next = e->next;
+			Entry *next = e->next;
 			delete e;
 			e = next;
 		}
@@ -925,7 +1051,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
 	virtual int setAt(int index, int element) THROWS(EIndexOutOfBoundsException) {
-        Entry<int> *e = entry(index);
+		Entry *e = entry(index);
         int oldVal = e->elem;
         e->elem = element;
         return oldVal;
@@ -972,7 +1098,7 @@ public:
 	 */
 	virtual int indexOf(int o) {
 		int index = 0;
-		for (Entry<int> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (o == (e->elem))
 				return index;
 			index++;
@@ -993,7 +1119,7 @@ public:
 	 */
 	virtual int lastIndexOf(int o) {
 		int index = listSize;
-		for (Entry<int> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			index--;
 			if (o == (e->elem))
 				return index;
@@ -1179,7 +1305,7 @@ public:
 	 * @since 1.6
 	 */
 	virtual boolean removeLastOccurrence(int o) {
-		for (Entry<int> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			if (o == (e->elem)) {
 				remove(e);
 				return true;
@@ -1210,15 +1336,40 @@ public:
 	 * @see List#listIterator(int)
 	 */
 	virtual EIterator<int>* iterator(int index = 0) {
-		return EAbstractList<int>::iterator(index);
+		return new ListItr(this, index);
 	}
 
-	virtual boolean isEmpty() {
-		return listSize==0;
+	/**
+	 * Returns a list-iterator of the elements in this list (in proper
+	 * sequence), starting at the specified position in the list.
+	 * Obeys the general contract of {@code List.listIterator(int)}.<p>
+	 *
+	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
+	 * modified at any time after the Iterator is created, in any way except
+	 * through the list-iterator's own {@code remove} or {@code add}
+	 * methods, the list-iterator will throw a
+	 * {@code ConcurrentModificationException}.  Thus, in the face of
+	 * concurrent modification, the iterator fails quickly and cleanly, rather
+	 * than risking arbitrary, non-deterministic behavior at an undetermined
+	 * time in the future.
+	 *
+	 * @param index index of the first element to be returned from the
+	 *              list-iterator (by a call to {@code next})
+	 * @return a ListIterator of the elements in this list (in proper
+	 *         sequence), starting at the specified position in the list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 * @see List#listIterator(int)
+	 */
+	virtual EListIterator<int>* listIterator(int index = 0) {
+		return new ListItr(this, index);
 	}
 
 	virtual EIterator<int>* descendingIterator() {
 		return null;
+	}
+
+	virtual boolean isEmpty() {
+		return listSize==0;
 	}
 
 	/**
@@ -1231,22 +1382,21 @@ public:
 		ELinkedList<int>* ll = new ELinkedList<int>();
 
 		// Initialize clone with our elements
-		for (Entry<int>* x = header->next; x != header; x = x->next)
+		for (Entry* x = header->next; x != header; x = x->next)
 			ll->add(x->elem);
 
 		return ll;
 	}
 
 private:
-	template<typename _TELinkedListEntry>
 	class Entry {
 	public:
 		int elem;
-		Entry<_TELinkedListEntry> *next;
-		Entry<_TELinkedListEntry> *prev;
+		Entry *next;
+		Entry *prev;
 
-		Entry(_TELinkedListEntry element, Entry<_TELinkedListEntry> *next,
-				Entry<_TELinkedListEntry> *previous) {
+		Entry(int element, Entry *next,
+				Entry *previous) {
 			this->elem = element;
 			this->next = next;
 			this->prev = previous;
@@ -1256,12 +1406,108 @@ private:
 		}
 	};
 
-	Entry<int> *header;
+	class ListItr : public EListIterator<int> {
+	private:
+		ELinkedList<int>* self;
+
+		Entry* lastReturned;
+		Entry* next_;
+		int nextIndex_;
+	public:
+		ListItr(ELinkedList<int>* list, int index) : self(list), lastReturned(null), next_(null) {
+			// assert isPositionIndex(index);
+			if (index < 0 || index > self->listSize)
+				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
+
+			next_ = (index == self->listSize) ? null : self->entry(index);
+			nextIndex_ = index;
+		}
+
+		boolean hasNext() {
+			return nextIndex_ < self->listSize;
+		}
+
+		int next() {
+			if (!hasNext())
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			lastReturned = next_;
+			next_ = next_->next;
+			nextIndex_++;
+			return lastReturned->elem;
+		}
+
+		boolean hasPrevious() {
+			return nextIndex_ > 0;
+		}
+
+		int previous() {
+			if (!hasPrevious())
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
+			nextIndex_--;
+			return lastReturned->elem;
+		}
+
+		int nextIndex() {
+			return nextIndex_;
+		}
+
+		int previousIndex() {
+			return nextIndex_ - 1;
+		}
+
+		void remove() {
+			if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+		}
+
+		int moveOut() {
+			if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			int v = self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+			return v;
+		}
+
+		void set(int e) {
+			if (lastReturned == null)
+				throw EIllegalStateException(__FILE__, __LINE__);
+			lastReturned->elem = e;
+		}
+
+		void add(int e) {
+			lastReturned = null;
+			if (next_ == null)
+				self->addLast(e);
+			else
+				self->addBefore(e, next_);
+			nextIndex_++;
+		}
+	};
+
+	Entry *header;
 	int listSize;
 
-	Entry<int>* addBefore(int e,
-			Entry<int> *entry) {
-		Entry<int> *newEntry = new Entry<int>(e, entry,
+	Entry* addBefore(int e,
+			Entry *entry) {
+		Entry *newEntry = new Entry(e, entry,
 				entry->prev);
 		newEntry->prev->next = newEntry;
 		newEntry->next->prev = newEntry;
@@ -1269,7 +1515,7 @@ private:
 		return newEntry;
 	}
 
-	int remove(Entry<int> *e) {
+	int remove(Entry *e) {
 		if (e == header)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 
@@ -1285,12 +1531,11 @@ private:
 	/**
 	 * Returns the indexed entry.
 	 */
-	Entry<int>* entry(int index) {
+	Entry* entry(int index) {
 		if (index < 0 || index >= listSize)
-			throw EIndexOutOfBoundsException(
-					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str(),
-					__FILE__, __LINE__);
-		Entry<int> *e = header;
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str());
+		Entry *e = header;
 		if (index < (listSize >> 1)) {
 			for (int i = 0; i <= index; i++)
 				e = e->next;
@@ -1318,17 +1563,17 @@ public:
 	 * Constructs an empty list.
 	 */
 	ELinkedList() : listSize(0) {
-		header = new Entry<llong>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 	}
 
     ELinkedList(const ELinkedList<llong>& that) : listSize(0) {
 		ELinkedList<llong>* t = (ELinkedList<llong>*)&that;
 
-		header = new Entry<llong>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<llong> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -1345,10 +1590,10 @@ public:
 		delete header;
 
 		//2.
-		header = new Entry<llong>(0, null, null);
+		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 
-		Entry<llong> *e = t->header->next;
+		Entry *e = t->header->next;
 		while (e != t->header) {
 			add(e->elem);
 			e = e->next;
@@ -1480,7 +1725,7 @@ public:
 	 * @return <tt>true</tt> if this list contained the specified element
 	 */
 	virtual boolean remove(llong o) {
-		for (Entry<llong> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (e->elem == (o)) {
 				remove(e);
 				return true;
@@ -1493,9 +1738,9 @@ public:
 	 * Removes all of the elements from this list.
 	 */
 	virtual void clear() {
-		Entry<llong> *e = header->next;
+		Entry *e = header->next;
 		while (e != header) {
-			Entry<llong> *next = e->next;
+			Entry *next = e->next;
 			delete e;
 			e = next;
 		}
@@ -1526,7 +1771,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
 	virtual llong setAt(int index, llong element) THROWS(EIndexOutOfBoundsException) {
-        Entry<llong> *e = entry(index);
+        Entry *e = entry(index);
         llong oldVal = e->elem;
         e->elem = element;
         return oldVal;
@@ -1573,7 +1818,7 @@ public:
 	 */
 	virtual int indexOf(llong o) {
 		int index = 0;
-		for (Entry<llong> *e = header->next; e != header; e = e->next) {
+		for (Entry *e = header->next; e != header; e = e->next) {
 			if (o == (e->elem))
 				return index;
 			index++;
@@ -1594,7 +1839,7 @@ public:
 	 */
 	virtual int lastIndexOf(llong o) {
 		int index = listSize;
-		for (Entry<llong> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			index--;
 			if (o == (e->elem))
 				return index;
@@ -1780,7 +2025,7 @@ public:
 	 * @since 1.6
 	 */
 	virtual boolean removeLastOccurrence(llong o) {
-		for (Entry<llong> *e = header->prev; e != header; e = e->prev) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
 			if (o == (e->elem)) {
 				remove(e);
 				return true;
@@ -1811,15 +2056,40 @@ public:
 	 * @see List#listIterator(int)
 	 */
 	virtual EIterator<llong>* iterator(int index = 0) {
-		return EAbstractList<llong>::iterator(index);
+		return new ListItr(this, index);
 	}
 
-	virtual boolean isEmpty() {
-		return listSize==0;
+	/**
+	 * Returns a list-iterator of the elements in this list (in proper
+	 * sequence), starting at the specified position in the list.
+	 * Obeys the general contract of {@code List.listIterator(int)}.<p>
+	 *
+	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
+	 * modified at any time after the Iterator is created, in any way except
+	 * through the list-iterator's own {@code remove} or {@code add}
+	 * methods, the list-iterator will throw a
+	 * {@code ConcurrentModificationException}.  Thus, in the face of
+	 * concurrent modification, the iterator fails quickly and cleanly, rather
+	 * than risking arbitrary, non-deterministic behavior at an undetermined
+	 * time in the future.
+	 *
+	 * @param index index of the first element to be returned from the
+	 *              list-iterator (by a call to {@code next})
+	 * @return a ListIterator of the elements in this list (in proper
+	 *         sequence), starting at the specified position in the list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 * @see List#listIterator(int)
+	 */
+	virtual EListIterator<llong>* listIterator(int index = 0) {
+		return new ListItr(this, index);
 	}
 
 	virtual EIterator<llong>* descendingIterator() {
 		return null;
+	}
+
+	virtual boolean isEmpty() {
+		return listSize==0;
 	}
 
 	/**
@@ -1832,22 +2102,21 @@ public:
 		ELinkedList<llong>* ll = new ELinkedList<llong>();
 
 		// Initialize clone with our elements
-		for (Entry<llong>* x = header->next; x != header; x = x->next)
+		for (Entry* x = header->next; x != header; x = x->next)
 			ll->add(x->elem);
 
 		return ll;
 	}
 
 private:
-	template<typename _TELinkedListEntry>
 	class Entry {
 	public:
 		llong elem;
-		Entry<_TELinkedListEntry> *next;
-		Entry<_TELinkedListEntry> *prev;
+		Entry *next;
+		Entry *prev;
 
-		Entry(_TELinkedListEntry element, Entry<_TELinkedListEntry> *next,
-				Entry<_TELinkedListEntry> *previous) {
+		Entry(llong element, Entry *next,
+				Entry *previous) {
 			this->elem = element;
 			this->next = next;
 			this->prev = previous;
@@ -1857,12 +2126,108 @@ private:
 		}
 	};
 
-	Entry<llong> *header;
+	class ListItr : public EListIterator<llong> {
+	private:
+		ELinkedList<llong>* self;
+
+		Entry* lastReturned;
+		Entry* next_;
+		int nextIndex_;
+	public:
+		ListItr(ELinkedList<llong>* list, int index) : self(list), lastReturned(null), next_(null) {
+			// assert isPositionIndex(index);
+			if (index < 0 || index > self->listSize)
+				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
+
+			next_ = (index == self->listSize) ? null : self->entry(index);
+			nextIndex_ = index;
+		}
+
+		boolean hasNext() {
+			return nextIndex_ < self->listSize;
+		}
+
+		llong next() {
+			if (!hasNext())
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			lastReturned = next_;
+			next_ = next_->next;
+			nextIndex_++;
+			return lastReturned->elem;
+		}
+
+		boolean hasPrevious() {
+			return nextIndex_ > 0;
+		}
+
+		llong previous() {
+			if (!hasPrevious())
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
+			nextIndex_--;
+			return lastReturned->elem;
+		}
+
+		int nextIndex() {
+			return nextIndex_;
+		}
+
+		int previousIndex() {
+			return nextIndex_ - 1;
+		}
+
+		void remove() {
+			if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+		}
+
+		llong moveOut() {
+			if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			llong v = self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+			return v;
+		}
+
+		void set(llong e) {
+			if (lastReturned == null)
+				throw EIllegalStateException(__FILE__, __LINE__);
+			lastReturned->elem = e;
+		}
+
+		void add(llong e) {
+			lastReturned = null;
+			if (next_ == null)
+				self->addLast(e);
+			else
+				self->addBefore(e, next_);
+			nextIndex_++;
+		}
+	};
+
+	Entry *header;
 	int listSize;
 
-	Entry<llong>* addBefore(llong e,
-			Entry<llong> *entry) {
-		Entry<llong> *newEntry = new Entry<llong>(e, entry,
+	Entry* addBefore(llong e,
+			Entry *entry) {
+		Entry *newEntry = new Entry(e, entry,
 				entry->prev);
 		newEntry->prev->next = newEntry;
 		newEntry->next->prev = newEntry;
@@ -1870,7 +2235,7 @@ private:
 		return newEntry;
 	}
 
-	llong remove(Entry<llong> *e) {
+	llong remove(Entry *e) {
 		if (e == header)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 
@@ -1886,12 +2251,11 @@ private:
 	/**
 	 * Returns the indexed entry.
 	 */
-	Entry<llong>* entry(int index) {
+	Entry* entry(int index) {
 		if (index < 0 || index >= listSize)
-			throw EIndexOutOfBoundsException(
-					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str(),
-					__FILE__, __LINE__);
-		Entry<llong> *e = header;
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str());
+		Entry *e = header;
 		if (index < (listSize >> 1)) {
 			for (int i = 0; i <= index; i++)
 				e = e->next;

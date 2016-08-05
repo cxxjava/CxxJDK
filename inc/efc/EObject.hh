@@ -2,6 +2,7 @@
 #define __EObject_H__
 
 #include "EBase.hh"
+#include "EStringBase.hh"
 
 namespace efc {
 
@@ -82,6 +83,37 @@ instanceof(T &object)
 {
     return dynamic_cast<Class const *>(&object) ? true : false;
 }
+
+//=============================================================================
+
+//@see: STL iterator traits && http://blog.csdn.net/xuqingict/article/details/38453929
+
+template<class T>
+struct ETraits
+{
+    typedef typename T::valueType valueType;
+    typedef typename T::differenceType differenceType;
+    typedef typename T::pointer pointer;
+    typedef typename T::reference reference;
+};
+
+template<class T>
+struct ETraits<T*>
+{
+    typedef T valueType;
+    typedef ptrdiff_t differenceType;
+    typedef T* pointer;
+    typedef T & reference;
+};
+
+template<class T>
+struct ETraits<const T*>
+{
+    typedef T valueType;
+    typedef ptrdiff_t differenceType;
+    typedef const T* pointer;
+    typedef const T & reference;
+};
 
 //=============================================================================
 
@@ -175,6 +207,29 @@ public:
 	 * @see     java.util.Hashtable
 	 */
 	virtual boolean equals(EObject* obj);
+
+	/**
+	 * Returns a string representation of the object. In general, the
+	 * {@code toString} method returns a string that
+	 * "textually represents" this object. The result should
+	 * be a concise but informative representation that is easy for a
+	 * person to read.
+	 * It is recommended that all subclasses override this method.
+	 * <p>
+	 * The {@code toString} method for class {@code Object}
+	 * returns a string consisting of the name of the class of which the
+	 * object is an instance, the at-sign character `{@code @}', and
+	 * the unsigned hexadecimal representation of the hash code of the
+	 * object. In other words, this method returns a string equal to the
+	 * value of:
+	 * <blockquote>
+	 * <pre>
+	 * getClass().getName() + '@' + Integer.toHexString(hashCode())
+	 * </pre></blockquote>
+	 *
+	 * @return  a string representation of the object.
+	 */
+	virtual EStringBase toString();
 };
 
 } /* namespace efc */

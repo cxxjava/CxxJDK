@@ -2,7 +2,7 @@
  * EConfig.hh
  *
  *  Created on: 2013-3-23
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ECONFIG_HH_
@@ -29,6 +29,10 @@ public:
 	 * Default to load from config file.
 	 */
 	EConfig(const char *file) THROWS(EIOException);
+
+	// unsupported.
+	EConfig(const EConfig& that);
+	EConfig& operator= (const EConfig& that);
 
 	/**
 	 * Load from config file or stream.
@@ -92,7 +96,7 @@ public:
 	 */
 	const char* getName();
 
-	EString toString();
+	EStringBase toString();
 
 private:
 	ESimpleMap* m_vmap; //key = values

@@ -75,8 +75,6 @@ namespace efc {
  *
  * @param <T> the type of objects that may be compared by this comparator
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.26, 04/21/06
  * @see Comparable
  * @see java.io.Serializable

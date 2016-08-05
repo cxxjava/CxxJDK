@@ -27,6 +27,10 @@ public:
 	 */
 	EGZIPInputStream(EInputStream* in, int size = 512) THROWS(EIOException);
 
+	//TODO:
+	EGZIPInputStream(const EGZIPInputStream& that);
+	EGZIPInputStream& operator= (const EGZIPInputStream& that);
+
 	/**
 	 * Reads uncompressed data into an array of bytes. If <code>len</code> is not
 	 * zero, the method will block until some input can be decompressed; otherwise,

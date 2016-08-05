@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EFILENOTFOUNDEXCEPTION        EFileNotFoundException(__FILE__, __LINE__, errno)
-#define EFILENOTFOUNDEXCEPTIONS(msg)  EFileNotFoundException(msg, __FILE__, __LINE__, errno)
+#define EFILENOTFOUNDEXCEPTIONS(msg)  EFileNotFoundException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that an attempt to open the file denoted by a specified pathname
@@ -44,14 +44,13 @@ public:
 	 * Constructs an <code>EFileNotFoundException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EFileNotFoundException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EIOException(s, _file_, _line_, errn) {
+	EFileNotFoundException(const char *_file_,
+			int _line_, const char *s) :
+			EIOException(_file_, _line_, s) {
 	}
 };
 

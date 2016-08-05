@@ -16,7 +16,7 @@ interface ESimpleEnumeration : virtual public EObject
 	virtual ~ESimpleEnumeration() {}
 
 	//Tests if this enumeration contains more elements.
-	virtual es_bool_t       hasMoreElements() = 0;
+	virtual boolean       hasMoreElements() = 0;
 	//Returns the next element of this enumeration if this enumeration object has at least one more element to provide.
 	virtual void            nextElement(void* element) = 0;
 	virtual EObject*        nextElement() = 0;

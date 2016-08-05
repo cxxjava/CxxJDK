@@ -25,7 +25,6 @@ namespace efc {
  * this class can be called after the stream has been closed without
  * generating an <tt>IOException</tt>.
  *
- * @author  Arthur van Hoff
  * @version 1.47, 11/17/05
  * @see     java.io.StringBufferInputStream
  * @since   JDK1.0
@@ -49,6 +48,10 @@ public:
      */
     EByteArrayInputStream(void *buf, int len);
 	
+    //TODO...
+    EByteArrayInputStream(const EByteArrayInputStream& that);
+    EByteArrayInputStream& operator= (const EByteArrayInputStream& that);
+
 	/**
      * Reads some number of bytes from the input stream and stores them into
      * the buffer array <code>b</code>. The number of bytes actually read is
@@ -95,7 +98,7 @@ public:
      * @param   n   the number of bytes to be skipped.
      * @return  the actual number of bytes skipped.
      */
-    virtual synchronized llong skip(llong n);
+    virtual synchronized long skip(long n);
     
     /**
      * Returns the number of remaining bytes that can be read (or skipped over)
@@ -107,7 +110,7 @@ public:
      * @return  the number of remaining bytes that can be read (or skipped
      *          over) from this input stream without blocking.
      */
-    virtual synchronized int available();
+    virtual synchronized long available();
 
 protected:   
     /**
@@ -127,7 +130,7 @@ protected:
      * The next byte to be read from the input stream buffer 
      * will be <code>buf[pos]</code>.
      */
-    int pos;
+    long pos;
 
     /**
      * The index one greater than the last valid character in the input 
@@ -138,7 +141,7 @@ protected:
      * the last byte within <code>buf</code> that
      * can ever be read  from the input stream buffer.
      */
-    int count;
+    long count;
 };
 
 } /* namespace efc */

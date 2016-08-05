@@ -19,7 +19,6 @@ class EThreadPoolExecutor;
  * A handler for tasks that cannot be executed by a {@link ThreadPoolExecutor}.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 interface ERejectedExecutionHandler : virtual public EObject {

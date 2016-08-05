@@ -29,12 +29,11 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  */
 
-template<typename _TK, typename _TV>
+template<typename K, typename V>
 interface EConcurrentMapEntry : virtual public EObject {
 	virtual ~EConcurrentMapEntry() {
 	}
@@ -47,7 +46,7 @@ interface EConcurrentMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual sp<_TK> getKey() = 0;
+	virtual sp<K> getKey() = 0;
 
 	/**
 	 * Returns the value corresponding to this entry.  If the mapping
@@ -59,7 +58,7 @@ interface EConcurrentMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual sp<_TV> getValue() = 0;
+	virtual sp<V> getValue() = 0;
 
 	/**
 	 * Replaces the value corresponding to this entry with the specified
@@ -81,7 +80,7 @@ interface EConcurrentMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual sp<_TV> setValue(sp<_TV> value) = 0;
+	virtual sp<V> setValue(sp<V> value) = 0;
 
 	/**
 	 * Compares the specified object with this entry for equality.
@@ -101,7 +100,7 @@ interface EConcurrentMapEntry : virtual public EObject {
 	 * @return <tt>true</tt> if the specified object is equal to this map
 	 *         entry
 	 */
-	virtual boolean equals(sp<EConcurrentMapEntry<_TK,_TV> > o) = 0;
+	virtual boolean equals(sp<EConcurrentMapEntry<K,V> > o) = 0;
 
 	/**
 	 * Returns the hash code value for this map entry.  The hash code
@@ -122,7 +121,7 @@ interface EConcurrentMapEntry : virtual public EObject {
 	virtual int hashCode() = 0;
 };
 
-template<typename _TK, typename _TV>
+template<typename K, typename V>
 interface EConcurrentMap : virtual public EObject {
 	virtual ~EConcurrentMap(){
 	}
@@ -161,7 +160,7 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this map
 	 *         does not permit null keys (optional)
 	 */
-	virtual boolean containsKey(_TK* key) = 0;
+	virtual boolean containsKey(K* key) = 0;
 
 	/**
 	 * Returns <tt>true</tt> if this map maps one or more keys to the
@@ -179,7 +178,7 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws NullPointerException if the specified value is null and this
 	 *         map does not permit null values (optional)
 	 */
-	virtual boolean containsValue(_TV* value) = 0;
+	virtual boolean containsValue(V* value) = 0;
 
 	/**
 	 * Returns the value to which the specified key is mapped,
@@ -204,7 +203,7 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this map
 	 *         does not permit null keys (optional)
 	 */
-	virtual sp<_TV> get(_TK* key) = 0;
+	virtual sp<V> get(K* key) = 0;
 
 	// Modification Operations
 
@@ -232,7 +231,8 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws IllegalArgumentException if some property of the specified key
 	 *         or value prevents it from being stored in this map
 	 */
-	virtual sp<_TV> put(_TK* key, _TV* value) = 0;
+	virtual sp<V> put(K* key, V* value) = 0;
+	virtual sp<V> put(sp<K> key, sp<V> value) = 0;
 
 	/**
 	 * Removes the mapping for a key from this map if it is present
@@ -262,7 +262,7 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this
 	 *         map does not permit null keys (optional)
 	 */
-	virtual sp<_TV> remove(_TK* key) = 0;
+	virtual sp<V> remove(K* key) = 0;
 
 	/**
 	 * Removes all of the mappings from this map (optional operation).
@@ -290,7 +290,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a set view of the keys contained in this map
 	 */
-	virtual sp<EConcurrentSet<_TK> > keySet() = 0;
+	virtual sp<EConcurrentSet<K> > keySet() = 0;
 
 	/**
 	 * Returns a {@link Collection} view of the values contained in this map.
@@ -307,7 +307,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a collection view of the values contained in this map
 	 */
-	virtual sp<EConcurrentCollection<_TV> > values() = 0;
+	virtual sp<EConcurrentCollection<V> > values() = 0;
 
 	/**
 	 * Returns a {@link Set} view of the mappings contained in this map.
@@ -325,7 +325,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	virtual sp<EConcurrentSet<EConcurrentMapEntry<_TK,_TV> > > entrySet() = 0;
+	virtual sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() = 0;
 
 
 	// ==ConcurrentMap==
@@ -358,7 +358,8 @@ interface EConcurrentMap : virtual public EObject {
      *         or value prevents it from being stored in this map
      *
      */
-	virtual sp<_TV> putIfAbsent(_TK* key, _TV* value) = 0;
+	virtual sp<V> putIfAbsent(K* key, V* value) = 0;
+	virtual sp<V> putIfAbsent(sp<K> key, sp<V> value) = 0;
 
     /**
      * Removes the entry for a key only if currently mapped to a given value.
@@ -380,7 +381,7 @@ interface EConcurrentMap : virtual public EObject {
      * @throws NullPointerException if the specified key or value is null,
      *         and this map does not permit null keys or values (optional)
      */
-	virtual boolean remove(_TK* key, _TV* value) = 0;
+	virtual boolean remove(K* key, V* value) = 0;
 
     /**
      * Replaces the entry for a key only if currently mapped to a given value.
@@ -405,7 +406,8 @@ interface EConcurrentMap : virtual public EObject {
      * @throws IllegalArgumentException if some property of a specified key
      *         or value prevents it from being stored in this map
      */
-	virtual boolean replace(_TK* key, _TV* oldValue, _TV* newValue) = 0;
+	virtual boolean replace(K* key, V* oldValue, V* newValue) = 0;
+	virtual boolean replace(K* key, V* oldValue, sp<V> newValue) = 0;
 
     /**
      * Replaces the entry for a key only if currently mapped to some value.
@@ -432,7 +434,71 @@ interface EConcurrentMap : virtual public EObject {
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
      */
-	virtual sp<_TV> replace(_TK* key, _TV* value) = 0;
+	virtual sp<V> replace(K* key, V* value) = 0;
+	virtual sp<V> replace(K* key, sp<V> value) = 0;
+};
+
+template<typename K, typename V>
+class EConcurrentImmutableEntry: public EConcurrentMapEntry<K, V> {
+private:
+	sp<K> key;
+	sp<V> value;
+
+	static boolean eq(EObject* o1, EObject* o2) {
+		return o1 == null ? o2 == null : o1->equals(o2);
+	}
+public:
+	/**
+	 * Creates an entry representing a mapping from the specified
+	 * key to the specified value.
+	 *
+	 * @param key the key represented by this entry
+	 * @param value the value represented by this entry
+	 */
+	EConcurrentImmutableEntry(sp<K> key, sp<V> value) {
+		this->key = key;
+		this->value = value;
+	}
+
+	/**
+	 * Returns the key corresponding to this entry.
+	 *
+	 * @return the key corresponding to this entry
+	 */
+	sp<K> getKey() {
+		return key;
+	}
+
+	/**
+	 * Returns the value corresponding to this entry.
+	 *
+	 * @return the value corresponding to this entry
+	 */
+	sp<V> getValue() {
+		return value;
+	}
+
+	/**
+	 * Set our entry's value and write through to the map. The
+	 * value to return is somewhat arbitrary here. Since a
+	 * WriteThroughEntry does not necessarily track asynchronous
+	 * changes, the most recent "previous" value could be
+	 * different from what we return (or could even have been
+	 * removed in which case the put will re-establish). We do not
+	 * and cannot guarantee more.
+	 */
+	sp<V> setValue(sp<V> value) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	}
+
+	boolean equals(sp<EConcurrentMapEntry<K, V> > o) {
+		return eq(key.get(), o->getKey().get()) && eq(value.get(), o->getValue().get());
+	}
+
+	int hashCode() {
+		return (key   == null ? 0 : key->hashCode()) ^
+				(value == null ? 0 : value->hashCode());
+	}
 };
 
 } /* namespace efc */

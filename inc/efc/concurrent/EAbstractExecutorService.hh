@@ -42,7 +42,6 @@ namespace efc {
  * }}</pre>
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 template<typename V>

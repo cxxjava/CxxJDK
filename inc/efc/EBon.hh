@@ -20,17 +20,16 @@ public:
 	virtual ~EBon();
 	EBon(const char *encoding=NULL);
 
-	//TODO:
 	EBon(const EBon& that);
 	EBon& operator= (const EBon& that);
 
 	void clear();
-	bool isEmpty();
+	boolean isEmpty();
 
 	void Import(void *buffer, ulong size);
 	void Export(es_buffer_t *buffer, const char *path, boolean useHead);
 
-	void clone(const char *toPath, EBon& from, const char *fromPath) THROWS(ERuntimeException);
+	void copy(const char *toPath, EBon& from, const char *fromPath) THROWS(ERuntimeException);
 
 	es_bon_node_t* add(const char *path, const char *str);
 	es_bon_node_t* add(const char *path, const void *data, es_size_t size);

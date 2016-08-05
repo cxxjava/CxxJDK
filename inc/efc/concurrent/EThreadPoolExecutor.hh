@@ -13,7 +13,6 @@
 #include "EBlockingQueue.hh"
 #include "EList.hh"
 #include "ELinkedList.hh"
-#include "ETimer.hh"
 #include "EInteger.hh"
 #include "ESharedArrLst.hh"
 #include "EAtomicInteger.hh"
@@ -305,7 +304,6 @@ namespace tpe {
  * }}</pre>
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class EThreadPoolExecutor: public EAbstractExecutorService {
@@ -359,7 +357,7 @@ public:
 		  * @throws RejectedExecutionException always.
 		  */
 		 void rejectedExecution(sp<ERunnable> r, EThreadPoolExecutor* e) {
-			 throw ERejectedExecutionException("Unable to execute task.", __FILE__, __LINE__);
+			 throw ERejectedExecutionException(__FILE__, __LINE__, "Unable to execute task.");
 		 }
 	 };
 
@@ -441,7 +439,7 @@ public:
 	 */
 	EThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
 			llong keepAliveTime, ETimeUnit* unit,
-			EBlockingQueue<ERunnable>* workQueue);
+			sp<EBlockingQueue<ERunnable> > workQueue);
 
 	/**
 	 * Creates a new {@code ThreadPoolExecutor} with the given initial
@@ -470,7 +468,7 @@ public:
 	 */
 	EThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
 			llong keepAliveTime, ETimeUnit* unit,
-			EBlockingQueue<ERunnable>* workQueue, EThreadFactory* threadFactory);
+			sp<EBlockingQueue<ERunnable> > workQueue, sp<EThreadFactory> threadFactory);
 
 	/**
 	 * Creates a new {@code ThreadPoolExecutor} with the given initial
@@ -499,8 +497,8 @@ public:
 	 */
 	EThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
 			llong keepAliveTime, ETimeUnit* unit,
-			EBlockingQueue<ERunnable>* workQueue,
-			ERejectedExecutionHandler* handler);
+			sp<EBlockingQueue<ERunnable> > workQueue,
+			sp<ERejectedExecutionHandler> handler);
 
 	/**
 	 * Creates a new {@code ThreadPoolExecutor} with the given initial
@@ -531,8 +529,8 @@ public:
 	 */
 	EThreadPoolExecutor(int corePoolSize, int maximumPoolSize,
 			llong keepAliveTime, ETimeUnit* unit,
-			EBlockingQueue<ERunnable>* workQueue, EThreadFactory* threadFactory,
-			ERejectedExecutionHandler* handler);
+			sp<EBlockingQueue<ERunnable> > workQueue, sp<EThreadFactory> threadFactory,
+			sp<ERejectedExecutionHandler> handler);
 
 	/**
 	 * Executes the given task sometime in the future.  The task
@@ -609,7 +607,7 @@ public:
 	 * @throws NullPointerException if threadFactory is null
 	 * @see #getThreadFactory
 	 */
-	void setThreadFactory(EThreadFactory* threadFactory);
+	void setThreadFactory(sp<EThreadFactory> threadFactory);
 
 	/**
 	 * Returns the thread factory used to create new threads.
@@ -617,7 +615,7 @@ public:
 	 * @return the current thread factory
 	 * @see #setThreadFactory
 	 */
-	EThreadFactory* getThreadFactory();
+	sp<EThreadFactory> getThreadFactory();
 
 	/**
 	 * Sets a new handler for unexecutable tasks.
@@ -626,7 +624,7 @@ public:
 	 * @throws NullPointerException if handler is null
 	 * @see #getRejectedExecutionHandler
 	 */
-	void setRejectedExecutionHandler(ERejectedExecutionHandler* handler);
+	void setRejectedExecutionHandler(sp<ERejectedExecutionHandler> handler);
 
 	/**
 	 * Returns the current handler for unexecutable tasks.
@@ -634,7 +632,7 @@ public:
 	 * @return the current handler
 	 * @see #setRejectedExecutionHandler
 	 */
-	ERejectedExecutionHandler* getRejectedExecutionHandler();
+	sp<ERejectedExecutionHandler> getRejectedExecutionHandler();
 
 	/**
 	 * Sets the core number of threads.  This overrides any value set
@@ -769,7 +767,7 @@ public:
 	 *
 	 * @return the task queue
 	 */
-	EBlockingQueue<ERunnable>* getQueue();
+	sp<EBlockingQueue<ERunnable> > getQueue();
 
 	/**
 	 * Removes this task from the executor's internal queue if it is
@@ -854,7 +852,7 @@ public:
 	 *
 	 * @return a string identifying this pool, as well as its state
 	 */
-	EString toString();
+	EStringBase toString();
 
 protected:
 	/**
@@ -995,8 +993,8 @@ private:
 	 */
 	void init(int corePoolSize, int maximumPoolSize,
 			llong keepAliveTime, ETimeUnit* unit,
-			EBlockingQueue<ERunnable>* workQueue, EThreadFactory* threadFactory,
-			ERejectedExecutionHandler* handler);
+			sp<EBlockingQueue<ERunnable> > workQueue, sp<EThreadFactory> threadFactory,
+			sp<ERejectedExecutionHandler> handler);
 
 	/**
 	 * Attempt to CAS-increment the workerCount field of ctl.
@@ -1026,7 +1024,7 @@ private:
 	 * return null even if it may later return non-null when delays
 	 * expire.
 	 */
-	EBlockingQueue<ERunnable>* workQueue; // need free!
+	sp<EBlockingQueue<ERunnable> > workQueue;
 
 	/**
 	 * Lock held on access to workers set and related bookkeeping.
@@ -1041,27 +1039,13 @@ private:
 	 * ensuring workers set is stable while separately checking
 	 * permission to interrupt and actually interrupting.
 	 */
-	EReentrantLock mainLock;
+	ESimpleLock mainLock;
 
 	/**
 	 * Set containing all worker threads in pool. Accessed only when
 	 * holding mainLock.
 	 */
-	ELinkedList<tpe::Worker*>* workers; // = new HashSet<Worker>();
-
-	/**
-	 * List to hold Worker object that have terminated for some reason. Usually this is
-	 * because of a call to setMaximumPoolSize or setCorePoolSize but can also occur
-	 * because of an exception from a task that the worker was running.
-	 */
-	ELinkedList<tpe::Worker*>* deadWorkers;
-
-	/**
-	 * Timer used to periodically clean up the dead worker objects.  They must be cleaned
-	 * up on a separate thread because the Worker generally adds itself to the deadWorkers
-	 * list from the context of its run method and cannot delete itself.
-	 */
-	ETimer cleanupTimer;
+	eal<tpe::Worker>* workers; // = new HashSet<Worker>();
 
 	/**
 	 * Wait condition to support awaitTermination
@@ -1104,12 +1088,12 @@ private:
 	 * will likely be enough memory available for the cleanup code to
 	 * complete without encountering yet another OutOfMemoryError.
 	 */
-	EThreadFactory* volatile threadFactory; // need free!
+	sp<EThreadFactory> /*volatile*/ threadFactory;
 
 	/**
 	 * Handler called when saturated or shutdown in execute.
 	 */
-	ERejectedExecutionHandler* volatile handler; // need free!
+	sp<ERejectedExecutionHandler> /*volatile*/ handler;
 
 	/**
 	 * Timeout in nanoseconds for idle threads waiting for work.
@@ -1148,7 +1132,7 @@ private:
 	/**
 	 * The default rejected execution handler
 	 */
-	static ERejectedExecutionHandler* defaultHandler; // = new AbortPolicy();
+	static sp<ERejectedExecutionHandler> defaultHandler; // = new AbortPolicy();
 
 	/*
 	 * Methods for setting control state
@@ -1222,7 +1206,7 @@ private:
 	 */
 	void interruptIdleWorkers();
 
-	static const boolean ONLY_ONE = true;
+	//static const boolean ONLY_ONE = true;
 
 	/*
 	 * Misc utilities, most of which are also exported to
@@ -1290,7 +1274,7 @@ private:
 	 * - rechecks for termination, in case the existence of this
 	 *   worker was holding up termination
 	 */
-	void addWorkerFailed(tpe::Worker* w);
+	void addWorkerFailed(sp<tpe::Worker>& w);
 
 	/**
 	 * Performs cleanup and bookkeeping for a dying worker. Called
@@ -1305,7 +1289,7 @@ private:
 	 * @param w the worker
 	 * @param completedAbruptly if the worker died due to user exception
 	 */
-	void processWorkerExit(tpe::Worker* w, boolean completedAbruptly);
+	void processWorkerExit(sp<tpe::Worker>& w, boolean completedAbruptly);
 
 	/**
 	 * Performs blocking or timed wait for a task, depending on
@@ -1368,7 +1352,7 @@ private:
 	 *
 	 * @param w the worker
 	 */
-	void runWorker(tpe::Worker* w);
+	void runWorker(sp<tpe::Worker> w);
 
 };
 

@@ -8,7 +8,7 @@
 #ifndef EINTERRUPTIBLE_HH_
 #define EINTERRUPTIBLE_HH_
 
-#include "EBase.hh"
+#include "EThread.hh"
 
 namespace efc {
 
@@ -16,7 +16,7 @@ interface EInterruptible {
 
 	virtual ~EInterruptible(){}
 
-    virtual void interrupt() = 0;
+    virtual void interrupt(EThread* t) = 0;
 
 };
 

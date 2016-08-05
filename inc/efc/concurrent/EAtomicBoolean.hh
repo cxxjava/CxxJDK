@@ -97,7 +97,7 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value.
 	 */
-	EString toString();
+	EStringBase toString();
 
 private:
 	volatile int value ES_ALIGN;

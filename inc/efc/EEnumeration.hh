@@ -35,7 +35,6 @@ namespace efc {
  * @see     java.util.Vector
  * @see     java.util.Vector#elements()
  *
- * @author  Lee Boynton
  * @version 1.24, 11/17/05
  * @since   JDK1.0
  */

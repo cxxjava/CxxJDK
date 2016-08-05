@@ -55,8 +55,6 @@ namespace efc {
  * Which approach the decoder takes is left to the
  * implementation.
  *
- * @author  Mark Chamness
- * @author  Michael McCloskey
  * @version 1.28, 11/17/05
  * @since   1.2
  */

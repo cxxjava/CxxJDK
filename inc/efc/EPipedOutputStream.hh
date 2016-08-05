@@ -26,7 +26,6 @@ namespace efc {
  * thread that was reading data bytes from the connected piped input 
  * stream is no longer alive.
  *
- * @author  James Gosling
  * @version 1.28, 06/07/06
  * @see     java.io.PipedInputStream
  * @since   JDK1.0
@@ -58,6 +57,10 @@ public:
      */
     EPipedOutputStream();
     
+    // TODO:
+    EPipedOutputStream(const EPipedOutputStream& that);
+    EPipedOutputStream& operator= (const EPipedOutputStream& that);
+
     /**
      * Connects this piped output stream to a receiver. If this object
      * is already connected to some other piped input stream, an 

@@ -36,27 +36,27 @@ static intFP div(intFP i, intFP j); //'/'
 static intFP max(intFP i, intFP j); //max
 static intFP min(intFP i, intFP j); //min
 
-static intFP abs(intFP i); //È¡¾ø¶ÔÖµ
-static intFP round(intFP i, int j=0); //¶ÔÒ»¸öÊµÊý½øÐÐËÄÉáÎåÈë£¬j±íÊ¾±£ÁôÐ¡ÊýÎ»Êý
-static intFP trunc(intFP i); //½ØÈ¡Ò»¸öÊµÊýµÄÕûÊý²¿·Ö
-static intFP floor(intFP i); //¼ÆËãÐ¡ÓÚÖ¸¶¨ÊýµÄ×î´óÕûÊý
-static intFP ceil(intFP i); //¼ÆËã´óÓÚÖ¸¶¨ÊýµÄ×îÐ¡ÕûÊý
-static intFP frac(intFP i); //·µ»ØÒ»¸öÊµÊýµÄÐ¡Êý²¿·Ö£¬·µ»ØÖµ·Å´óÁË1000±¶
+static intFP abs(intFP i); //å–ç»å¯¹å€¼
+static intFP round(intFP i, int j=0); //å¯¹ä¸€ä¸ªå®žæ•°è¿›è¡Œå››èˆäº”å…¥ï¼Œjè¡¨ç¤ºä¿ç•™å°æ•°ä½æ•°
+static intFP trunc(intFP i); //æˆªå–ä¸€ä¸ªå®žæ•°çš„æ•´æ•°éƒ¨åˆ†
+static intFP floor(intFP i); //è®¡ç®—å°äºŽæŒ‡å®šæ•°çš„æœ€å¤§æ•´æ•°
+static intFP ceil(intFP i); //è®¡ç®—å¤§äºŽæŒ‡å®šæ•°çš„æœ€å°æ•´æ•°
+static intFP frac(intFP i); //è¿”å›žä¸€ä¸ªå®žæ•°çš„å°æ•°éƒ¨åˆ†ï¼Œè¿”å›žå€¼æ”¾å¤§äº†1000å€
 
-static intFP sin(intFP i); //ÕýÏÒ¼ÆËã£¬µ¥Î»ÊÇ»¡¶È
-static intFP cos(intFP i); //ÓàÏÒ¼ÆËã£¬µ¥Î»ÊÇ»¡¶È
-static intFP cot(intFP i); //ÓàÇÐ¼ÆËã£¬µ¥Î»ÊÇ»¡¶È
-static intFP tan(intFP i); //ÕýÇÐ¼ÆËã£¬µ¥Î»ÊÇ»¡¶È
-static intFP asin(intFP e); //È¡µÃ·´ÕýÏÒÖµ£¬µ¥Î»ÊÇ»¡¶È
-static intFP acos(intFP e); //È¡µÃ·´ÓàÏÒÖµ£¬µ¥Î»ÊÇ»¡¶È
+static intFP sin(intFP i); //æ­£å¼¦è®¡ç®—ï¼Œå•ä½æ˜¯å¼§åº¦
+static intFP cos(intFP i); //ä½™å¼¦è®¡ç®—ï¼Œå•ä½æ˜¯å¼§åº¦
+static intFP cot(intFP i); //ä½™åˆ‡è®¡ç®—ï¼Œå•ä½æ˜¯å¼§åº¦
+static intFP tan(intFP i); //æ­£åˆ‡è®¡ç®—ï¼Œå•ä½æ˜¯å¼§åº¦
+static intFP asin(intFP e); //å–å¾—åæ­£å¼¦å€¼ï¼Œå•ä½æ˜¯å¼§åº¦
+static intFP acos(intFP e); //å–å¾—åä½™å¼¦å€¼ï¼Œå•ä½æ˜¯å¼§åº¦
 
-static intFP exp(intFP i); //×ÔÈ»¶ÔÊýeµÄ´Î·½Öµ
-static intFP log(intFP i); //¶ÔÊý£¬Ä¬ÈÏµ×ÊýÎª10
-static intFP pow(intFP i, int j=2); //ÃÝÔËËã
-static intFP sqrt(intFP i); //¿ª·½¸ù
+static intFP exp(intFP i); //è‡ªç„¶å¯¹æ•°eçš„æ¬¡æ–¹å€¼
+static intFP log(intFP i); //å¯¹æ•°ï¼Œé»˜è®¤åº•æ•°ä¸º10
+static intFP pow(intFP i, int j=2); //å¹‚è¿ç®—
+static intFP sqrt(intFP i); //å¼€æ–¹æ ¹
 
-static intFP toDeg(intFP a); //»¡¶È->½Ç¶È
-static intFP toRad(intFP a); //½Ç¶È->»¡¶È
+static intFP toDeg(intFP a); //å¼§åº¦->è§’åº¦
+static intFP toRad(intFP a); //è§’åº¦->å¼§åº¦
 
 private:
 static int pow_int(int i, int j);

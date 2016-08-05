@@ -79,7 +79,6 @@ namespace efc {
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Josh Bloch
  * @see Map
  * @see TreeMap
  * @see SortedSet

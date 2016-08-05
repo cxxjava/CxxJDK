@@ -49,8 +49,6 @@ namespace efc {
  *
  * @param <E> the type of elements maintained by this set
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.39, 04/21/06
  * @see Collection
  * @see List

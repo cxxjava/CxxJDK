@@ -20,7 +20,6 @@ namespace efc {
  * types of compression filters, such as GZIPOutputStream.
  *
  * @see         Deflater
- * @author      David Connelly
  */
 
 class EDeflaterOutputStream: public EFilterOutputStream {
@@ -44,6 +43,10 @@ public:
      * @since 1.7
 	 */
 	EDeflaterOutputStream(EOutputStream* out, int size=512, boolean syncFlush=false, boolean useDefault=true);
+
+	//TODO:
+	EDeflaterOutputStream(const EDeflaterOutputStream& that);
+	EDeflaterOutputStream& operator= (const EDeflaterOutputStream& that);
 
 	/**
 	 * Set the specified encompressor

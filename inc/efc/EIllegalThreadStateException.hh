@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EILLEGALTHREADSTATEEXCEPTION       EIllegalThreadStateException(__FILE__, __LINE__, errno)
-#define EILLEGALTHREADSTATEEXCEPTIONS(msg) EIllegalThreadStateException(msg, __FILE__, __LINE__, errno)
+#define EILLEGALTHREADSTATEEXCEPTIONS(msg) EIllegalThreadStateException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown to indicate that a thread is not in an appropriate state
@@ -21,7 +21,6 @@ namespace efc {
  * <code>suspend</code> and <code>resume</code> methods in class
  * <code>Thread</code>.
  *
- * @author  unascribed
  * @see     java.lang.Thread#resume()
  * @see     java.lang.Thread#suspend()
  * @since   JDK1.0
@@ -45,14 +44,12 @@ public:
 	 * Constructs an <code>EIllegalThreadStateException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EIllegalThreadStateException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-				EIllegalArgumentException(s, _file_, _line_, errn) {
+	EIllegalThreadStateException(const char *_file_, int _line_, const char *s, int errn = 0) :
+				EIllegalArgumentException(_file_, _line_, s, errn) {
 	}
 };
 

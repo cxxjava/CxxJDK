@@ -56,7 +56,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
 
@@ -324,14 +323,14 @@ public:
 	virtual void put(sp<E> o) THROWS(EInterruptedException) {
 		if (o == null) throw ENullPointerException(__FILE__, __LINE__);
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			boolean mustWait;
 			if (EThread::interrupted()) throw EInterruptedException(__FILE__, __LINE__);
 			SYNCBLOCK(qlock) {
 				node = waitingConsumers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingProducers->enq(o);
-			}}
+			}
 
 			if (mustWait) {
 				node->waitForTake();
@@ -360,7 +359,7 @@ public:
 		sp<E> x(e);
 		boolean r = offer(x, timeout, unit);
 		if (!r) {
-			x.detach();
+			x.dismiss();
 		}
 		return r;
 	}
@@ -369,14 +368,14 @@ public:
 		if (o == null) throw ENullPointerException(__FILE__, __LINE__);
 		llong nanos = unit->toNanos(timeout);
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			boolean mustWait;
 			if (EThread::interrupted()) throw EInterruptedException(__FILE__, __LINE__);
 			SYNCBLOCK(qlock) {
 				node = waitingConsumers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingProducers->enq(o);
-			}}
+			}
 
 			if (mustWait) {
 				return node->waitForTake(nanos);
@@ -403,17 +402,17 @@ public:
 		sp<E> x(e);
 		boolean r = offer(x);
 		if (!r) {
-			x.detach();
+			x.dismiss();
 		}
 		return r;
 	}
 	virtual boolean offer(sp<E> e) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			SYNCBLOCK(qlock) {
 				node = waitingConsumers->deq();
-			}}
+			}
 			if (node == null)
 				return false;
 
@@ -432,7 +431,7 @@ public:
 	 */
 	virtual sp<E> take() THROWS(EInterruptedException) {
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			boolean mustWait;
 
 			if (EThread::interrupted()) throw EInterruptedException(__FILE__, __LINE__);
@@ -440,11 +439,10 @@ public:
 				node = waitingProducers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingConsumers->enq(null);
-			}}
+			}
 
 			if (mustWait) {
-				sp<E> x = node->waitForPut();
-				return x;
+				return node->waitForPut();
 			}
 			else {
 				sp<E> x = node->getItem();
@@ -469,7 +467,7 @@ public:
 		llong nanos = unit->toNanos(timeout);
 
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			boolean mustWait;
 
 			if (EThread::interrupted()) throw EInterruptedException(__FILE__, __LINE__);
@@ -477,7 +475,7 @@ public:
 				node = waitingProducers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingConsumers->enq(null);
-			}}
+			}
 
 			if (mustWait) {
 				sp<E> x = node->waitForPut(nanos);
@@ -502,10 +500,10 @@ public:
 	 */
 	virtual sp<E> poll() {
 		for (;;) {
-			sp<Node> node = null;
+			sp<Node> node;
 			SYNCBLOCK(qlock) {
 				node = waitingProducers->deq();
-			}}
+			}
 			if (node == null)
 				return null;
 

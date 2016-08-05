@@ -13,13 +13,12 @@
 namespace efc {
 
 #define EPROTOCOLEXCEPTION       EProtocolException(__FILE__, __LINE__, errno)
-#define EPROTOCOLEXCEPTIONS(msg) EProtocolException(msg, __FILE__, __LINE__, errno)
+#define EPROTOCOLEXCEPTIONS(msg) EProtocolException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown to indicate that there is an error in the underlying
  * protocol, such as a TCP error.
  *
- * @author  Chris Warth
  * @since   JDK1.0
  */
 
@@ -41,14 +40,12 @@ public:
 	 * Constructs an <code>EProtocolException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EProtocolException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EIOException(s, _file_, _line_, errn) {
+	EProtocolException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EIOException(_file_, _line_, s, errn) {
 	}
 };
 

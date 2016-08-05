@@ -20,7 +20,6 @@ namespace efc {
  * <strong>NOTE: This class is obsolete.  New implementations should
  * implement the Map interface, rather than extending this class.</strong>
  *
- * @author  unascribed
  * @version 1.24, 11/17/05
  * @see	    java.util.Map
  * @see     java.lang.Object#equals(java.lang.Object)

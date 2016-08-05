@@ -86,7 +86,6 @@ namespace efc {
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Josh Bloch and Doug Lea
  * @see Map
  * @see HashMap
  * @see Hashtable
@@ -187,8 +186,8 @@ private:
 			return keyHash ^ valueHash;
 		}
 
-		EString toString() {
-			return EString::formatOf("%s=%s", key->toString()->c_str(), value->toString()->c_str());
+		EStringBase toString() {
+			return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
 		}
 	};
 
@@ -245,9 +244,23 @@ private:
 			// deleted entries are replaced by their successors
 			if (lastReturned->left != null && lastReturned->right != null)
 				next = lastReturned;
-			_map->deleteEntry(lastReturned);
+			delete _map->deleteEntry(lastReturned);
 			expectedModCount = _map->modCount;
 			lastReturned = null;
+		}
+
+		virtual Entry* moveOutEntry() {
+			if (lastReturned == null)
+				throw EIllegalStateException(__FILE__, __LINE__);
+			if (_map->modCount != expectedModCount)
+				throw EConcurrentModificationException(__FILE__, __LINE__);
+			// deleted entries are replaced by their successors
+			if (lastReturned->left != null && lastReturned->right != null)
+				next = lastReturned;
+			Entry* e = _map->deleteEntry(lastReturned);
+			expectedModCount = _map->modCount;
+			lastReturned = null;
+			return e;
 		}
 	};
 
@@ -258,6 +271,9 @@ private:
 		EMapEntry<K,V>* next() {
 			return PrivateEntryIterator<EMapEntry<K,V>*>::nextEntry();
 		}
+		EMapEntry<K,V>* moveOut() {
+			return PrivateEntryIterator<EMapEntry<K,V>*>::moveOutEntry();
+		}
 	};
 
 	class ValueIterator : public PrivateEntryIterator<V> {
@@ -266,6 +282,12 @@ private:
 		}
 		V next() {
 			return PrivateEntryIterator<V>::nextEntry()->value;
+		}
+		V moveOut() {
+			Entry* e = PrivateEntryIterator<V>::moveOutEntry();
+			V v = e->value;
+			delete e;
+			return v;
 		}
 	};
 
@@ -276,6 +298,12 @@ private:
 		K next() {
 			return PrivateEntryIterator<K>::nextEntry()->key;
 		}
+		K moveOut() {
+			Entry* e = PrivateEntryIterator<K>::moveOutEntry();
+			K k = e->key;
+			delete e;
+			return k;
+		}
 	};
 
 	class DescendingKeyIterator : public PrivateEntryIterator<K> {
@@ -284,6 +312,12 @@ private:
 		}
 		K next() {
 			return PrivateEntryIterator<K>::prevEntry()->key;
+		}
+		K moveOut() {
+			Entry* e = PrivateEntryIterator<K>::moveOutEntry();
+			K k = e->key;
+			delete e;
+			return k;
 		}
 	};
 
@@ -312,8 +346,7 @@ private:
 		boolean remove(V o) {
 			for (Entry* e = _map->getFirstEntry(); e != null; e = successor(e)) {
 				if (valEquals(e->getValue(), o)) {
-					_map->deleteEntry(e);
-					delete e; //!
+					delete _map->deleteEntry(e);
 					return true;
 				}
 			}
@@ -350,7 +383,7 @@ private:
 			V value = entry->getValue();
 			Entry* p = _map->getEntry(entry->getKey());
 			if (p != null && valEquals(p->getValue(), value)) {
-				_map->deleteEntry(p);
+				delete _map->deleteEntry(p);
 				return true;
 			}
 			return false;

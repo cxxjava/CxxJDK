@@ -139,7 +139,6 @@ namespace efc {
  * {@code await()} in another thread.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class ECountDownLatch: public EObject {
@@ -255,7 +254,7 @@ public:
 	 *
 	 * @return a string identifying this latch, as well as its state
 	 */
-	EString toString();
+	EStringBase toString();
 
 private:
 	cdl::Sync *sync;

@@ -37,7 +37,6 @@
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
 namespace efc {
@@ -94,13 +93,13 @@ public:
 		if (offer(e))
 			return true;
 		else
-			throw EIllegalStateException("Queue full", __FILE__, __LINE__);
+			throw EIllegalStateException(__FILE__, __LINE__, "Queue full");
 	}
 	virtual boolean add(sp<E> e) {
 		if (offer(e))
 			return true;
 		else
-			throw EIllegalStateException("Queue full", __FILE__, __LINE__);
+			throw EIllegalStateException(__FILE__, __LINE__, "Queue full");
 	}
 
 	/**

@@ -30,7 +30,6 @@ namespace efc {
  * implementation to configure itself to create sockets 
  * appropriate to the local firewall. 
  *
- * @author  unascribed
  * @version 1.91, 03/08/07
  * @see     java.net.SocketImpl
  * @see     java.net.ServerSocket#setSocketFactory(java.net.SocketImplFactory)
@@ -288,7 +287,7 @@ public:
      *
      * @return  a string representation of this socket.
      */
-    virtual EString toString();
+    virtual EStringBase toString();
     
     /**
      * Sets a default proposed value for the SO_RCVBUF option for sockets 

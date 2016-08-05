@@ -33,7 +33,7 @@ namespace efc {
  * @since 1.4
  */
 
-class EInetSocketAddress {
+class EInetSocketAddress : virtual public EObject {
 public:
 	virtual ~EInetSocketAddress();
 	
@@ -94,6 +94,12 @@ public:
      * @see	#isUnresolved()
      */
     EInetSocketAddress(const char* hostname, int port) THROWS2(EIllegalArgumentException,EUnknownHostException);
+
+    /**
+     *
+     */
+    EInetSocketAddress(const EInetSocketAddress& that);
+    EInetSocketAddress& operator= (const EInetSocketAddress& that);
 
     /**
      *
@@ -166,7 +172,7 @@ public:
      *
      * @return  a string representation of this object.
      */
-    EString toString();
+    virtual EStringBase toString();
 
     /**
      * Compares this object against the specified object.
@@ -186,20 +192,21 @@ public:
      * @see java.net.InetAddress#equals(java.lang.Object)
      */
     boolean equals(EInetSocketAddress* obj);
+    virtual boolean equals(EObject* obj);
 
     /**
      * Returns a hashcode for this socket address.
      *
      * @return  a hash code value for this socket address.
      */
-    int hashCode();
+    virtual int hashCode();
 
 private:
 	
 	/* The hostname of the Socket Address
      * @serial
      */     
-    EString hostname;
+    EString* hostname;
     /* The IP address of the Socket Address
      * @serial
      */
@@ -209,8 +216,7 @@ private:
      */   
     int port;
 
-    EInetSocketAddress() {
-    }
+    EInetSocketAddress();
 };
 
 } /* namespace efc */

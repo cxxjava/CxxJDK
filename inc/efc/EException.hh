@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EEXCEPTION       EException(__FILE__, __LINE__, errno)
-#define EEXCEPTIONS(msg) EException(msg, __FILE__, __LINE__, errno)
+#define EEXCEPTIONS(msg) EException(__FILE__, __LINE__, msg)
 
 /**
  * The class <code>Exception</code> and its subclasses are a form of 
@@ -37,13 +37,42 @@ public:
 	/**
      * Constructs an <code>Exception</code> with the specified detail message. 
      *
-     * @param   s   the detail message.
 	 * @param   _file_   __FILE__
 	 * @param   _line_   __LINE__
-	 * @param   errn     errno
+     * @param   s   the detail message.
      */
-	EException(const char *s, const char *_file_, int _line_, int errn = 0) :
-			EThrowable(s, _file_, _line_, errn) {
+	EException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EThrowable(_file_, _line_, s, errn) {
+	}
+
+	/**
+	 * Constructs an <code>Exception</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A {@code null} value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+	 */
+	EException(const char *_file_, int _line_, EThrowable* cause) :
+			EThrowable(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+     * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+     *         {@link #getCause()} method).  (A {@code null} value is
+     *         permitted, and indicates that the cause is nonexistent or
+     *         unknown.)
+     */
+	EException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+			EThrowable(_file_, _line_, s, cause) {
 	}
 };
 

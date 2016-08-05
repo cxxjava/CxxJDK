@@ -10,15 +10,15 @@
 namespace efc {
 
 #ifdef HAVE_THREADS
-# define SYNCHRONIZED(obj) { \
-	ESentry __synchronizer__((obj)->getLock());
+# define SYNCHRONIZED(obj) \
+		for(ESentry __synchronizer__((obj)->getLock()); __synchronizer__.begin(); __synchronizer__.end())
 
-# define SYNCBLOCK(lock) { \
-	ESentry __synchronizer__(lock);
+# define SYNCBLOCK(lock) \
+		for (ESentry __synchronizer__(lock); __synchronizer__.begin(); __synchronizer__.end())
 
 #else
-# define SYNCHRONIZED(obj) {
-# define SYNCBLOCK(obj) {
+# define SYNCHRONIZED(obj)
+# define SYNCBLOCK(obj)
 #endif
 
 /**
@@ -82,21 +82,21 @@ class ESynchronizeable : virtual public EObject
 public:
 	virtual ~ESynchronizeable() {
 #ifdef HAVE_THREADS
-		delete _cond;
-		delete _lock;
+		delete __cond__;
+		delete __lock__;
 #endif
 	}
 
 	ESynchronizeable() {
 #ifdef HAVE_THREADS
-		_lock = new EReentrantLock();
-		_cond = _lock->newCondition();
+		__lock__ = new EReentrantLock();
+		__cond__ = __lock__->newCondition();
 #endif
 	}
 
 	ELock* getLock() {
 #ifdef HAVE_THREADS
-		return _lock;
+		return __lock__;
 #else
 		return null;
 #endif
@@ -136,7 +136,7 @@ public:
 	 */
 	void notify() {
 #ifdef HAVE_THREADS
-		_cond->signal();
+		__cond__->signal();
 #endif
 	}
 
@@ -164,7 +164,7 @@ public:
 	 */
 	void notifyAll() {
 #ifdef HAVE_THREADS
-		_cond->signalAll();
+		__cond__->signalAll();
 #endif
 	}
 
@@ -256,10 +256,10 @@ public:
 	void wait(llong timeout) THROWS(EInterruptedException) {
 #ifdef HAVE_THREADS
 		if (timeout == 0) {
-			_cond->await();
+			__cond__->await();
 		}
 		else {
-			_cond->awaitNanos(timeout * 1000000);
+			__cond__->awaitNanos(timeout * 1000000);
 		}
 #endif
 	}
@@ -328,8 +328,8 @@ public:
 	 */
 	void wait(llong timeout, int nanos) THROWS(EInterruptedException) {
 		if (nanos > 999999) {
-			throw EIllegalArgumentException(
-								"nanosecond timeout value out of range", __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__,
+								"nanosecond timeout value out of range");
 		}
 
 		if (nanos >= 500000 || (nanos != 0 && timeout == 0)) {
@@ -383,8 +383,8 @@ public:
 
 protected:
 #ifdef HAVE_THREADS
-	EReentrantLock* _lock;
-	ECondition* _cond;
+	EReentrantLock* __lock__;
+	ECondition* __cond__;
 #endif
 };
 

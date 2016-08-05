@@ -17,7 +17,7 @@ namespace efc {
 typedef struct es_emap_elem_t es_emap_elem_t;
 struct es_emap_elem_t {
 	ES_RING_ENTRY(es_emap_elem_t) link;
-	es_int32_t key_int;
+	int key_int;
 	char *key_str;
 	EObject *data;
 };
@@ -26,45 +26,50 @@ typedef struct es_emap_t es_emap_t;
 
 class ESimpleMap : virtual public ESimpleEnumeration {
 public:
-	ESimpleMap(es_bool_t autofree = TRUE, es_bool_t uniqueKey = TRUE,
-			es_uint32_t initialCapacity = 32);
 	~ESimpleMap();
+	ESimpleMap(boolean autofree = TRUE, boolean uniqueKey = TRUE,
+			uint initialCapacity = 32);
+
+	//TODO:
+	ESimpleMap(const ESimpleMap& that);
+	ESimpleMap& operator= (const ESimpleMap& that);
 
 public:
 	ESimpleEnumeration* elements();
 
-	void setAutoFree(es_bool_t autofree = TRUE);boolean getAutoFree();
-	es_int32_t put(const char* key, const EObject* value);
-	es_int32_t put(es_int32_t key, const EObject* value);
+	void setAutoFree(boolean autofree = TRUE);
+    boolean getAutoFree();
+	int put(const char* key, const EObject* value);
+	int put(int key, const EObject* value);
 	EObject* get(const char* key, int index=0); //if (index == -1) then get the last one.
-	EObject* get(es_int32_t key, int index=0); //if (index == -1) then get the last one.
-	es_int32_t remove(const char* key, int index=0);
-	es_int32_t remove(es_int32_t key, int index=0);
-	es_int32_t insert(const char* key, const EObject* value, es_int32_t index);
-	es_int32_t insert(es_int32_t key, const EObject* value, es_int32_t index);
-	es_int32_t update(const char* key, const EObject* value, int index=0);
-	es_int32_t update(es_int32_t key, const EObject* value, int index=0);
+	EObject* get(int key, int index=0); //if (index == -1) then get the last one.
+	int remove(const char* key, int index=0);
+	int remove(int key, int index=0);
+	int insert(const char* key, const EObject* value, int index);
+	int insert(int key, const EObject* value, int index);
+	int update(const char* key, const EObject* value, int index=0);
+	int update(int key, const EObject* value, int index=0);
 
-	EObject* elementAt(es_int32_t index);
-	es_int32_t indexOf(es_int32_t key);
-	es_int32_t indexOf(const char* key);
+	EObject* elementAt(int index);
+	int indexOf(int key);
+	int indexOf(const char* key);
 
 	void clear();
-	es_bool_t isEmpty();
-	es_bool_t isUniqueKey();
-	es_int32_t size();
-	void sort(es_bool_t onASC = TRUE);
+	boolean isEmpty();
+	boolean isUniqueKey();
+	int size();
+	void sort(boolean onASC = TRUE);
 
 private:
-	es_bool_t m_uniqueKey;
-	es_bool_t m_autoFree;
-	es_uint32_t m_initialCapacity;
-	es_int32_t m_items;
+	boolean m_uniqueKey;
+	boolean m_autoFree;
+	uint m_initialCapacity;
+	int m_items;
 
 	es_emap_t* m_emap;
 	es_emap_elem_t* m_emapElem;
 
-	es_bool_t hasMoreElements();
+	boolean hasMoreElements();
 	void nextElement(void* element);
 	EObject* nextElement() {
 		throw EUNSUPPORTEDOPERATIONEXCEPTION;

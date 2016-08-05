@@ -26,7 +26,6 @@ namespace efc {
  * <code>EFilterOutputStream</code> may further override some of these 
  * methods as well as provide additional methods and fields. 
  *
- * @author  Jonathan Payne
  * @version 1.32, 11/17/05
  * @since   JDK1.0
  */

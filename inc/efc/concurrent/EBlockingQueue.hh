@@ -150,7 +150,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
 

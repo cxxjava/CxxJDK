@@ -20,7 +20,6 @@ namespace efc {
  *
  * @see		Inflater
  * @version 	1.40, 04/07/06
- * @author 	David Connelly
  */
 
 class EInflaterInputStream : public EFilterInputStream {
@@ -34,6 +33,10 @@ public:
 	 * @param useDefault if false then need to call .setInflater(inf)
 	 */
 	EInflaterInputStream(EInputStream* in, int size=512, boolean useDefault=true);
+
+	//TODO:
+	EInflaterInputStream(const EInflaterInputStream& that);
+	EInflaterInputStream& operator= (const EInflaterInputStream& that);
 
 	/**
 	 * Set the specified decompressor
@@ -66,7 +69,7 @@ public:
 	 * @exception IOException if an I/O error has occurred
 	 * @exception IllegalArgumentException if n < 0
 	 */
-	virtual llong skip(llong n) THROWS(EIOException);
+	virtual long skip(long n) THROWS(EIOException);
 
 	/**
 	 * Returns 0 after EOF has been reached, otherwise always return 1.
@@ -78,7 +81,7 @@ public:
 	 * @exception  IOException  if an I/O error occurs.
 	 *
 	 */
-	virtual int available() THROWS(EIOException);
+	virtual long available() THROWS(EIOException);
 
 	/**
 	 * Closes this input stream and releases any system resources associated

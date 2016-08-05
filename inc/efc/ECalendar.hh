@@ -15,13 +15,13 @@ namespace efc {
     ECalendar *calendar = new ECalendar();
 	
     calendar->setTimeInMillis(ESystem::currentTimeMillis());
-	str = EInteger::toString(calendar->get(ECalendar::YEAR)) + "Äê"
-		+ EInteger::toString(calendar->get(ECalendar::MONTH)+1) + "ÔÂ"
-		+ EInteger::toString(calendar->get(ECalendar::DATE)+1) + "ÈÕ"
-		+ (calendar->get(ECalendar::AM_PM)==ECalendar::PM ? "ÏÂÎç" : "ÉÏÎç")
-		+ EInteger::toString(calendar->get(ECalendar::HOUR)) + "Ê±"
-		+ EInteger::toString(calendar->get(ECalendar::MINUTE)) + "·Ö"
-		+ EInteger::toString(calendar->get(ECalendar::SECOND)) + "Ãë";
+	str = EInteger::toString(calendar->get(ECalendar::YEAR)) + "Ã„Ãª"
+		+ EInteger::toString(calendar->get(ECalendar::MONTH)+1) + "Ã”Ã‚"
+		+ EInteger::toString(calendar->get(ECalendar::DATE)+1) + "ÃˆÃ•"
+		+ (calendar->get(ECalendar::AM_PM)==ECalendar::PM ? "ÃÃ‚ÃŽÃ§" : "Ã‰ÃÃŽÃ§")
+		+ EInteger::toString(calendar->get(ECalendar::HOUR)) + "ÃŠÂ±"
+		+ EInteger::toString(calendar->get(ECalendar::MINUTE)) + "Â·Ã–"
+		+ EInteger::toString(calendar->get(ECalendar::SECOND)) + "ÃƒÃ«";
 	
 	delete calendar;
 
@@ -514,7 +514,7 @@ public:
 	 * @return a hash code value for this object.
 	 * @since 1.2
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Compares this <code>Calendar</code> to the specified
@@ -539,6 +539,7 @@ public:
 	 * <code>false</code> otherwise.
 	 */
 	boolean equals(ECalendar *obj);
+	virtual boolean equals(EObject* obj);
 
 	/**
 	 * Return a string representation of this calendar. This method
@@ -548,14 +549,14 @@ public:
 	 *
 	 * @return  a string representation of this calendar.
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Return a string representation of this calendar.
 	 * @param   format   a string to be parsed as a date.
 	 * @format:
-	 *	%a     locale¡¯s abbreviated weekday name (e.g., Sun)
-	 *	%b     locale¡¯s abbreviated month name (e.g., Jan)
+	 *	%a     localeÂ¡Â¯s abbreviated weekday name (e.g., Sun)
+	 *	%b     localeÂ¡Â¯s abbreviated month name (e.g., Jan)
 	 *	%d     day of month (01..31)
 	 *	%H     hour (00..23)
 	 *	%I     hour (01..12)
@@ -563,7 +564,7 @@ public:
 	 *	%M     minute (00..59)
 	 *	%S     second (00..60)
 	 *	%s     millisecond (000..999)
-	 *	%p     locale¡¯s equivalent of either AM or PM; blank if not known
+	 *	%p     localeÂ¡Â¯s equivalent of either AM or PM; blank if not known
 	 *	%P     like %p, but lower case
 	 *	%u     day of week (1..7); 1 is Monday
 	 *	%w     day of week (0..6); 0 is Sunday
@@ -640,8 +641,8 @@ public:
 	 * @return  the Date representing formated date string.
 	 * @see     java.text.DateFormat
 	 * @format:
-	 *	%a     locale¡¯s abbreviated weekday name (e.g., Sun)
-	 *	%b     locale¡¯s abbreviated month name (e.g., Jan)
+	 *	%a     localeÂ¡Â¯s abbreviated weekday name (e.g., Sun)
+	 *	%b     localeÂ¡Â¯s abbreviated month name (e.g., Jan)
 	 *	%d     day of month (01..31)
 	 *	%H     hour (00..23)
 	 *	%I     hour (01..12)
@@ -649,7 +650,7 @@ public:
 	 *	%M     minute (00..59)
 	 *	%S     second (00..60)
 	 *	%s     millisecond (000..999)
-	 *	%p     locale¡¯s equivalent of either AM or PM; blank if not known
+	 *	%p     localeÂ¡Â¯s equivalent of either AM or PM; blank if not known
 	 *	%P     like %p, but lower case
 	 *	%u     day of week (1..7); 1 is Monday
 	 *	%w     day of week (0..6); 0 is Sunday

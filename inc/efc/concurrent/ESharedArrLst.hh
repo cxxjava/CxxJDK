@@ -15,9 +15,11 @@
 #include "EToDoException.hh"
 #include "EConcurrentCollection.hh"
 #include "EOutOfMemoryError.hh"
+#include "EIllegalStateException.hh"
+#include "ENoSuchElementException.hh"
 #include "EIndexOutOfBoundsException.hh"
 #include "EIllegalArgumentException.hh"
-#include "EUnsupportedOperationException.hh"
+#include "EConcurrentModificationException.hh"
 
 namespace efc {
 
@@ -43,21 +45,37 @@ public:
 			char msg[64];
 			eso_snprintf(msg, sizeof(msg), "Illegal Capacity: %d",
 					initialCapacity);
-			throw EIllegalArgumentException(msg, __FILE__, __LINE__);
+			throw EIllegalArgumentException(__FILE__, __LINE__, msg);
 		}
 		this->elementData = new ea<E>(initialCapacity);
 	}
 
-	eal(eal<E>& that) {
-		size_ = that.size();
+	eal(const eal<E>& that) {
+		eal<E>* t = (eal<E>*)&that;
+
+		size_ = t->size();
 		elementData = new ea<E>(size_);
 		for (int i = 0; i < size_; i++) {
-			(*elementData)[i] = that.get(i);
+			(*elementData)[i] = t->get(i);
 		}
 	}
 
-	eal(const eal<E>& that) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	eal<E>& operator= (const eal<E>& that) {
+		if (this == &that) return *this;
+
+		eal<E>* t = (eal<E>*)&that;
+
+		//1.
+		delete elementData;
+
+		//2.
+		size_ = t->size();
+		elementData = new ea<E>(size_);
+		for (int i = 0; i < size_; i++) {
+			(*elementData)[i] = t->get(i);
+		}
+
+		return *this;
 	}
 
 	/**
@@ -275,8 +293,47 @@ public:
 	 * @return an iterator over the elements in this list in proper sequence
 	 */
 	sp<EConcurrentIterator<E> > iterator() {
-		throw EToDoException(__FILE__, __LINE__);
+		return new Itr(this);
 	}
+
+private:
+	/**
+	 * An optimized version of AbstractList.Itr
+	 */
+	class Itr : public EConcurrentIterator<E> {
+	protected:
+		eal<E>* list;
+		int cursor;       // index of next element to return
+		int lastRet;      // index of last element returned; -1 if no such
+	public:
+		Itr(eal* l): list(l), cursor(0), lastRet(-1) {
+		}
+
+		virtual boolean hasNext() {
+			return cursor != list->size();
+		}
+
+		virtual sp<E> next() {
+            int i = cursor;
+            if (i >= list->size())
+                throw ENoSuchElementException(__FILE__, __LINE__);
+            cursor = i + 1;
+            return list->get(lastRet = i);
+        }
+
+		virtual void remove() {
+            if (lastRet < 0)
+                throw EIllegalStateException(__FILE__, __LINE__);
+
+            try {
+                list->remove(lastRet);
+                cursor = lastRet;
+                lastRet = -1;
+            } catch (EIndexOutOfBoundsException& ex) {
+                throw EConcurrentModificationException(__FILE__, __LINE__);
+            }
+        }
+	};
 
 private:
 	/**
@@ -315,7 +372,7 @@ private:
 	 */
 	void rangeCheck(int index) {
 		if (index >= size_)
-			throw EIndexOutOfBoundsException("outOfBoundsMsg(index)", __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, "outOfBoundsMsg(index)");
 	}
 
 	/**
@@ -323,7 +380,7 @@ private:
 	 */
 	void rangeCheckForAdd(int index) {
 		if (index > size_ || index < 0)
-			throw EIndexOutOfBoundsException("outOfBoundsMsg(index)", __FILE__, __LINE__);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, "outOfBoundsMsg(index)");
 	}
 
 	void ensureExplicitCapacity(int minCapacity) {

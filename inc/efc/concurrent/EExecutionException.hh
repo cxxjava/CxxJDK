@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EEXECUTIONEXCEPTION       EExecutionException(__FILE__, __LINE__, errno)
-#define EEXECUTIONEXCEPTIONS(msg) EExecutionException(msg, __FILE__, __LINE__, errno)
+#define EEXECUTIONEXCEPTIONS(msg) EExecutionException(__FILE__, __LINE__, msg)
 
 /**
  * Exception thrown when attempting to retrieve the result of a task
@@ -22,7 +22,6 @@ namespace efc {
  *
  * @see Future
  * @since 1.5
- * @author Doug Lea
  */
 
 class EExecutionException: public EException {
@@ -43,14 +42,42 @@ public:
 	 * Constructs an <code>EExecutionException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EExecutionException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EException(s, _file_, _line_, errn) {
+	EExecutionException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EException(_file_, _line_, s, errn) {
+	}
+
+	/**
+	 * Constructs an <code>EExecutionException</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EExecutionException(const char *_file_, int _line_, EThrowable* cause) :
+			EException(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+	 * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	EExecutionException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+			EException(_file_, _line_, s, cause) {
 	}
 };
 

@@ -25,6 +25,10 @@ public:
 
 	ESimpleCondition(es_thread_mutex_t *mutex);
 
+	//TODO:
+	ESimpleCondition(const ESimpleCondition& that);
+	ESimpleCondition& operator= (const ESimpleCondition& that);
+
 	/**
 	 * Causes the current thread to wait until it is signalled or
 	 * {@linkplain Thread#interrupt interrupted}.

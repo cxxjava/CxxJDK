@@ -22,7 +22,6 @@ namespace efc {
  * <code>OutputStream</code> must always provide at least a method 
  * that writes one byte of output.
  *
- * @author  Arthur van Hoff
  * @version 1.30, 11/17/05
  * @see     java.io.BufferedOutputStream
  * @see     java.io.ByteArrayOutputStream

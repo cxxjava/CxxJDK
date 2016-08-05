@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EBROKENBARRIEREXCEPTION        EBROKENBARRIEREXCEPTION(__FILE__, __LINE__, errno)
-#define EBROKENBARRIEREXCEPTIONS(msg)  EBROKENBARRIEREXCEPTION(msg, __FILE__, __LINE__, errno)
+#define EBROKENBARRIEREXCEPTIONS(msg)  EBROKENBARRIEREXCEPTION(__FILE__, __LINE__, msg)
 
 /**
  * Exception thrown when a thread tries to wait upon a barrier that is
@@ -23,7 +23,6 @@ namespace efc {
  * @see CyclicBarrier
  *
  * @since 1.5
- * @author Doug Lea
  *
  */
 
@@ -45,14 +44,13 @@ public:
 	 * Constructs an <code>EBrokenBarrierException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EBrokenBarrierException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	EBrokenBarrierException(const char *_file_,
+			int _line_, const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 

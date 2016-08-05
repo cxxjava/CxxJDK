@@ -15,6 +15,25 @@
 namespace efc {
 
 /**
+ * The {@code Long} class wraps a value of the primitive type {@code
+ * long} in an object. An object of type {@code Long} contains a
+ * single field whose type is {@code long}.
+ *
+ * <p> In addition, this class provides several methods for converting
+ * a {@code long} to a {@code String} and a {@code String} to a {@code
+ * long}, as well as other constants and methods useful when dealing
+ * with a {@code long}.
+ *
+ * <p>Implementation note: The implementations of the "bit twiddling"
+ * methods (such as {@link #highestOneBit(long) highestOneBit} and
+ * {@link #numberOfTrailingZeros(long) numberOfTrailingZeros}) are
+ * based on material from Henry S. Warren, Jr.'s <i>Hacker's
+ * Delight</i>, (Addison Wesley, 2002).
+ *
+ * @since   JDK1.0
+ */
+
+/**
  * The minimum radix available for conversion to and from Strings.
  */
 #define LLONG_MIN_RADIX   2
@@ -73,17 +92,6 @@ public:
 	 * @since   CLDC 1.1
 	 */
 	double doubleValue();
-
-	/**
-	 * Returns a String object representing this Long's value.
-	 * The long integer value represented by this Long object is converted
-	 * to signed decimal representation and returned as a string, exactly
-	 * as if the long value were given as an argument to the
-	 * {@link #toString(long)} method that takes one argument.
-	 *
-	 * @return  a string representation of this object in base&nbsp;10.
-	 */
-	EString toString();
 
 	/**
 	 * Creates a string representation of the first argument in the
@@ -272,19 +280,6 @@ public:
 	static ELLong valueOf(const char* s, int radix=10);
 
 	/**
-	 * Returns a hash code for this <code>Long</code>. The result is
-	 * the exclusive OR of the two halves of the primitive
-	 * <code>long</code> value held by this <code>Long</code>
-	 * object. That is, the hashcode is the value of the expression:
-	 * <blockquote><pre>
-	 * (int)(this.longValue()^(this.longValue()&gt;&gt;&gt;32))
-	 * </pre></blockquote>
-	 *
-	 * @return  a hash code value for this object.
-	 */
-	int hashCode();
-
-	/**
 	 * Compares this object to the specified object.  The result is
 	 * <code>true</code> if and only if the argument is not
 	 * <code>null</code> and is a <code>Long</code> object that
@@ -295,6 +290,31 @@ public:
 	 *          <code>false</code> otherwise.
 	 */
 	boolean equals(ELLong *obj);
+	virtual boolean equals(EObject* obj);
+
+	/**
+	 * Returns a String object representing this Long's value.
+	 * The long integer value represented by this Long object is converted
+	 * to signed decimal representation and returned as a string, exactly
+	 * as if the long value were given as an argument to the
+	 * {@link #toString(long)} method that takes one argument.
+	 *
+	 * @return  a string representation of this object in base&nbsp;10.
+	 */
+	virtual EStringBase toString();
+
+	/**
+	 * Returns a hash code for this <code>Long</code>. The result is
+	 * the exclusive OR of the two halves of the primitive
+	 * <code>long</code> value held by this <code>Long</code>
+	 * object. That is, the hashcode is the value of the expression:
+	 * <blockquote><pre>
+	 * (int)(this.longValue()^(this.longValue()&gt;&gt;&gt;32))
+	 * </pre></blockquote>
+	 *
+	 * @return  a hash code value for this object.
+	 */
+	virtual int hashCode();
 
 	/**
 	 * Compares two {@code Long} objects numerically.
@@ -309,13 +329,43 @@ public:
 	 *           comparison).
 	 * @since   1.2
 	 */
-	int compareTo(ELLong* anotherLong);
+	virtual int compareTo(ELLong* anotherLong);
 
 public:
 	/**
 	 * The value of the Long.
 	 */
 	llong value;
+
+	/**
+	 * Returns a {@code long} value with at most a single one-bit, in the
+	 * position of the highest-order ("leftmost") one-bit in the specified
+	 * {@code long} value.  Returns zero if the specified value has no
+	 * one-bits in its two's complement binary representation, that is, if it
+	 * is equal to zero.
+	 *
+	 * @param i the value whose highest one bit is to be computed
+	 * @return a {@code long} value with a single one-bit, in the position
+	 *     of the highest-order one-bit in the specified value, or zero if
+	 *     the specified value is itself equal to zero.
+	 * @since 1.5
+	 */
+	static llong highestOneBit(llong i);
+
+	/**
+	 * Returns a {@code long} value with at most a single one-bit, in the
+	 * position of the lowest-order ("rightmost") one-bit in the specified
+	 * {@code long} value.  Returns zero if the specified value has no
+	 * one-bits in its two's complement binary representation, that is, if it
+	 * is equal to zero.
+	 *
+	 * @param i the value whose lowest one bit is to be computed
+	 * @return a {@code long} value with a single one-bit, in the position
+	 *     of the lowest-order one-bit in the specified value, or zero if
+	 *     the specified value is itself equal to zero.
+	 * @since 1.5
+	 */
+	static llong lowestOneBit(llong i);
 };
 
 } /* namespace efc */

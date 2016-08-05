@@ -370,7 +370,7 @@ public:
 		 *
 		 * @return a string identifying this lock, as well as its lock state
 		 */
-		EString toString();
+		EStringBase toString();
 
 	private:
 		rwlock::Sync *sync;
@@ -632,7 +632,7 @@ public:
 		 *
 		 * @return a string identifying this lock, as well as its lock state
 		 */
-		EString toString();
+		EStringBase toString();
 
 		/**
 		 * Queries if this write lock is held by the current thread.
@@ -817,7 +817,7 @@ public:
 	 *
 	 * @return a string identifying this lock, as well as its lock state
 	 */
-	EString toString();
+	EStringBase toString();
 
 protected:
 	/**

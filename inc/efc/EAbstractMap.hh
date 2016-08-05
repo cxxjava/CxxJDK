@@ -41,8 +41,6 @@ namespace efc {
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.50, 06/16/06
  * @see Map
  * @see Collection
@@ -161,6 +159,11 @@ public:
 	virtual boolean equals(EMapEntry<EK, EV>* e) {
 		return eq(key, e->getKey()) && eq(value, e->getValue());
 	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<EK, EV>* e = dynamic_cast<EMapEntry<EK, EV>*>(obj);
+		if (!e) return false;
+        return eq(key, e->getKey()) && eq(value, e->getValue());
+	}
 
 	/**
 	 * Returns the hash code value for this map entry.  The hash code
@@ -178,6 +181,18 @@ public:
 	virtual int hashCode() {
 		return (key   == null ? 0 : key->hashCode()) ^
 			   (value == null ? 0 : value->hashCode());
+	}
+
+	/**
+	 * Returns a String representation of this map entry.  This
+	 * implementation returns the string representation of this
+	 * entry's key followed by the equals character ("<tt>=</tt>")
+	 * followed by the string representation of this entry's value.
+	 *
+	 * @return a String representation of this map entry
+	 */
+	virtual EStringBase toString() {
+		return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
 	}
 };
 
@@ -280,9 +295,13 @@ public:
 	 *         entry
 	 * @see    #hashCode
 	 */
-	virtual boolean equals(
-			EMapEntry<K, V>* e) {
+	virtual boolean equals(EMapEntry<K, V>* e) {
 		return eq(key, e->getKey()) && eq(value, e->getValue());
+	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<K, V>* e = dynamic_cast<EMapEntry<K, V>*>(obj);
+		if (!e) return false;
+        return eq(key, e->getKey()) && eq(value, e->getValue());
 	}
 
 	/**
@@ -302,6 +321,18 @@ public:
 		return (key == null ? 0 : key->hashCode())
 				^ (value == null ? 0 : value->hashCode());
 	}
+
+	/**
+	 * Returns a String representation of this map entry.  This
+	 * implementation returns the string representation of this
+	 * entry's key followed by the equals character ("<tt>=</tt>")
+	 * followed by the string representation of this entry's value.
+	 *
+	 * @return a String representation of this map entry
+	 */
+	virtual EStringBase toString() {
+		return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
+	}
 };
 
 template<typename K, typename V>
@@ -316,11 +347,11 @@ protected:
 		_values = null;
 	}
 
-	template<typename _EKeySet>
-	class KeySet: public EAbstractSet<_EKeySet> {
+	template<typename _K>
+	class KeySet: public EAbstractSet<_K> {
 	private:
-		template<typename _EKeySetI>
-		class KSListIterator: public EIterator<_EKeySetI> {
+		template<typename _KI>
+		class KSListIterator: public EIterator<_KI> {
 		private:
 			EIterator<EMapEntry<K,V>*> *i;
 
@@ -333,12 +364,19 @@ protected:
 				return i->hasNext();
 			}
 
-			_EKeySetI next() {
+			_KI next() {
 				return i->next()->getKey();
 			}
 
 			void remove() {
 				i->remove();
+			}
+
+			_KI moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				_KI o = e->getKey();
+				delete e;
+				return o;
 			}
 		};
 
@@ -349,24 +387,24 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_EKeySet>* iterator(int index=0) {
-			return new KSListIterator<_EKeySet>(_map);
+		EIterator<_K>* iterator(int index=0) {
+			return new KSListIterator<_K>(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(_EKeySet k) {
+		boolean contains(_K k) {
 			return _map->containsKey(k);
 		}
 	};
 
-	template<typename _EValueCollection>
-	class ValueCollection: public EAbstractCollection<_EValueCollection> {
+	template<typename _V>
+	class ValueCollection: public EAbstractCollection<_V> {
 	private:
-		template<typename _EValueCollectionI>
-		class VCListIterator: public EIterator<_EValueCollectionI> {
+		template<typename _VI>
+		class VCListIterator: public EIterator<_VI> {
 		private:
 			EIterator<EMapEntry<K,V>*> *i;
 
@@ -379,12 +417,19 @@ protected:
 				return i->hasNext();
 			}
 
-			_EValueCollectionI next() {
+			_VI next() {
 				return i->next()->getValue();
 			}
 
 			void remove() {
 				i->remove();
+			}
+
+			_VI moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				_VI o = e->getValue();
+				delete e;
+				return o;
 			}
 		};
 
@@ -395,8 +440,8 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_EValueCollection>* iterator(int index=0) {
-			return new VCListIterator<_EValueCollection>(_map);
+		EIterator<_V>* iterator(int index=0) {
+			return new VCListIterator<_V>(_map);
 		}
 
 		int size() {
@@ -638,6 +683,68 @@ public:
 		return _values;
 	}
 
+	/**
+	 * Returns the hash code value for this map.  The hash code of a map is
+	 * defined to be the sum of the hash codes of each entry in the map's
+	 * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+	 * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+	 * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+	 * {@link Object#hashCode}.
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt>, calling
+	 * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
+	 * set, and adding up the results.
+	 *
+	 * @return the hash code value for this map
+	 * @see Map.Entry#hashCode()
+	 * @see Object#equals(Object)
+	 * @see Set#equals(Object)
+	 */
+	virtual int hashCode() {
+		int h = 0;
+		EIterator<EMapEntry<K,V>*>* i = entrySet()->iterator();
+		while (i->hasNext())
+			h += i->next()->hashCode();
+		delete i;
+		return h;
+	}
+
+	/**
+	 * Returns a string representation of this map.  The string representation
+	 * consists of a list of key-value mappings in the order returned by the
+	 * map's <tt>entrySet</tt> view's iterator, enclosed in braces
+	 * (<tt>"{}"</tt>).  Adjacent mappings are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
+	 * the key followed by an equals sign (<tt>"="</tt>) followed by the
+	 * associated value.  Keys and values are converted to strings as by
+	 * {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this map
+	 */
+	virtual EStringBase toString() {
+		EIterator<EMapEntry<K,V>*>* i = entrySet()->iterator();
+		if (! i->hasNext()) {
+			delete i;
+			return "{}";
+		}
+
+		EStringBase sb;
+		sb.append('{');
+		for (;;) {
+			EMapEntry<K,V>* e = i->next();
+			K key = e->getKey();
+			V value = e->getValue();
+			sb.append((void*)key   == (void*)this ? "(this Map)" : key->toString().c_str());
+			sb.append('=');
+			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
+			if (! i->hasNext()) {
+				delete i;
+				return sb.append('}');
+			}
+			sb.append(',').append(' ');
+		}
+	}
+
 	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
 
 protected:
@@ -764,6 +871,11 @@ public:
 	virtual boolean equals(EMapEntry<int, EV>* e) {
 		return (key == e->getKey()) && eq(value, e->getValue());
 	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<int, EV>* e = dynamic_cast<EMapEntry<int, EV>*>(obj);
+		if (!e) return false;
+        return (key == e->getKey()) && eq(value, e->getValue());
+	}
 
 	/**
 	 * Returns the hash code value for this map entry.  The hash code
@@ -883,9 +995,13 @@ public:
 	 *         entry
 	 * @see    #hashCode
 	 */
-	virtual boolean equals(
-			EMapEntry<int, V>* e) {
+	virtual boolean equals(EMapEntry<int, V>* e) {
 		return (key == e->getKey()) && eq(value, e->getValue());
+	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<int, V>* e = dynamic_cast<EMapEntry<int, V>*>(obj);
+		if (!e) return false;
+        return (key == e->getKey()) && eq(value, e->getValue());
 	}
 
 	/**
@@ -919,11 +1035,11 @@ protected:
 		_values = null;
 	}
 
-	template<typename _EKeySet>
-	class KeySet: public EAbstractSet<_EKeySet> {
+	template<typename _K>
+	class KeySet: public EAbstractSet<_K> {
 	private:
-		template<typename _EKeySetI>
-		class KSListIterator: public EIterator<_EKeySetI> {
+		template<typename _KI>
+		class KSListIterator: public EIterator<_KI> {
 		private:
 			EIterator<EMapEntry<int,V>*> *i;
 
@@ -936,12 +1052,19 @@ protected:
 				return i->hasNext();
 			}
 
-			_EKeySetI next() {
+			_KI next() {
 				return i->next()->getKey();
 			}
 
 			void remove() {
 				i->remove();
+			}
+
+			_KI moveOut() {
+				EMapEntry<int,V>* e = i->moveOut();
+				_KI o = e->getKey();
+				delete e;
+				return o;
 			}
 		};
 
@@ -952,24 +1075,24 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_EKeySet>* iterator(int index=0) {
-			return new KSListIterator<_EKeySet>(_map);
+		EIterator<_K>* iterator(int index=0) {
+			return new KSListIterator<_K>(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(_EKeySet k) {
+		boolean contains(_K k) {
 			return _map->containsKey(k);
 		}
 	};
 
-	template<typename _EValueCollection>
-		class ValueCollection: public EAbstractCollection<_EValueCollection> {
+	template<typename _V>
+		class ValueCollection: public EAbstractCollection<_V> {
 		private:
-			template<typename _EValueCollectionI>
-			class VCListIterator: public EIterator<_EValueCollectionI> {
+			template<typename _VI>
+			class VCListIterator: public EIterator<_VI> {
 			private:
 				EIterator<EMapEntry<int,V>*> *i;
 
@@ -982,12 +1105,19 @@ protected:
 					return i->hasNext();
 				}
 
-				_EValueCollectionI next() {
+				_VI next() {
 					return i->next()->getValue();
 				}
 
 				void remove() {
 					i->remove();
+				}
+
+				_VI moveOut() {
+					EMapEntry<int,V>* e = i->moveOut();
+					_VI o = e->getValue();
+					delete e;
+					return o;
 				}
 			};
 
@@ -998,8 +1128,8 @@ protected:
 				_map = map;
 			}
 
-			EIterator<_EValueCollection>* iterator(int index=0) {
-				return new VCListIterator<_EValueCollection>(_map);
+			EIterator<_V>* iterator(int index=0) {
+				return new VCListIterator<_V>(_map);
 			}
 
 			int size() {
@@ -1241,6 +1371,68 @@ public:
 		return _values;
 	}
 
+	/**
+	 * Returns the hash code value for this map.  The hash code of a map is
+	 * defined to be the sum of the hash codes of each entry in the map's
+	 * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+	 * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+	 * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+	 * {@link Object#hashCode}.
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt>, calling
+	 * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
+	 * set, and adding up the results.
+	 *
+	 * @return the hash code value for this map
+	 * @see Map.Entry#hashCode()
+	 * @see Object#equals(Object)
+	 * @see Set#equals(Object)
+	 */
+	virtual int hashCode() {
+		int h = 0;
+		EIterator<EMapEntry<int,V>*>* i = entrySet()->iterator();
+		while (i->hasNext())
+			h += i->next()->hashCode();
+		delete i;
+		return h;
+	}
+
+	/**
+	 * Returns a string representation of this map.  The string representation
+	 * consists of a list of key-value mappings in the order returned by the
+	 * map's <tt>entrySet</tt> view's iterator, enclosed in braces
+	 * (<tt>"{}"</tt>).  Adjacent mappings are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
+	 * the key followed by an equals sign (<tt>"="</tt>) followed by the
+	 * associated value.  Keys and values are converted to strings as by
+	 * {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this map
+	 */
+	virtual EStringBase toString() {
+		EIterator<EMapEntry<int,V>*>* i = entrySet()->iterator();
+		if (! i->hasNext()) {
+			delete i;
+			return "{}";
+		}
+
+		EStringBase sb;
+		sb.append('{');
+		for (;;) {
+			EMapEntry<int,V>* e = i->next();
+			int key = e->getKey();
+			V value = e->getValue();
+			sb.append(key);
+			sb.append('=');
+			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
+			if (! i->hasNext()) {
+				delete i;
+				return sb.append('}');
+			}
+			sb.append(',').append(' ');
+		}
+	}
+
 	virtual ESet<EMapEntry<int, V>*>* entrySet() = 0;
 
 protected:
@@ -1365,6 +1557,11 @@ public:
 	virtual boolean equals(EMapEntry<llong, EV>* e) {
 		return (key == e->getKey()) && eq(value, e->getValue());
 	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<llong, EV>* e = dynamic_cast<EMapEntry<llong, EV>*>(obj);
+		if (!e) return false;
+        return (key == e->getKey()) && eq(value, e->getValue());
+	}
 
 	/**
 	 * Returns the hash code value for this map entry.  The hash code
@@ -1484,9 +1681,13 @@ public:
 	 *         entry
 	 * @see    #hashCode
 	 */
-	virtual boolean equals(
-			EMapEntry<llong, V>* e) {
+	virtual boolean equals(EMapEntry<llong, V>* e) {
 		return (key == e->getKey()) && eq(value, e->getValue());
+	}
+	virtual boolean equals(EObject* obj) {
+		EMapEntry<llong, V>* e = dynamic_cast<EMapEntry<llong, V>*>(obj);
+		if (!e) return false;
+        return (key == e->getKey()) && eq(value, e->getValue());
 	}
 
 	/**
@@ -1520,11 +1721,11 @@ protected:
 		_values = null;
 	}
 
-	template<typename _EKeySet>
-	class KeySet: public EAbstractSet<_EKeySet> {
+	template<typename _K>
+	class KeySet: public EAbstractSet<_K> {
 	private:
-		template<typename _EKeySetI>
-		class KSListIterator: public EIterator<_EKeySetI> {
+		template<typename _KI>
+		class KSListIterator: public EIterator<_KI> {
 		private:
 			EIterator<EMapEntry<llong,V>*> *i;
 
@@ -1537,12 +1738,19 @@ protected:
 				return i->hasNext();
 			}
 
-			_EKeySetI next() {
+			_KI next() {
 				return i->next()->getKey();
 			}
 
 			void remove() {
 				i->remove();
+			}
+
+			_KI moveOut() {
+				EMapEntry<llong,V>* e = i->moveOut();
+				_KI o = e->getKey();
+				delete e;
+				return o;
 			}
 		};
 
@@ -1553,24 +1761,24 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_EKeySet>* iterator(int index=0) {
-			return new KSListIterator<_EKeySet>(_map);
+		EIterator<_K>* iterator(int index=0) {
+			return new KSListIterator<_K>(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(_EKeySet k) {
+		boolean contains(_K k) {
 			return _map->containsKey(k);
 		}
 	};
 
-	template<typename _EValueCollection>
-		class ValueCollection: public EAbstractCollection<_EValueCollection> {
+	template<typename _V>
+		class ValueCollection: public EAbstractCollection<_V> {
 		private:
-			template<typename _EValueCollectionI>
-			class VCListIterator: public EIterator<_EValueCollectionI> {
+			template<typename _VI>
+			class VCListIterator: public EIterator<_VI> {
 			private:
 				EIterator<EMapEntry<llong,V>*> *i;
 
@@ -1583,12 +1791,19 @@ protected:
 					return i->hasNext();
 				}
 
-				_EValueCollectionI next() {
+				_VI next() {
 					return i->next()->getValue();
 				}
 
 				void remove() {
 					i->remove();
+				}
+
+				_VI moveOut() {
+					EMapEntry<llong,V>* e = i->moveOut();
+					_VI o = e->getValue();
+					delete e;
+					return o;
 				}
 			};
 
@@ -1599,8 +1814,8 @@ protected:
 				_map = map;
 			}
 
-			EIterator<_EValueCollection>* iterator(int index=0) {
-				return new VCListIterator<_EValueCollection>(_map);
+			EIterator<_V>* iterator(int index=0) {
+				return new VCListIterator<_V>(_map);
 			}
 
 			int size() {
@@ -1840,6 +2055,68 @@ public:
 			_values = new ValueCollection<V>(this);
 		}
 		return _values;
+	}
+
+	/**
+	 * Returns the hash code value for this map.  The hash code of a map is
+	 * defined to be the sum of the hash codes of each entry in the map's
+	 * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+	 * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+	 * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+	 * {@link Object#hashCode}.
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt>, calling
+	 * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
+	 * set, and adding up the results.
+	 *
+	 * @return the hash code value for this map
+	 * @see Map.Entry#hashCode()
+	 * @see Object#equals(Object)
+	 * @see Set#equals(Object)
+	 */
+	virtual int hashCode() {
+		int h = 0;
+		EIterator<EMapEntry<llong,V>*>* i = entrySet()->iterator();
+		while (i->hasNext())
+			h += i->next()->hashCode();
+		delete i;
+		return h;
+	}
+
+	/**
+	 * Returns a string representation of this map.  The string representation
+	 * consists of a list of key-value mappings in the order returned by the
+	 * map's <tt>entrySet</tt> view's iterator, enclosed in braces
+	 * (<tt>"{}"</tt>).  Adjacent mappings are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
+	 * the key followed by an equals sign (<tt>"="</tt>) followed by the
+	 * associated value.  Keys and values are converted to strings as by
+	 * {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this map
+	 */
+	virtual EStringBase toString() {
+		EIterator<EMapEntry<llong,V>*>* i = entrySet()->iterator();
+		if (! i->hasNext()) {
+			delete i;
+			return "{}";
+		}
+
+		EStringBase sb;
+		sb.append('{');
+		for (;;) {
+			EMapEntry<llong,V>* e = i->next();
+			llong key = e->getKey();
+			V value = e->getValue();
+			sb.append(key);
+			sb.append('=');
+			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
+			if (! i->hasNext()) {
+				delete i;
+				return sb.append('}');
+			}
+			sb.append(',').append(' ');
+		}
 	}
 
 	virtual ESet<EMapEntry<llong, V>*>* entrySet() = 0;

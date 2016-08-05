@@ -42,7 +42,6 @@ namespace efc {
  * empty. Two observers are considered the same if and only if the
  * <tt>equals</tt> method returns true for them.
  *
- * @author  Chris Warth
  * @see     java.util.Observable#notifyObservers()
  * @see     java.util.Observable#notifyObservers(java.lang.Object)
  * @see     java.util.Observer
@@ -57,6 +56,10 @@ public:
 	/** Construct an Observable with zero Observers. */
 
 	EObservable();
+
+	// unsupported.
+	EObservable(const EObservable& that);
+	EObservable& operator= (const EObservable& that);
 
 	/**
 	 * Adds an observer to the set of observers for this object, provided

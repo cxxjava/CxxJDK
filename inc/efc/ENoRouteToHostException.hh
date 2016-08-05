@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ENOROUTETOHOSTEXCEPTION       ENoRouteToHostException(__FILE__, __LINE__, errno)
-#define ENOROUTETOHOSTEXCEPTIONS(msg) ENoRouteToHostException(msg, __FILE__, __LINE__, errno)
+#define ENOROUTETOHOSTEXCEPTIONS(msg) ENoRouteToHostException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that an error occurred while attempting to connect a
@@ -42,14 +42,12 @@ public:
 	 * Constructs an <code>ENoRouteToHostException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ENoRouteToHostException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			ESocketException(s, _file_, _line_, errn) {
+	ENoRouteToHostException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			ESocketException(_file_, _line_, s, errn) {
 	}
 };
 

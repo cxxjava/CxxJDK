@@ -23,7 +23,6 @@ namespace efc {
  * such as image data. For reading streams of characters, consider using
  * <code>FileReader</code>.
  *
- * @author  Arthur van Hoff
  * @version 1.68, 04/07/06
  * @see     java.io.File
  * @see     java.io.FileDescriptor
@@ -121,6 +120,16 @@ public:
     EFileInputStream& operator= (const EFileInputStream& that);
 
     /**
+	 * Reads a byte of data from this input stream. This method blocks
+	 * if no input is yet available.
+	 *
+	 * @return     the next byte of data, or <code>-1</code> if the end of the
+	 *             file is reached.
+	 * @exception  IOException  if an I/O error occurs.
+	 */
+    virtual int read() THROWS(EIOException);
+
+    /**
      * Reads up to <code>b.length</code> bytes of data from this input
      * stream into an array of bytes. This method blocks until some input
      * is available.
@@ -155,7 +164,7 @@ public:
      * @exception  IOException  if n is negative, if the stream does not
      *                   support seek, or if an I/O error occurs.
      */
-    virtual llong skip(llong n) THROWS(EIOException);
+    virtual long skip(long n) THROWS(EIOException);
 
     /**
      * Returns an estimate of the number of remaining bytes that can be read (or
@@ -173,7 +182,7 @@ public:
      * @exception  IOException  if this file input stream has been closed by calling
      *             {@code close} or an I/O error occurs.
      */
-    virtual int available() THROWS(EIOException);
+    virtual long available() THROWS(EIOException);
 
     /**
      * Closes this file input stream and releases any system resources
@@ -201,10 +210,70 @@ public:
      */
     es_file_t* getFD() THROWS(EIOException);
 
+    /**
+	 * Use buffered.
+	 */
+	boolean isIOBuffered();
+	void setIOBuffered(boolean onoff);
+
 private:
     es_os_file_t mFD;
 	es_file_t *mFile;
 	boolean needClose;
+
+	/**
+	 * The internal buffer array where the data is stored. When necessary,
+	 * it may be replaced by another array of
+	 * a different size.
+	 */
+	EA<byte>* buf;
+
+	/**
+	 * The index one greater than the index of the last valid byte in
+	 * the buffer.
+	 * This value is always
+	 * in the range <code>0</code> through <code>buf.length</code>;
+	 * elements <code>buf[0]</code>  through <code>buf[count-1]
+	 * </code>contain buffered input data obtained
+	 * from the underlying  input stream.
+	 */
+	long count;
+
+	/**
+	 * The current position in the buffer. This is the index of the next
+	 * character to be read from the <code>buf</code> array.
+	 * <p>
+	 * This value is always in the range <code>0</code>
+	 * through <code>count</code>. If it is less
+	 * than <code>count</code>, then  <code>buf[pos]</code>
+	 * is the next byte to be supplied as input;
+	 * if it is equal to <code>count</code>, then
+	 * the  next <code>read</code> or <code>skip</code>
+	 * operation will require more bytes to be
+	 * read from the contained  input stream.
+	 *
+	 * @see     java.io.BufferedInputStream#buf
+	 */
+	long pos;
+
+	/**
+	 * Fills the buffer with more data, taking into account
+	 * shuffling and other tricks for dealing with marks.
+	 * Assumes that it is being called by a synchronized method.
+	 * This method also assumes that all data has already been read in,
+	 * hence pos > count.
+	 */
+	void fill() THROWS(EIOException);
+
+	/**
+	 * Read characters into a portion of an array, reading from the underlying
+	 * stream at most once if necessary.
+	 */
+	int read1(void* b, int off, int len) THROWS(EIOException);
+
+	int read0(void* b, int len) THROWS(EIOException);
+	long skip0(long n) THROWS(EIOException);
+	long available0() THROWS(EIOException);
 };
 
 } /* namespace efc */

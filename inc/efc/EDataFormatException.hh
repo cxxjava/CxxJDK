@@ -1,55 +1,53 @@
 /*
- * EDataFormateException.hh
+ * EDataFormatException.hh
  *
  *  Created on: 2013-3-14
  *      Author: cxxjava@163.com
  */
 
-#ifndef EDATAFORMATEEXCEPTION_HH_
-#define EDATAFORMATEEXCEPTION_HH_
+#ifndef EDATAFORMATEXCEPTION_HH_
+#define EDATAFORMATEXCEPTION_HH_
 
 #include "EException.hh"
 
 namespace efc {
 
-#define EDATAFORMATEEXCEPTION        EDataFormateException(__FILE__, __LINE__, errno)
-#define EDATAFORMATEEXCEPTIONS(msg)  EDataFormateException(msg, __FILE__, __LINE__, errno)
+#define EDATAFORMATEXCEPTION        EDataFormatException(__FILE__, __LINE__, errno)
+#define EDATAFORMATEXCEPTIONS(msg)  EDataFormatException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that a data format error has occurred.
  *
  * @version 	1.14, 11/17/05
- * @author 	David Connelly
  */
 
-class EDataFormateException: public EException {
+class EDataFormatException: public EException {
 public:
 	/**
-	 * Constructs an <code>EDataFormateException</code> with no
+	 * Constructs an <code>EDataFormatException</code> with no
 	 * detail message.
 	 *
 	 * @param   _file_   __FILE__
 	 * @param   _line_   __LINE__
 	 * @param   errn     errno
 	 */
-	EDataFormateException(const char *_file_, int _line_, int errn = 0) :
+	EDataFormatException(const char *_file_, int _line_, int errn = 0) :
 			EException(_file_, _line_, errn) {
 	}
 
 	/**
-	 * Constructs an <code>EDataFormateException</code> with the
+	 * Constructs an <code>EDataFormatException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EDataFormateException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	EDataFormatException(const char *_file_,
+			int _line_, const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 
 } /* namespace efc */
-#endif /* EDATAFORMATEEXCEPTION_HH_ */
+#endif /* EDATAFORMATEXCEPTION_HH_ */

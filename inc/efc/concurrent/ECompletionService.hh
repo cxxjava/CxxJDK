@@ -55,7 +55,7 @@ interface ECompletionService : virtual public EObject {
      *         scheduled for execution
      * @throws NullPointerException if the task is null
      */
-    virtual sp<EFuture<V> > submit(ECallable<V> *task) = 0;
+    virtual sp<EFuture<V> > submit(sp<ECallable<V> > task) = 0;
 
     /**
      * Submits a Runnable task for execution and returns a Future
@@ -71,7 +71,7 @@ interface ECompletionService : virtual public EObject {
      *         scheduled for execution
      * @throws NullPointerException if the task is null
      */
-    virtual sp<EFuture<V> > submit(ERunnable *task, sp<V> result) = 0;
+    virtual sp<EFuture<V> > submit(sp<ERunnable> task, sp<V> result) = 0;
 
     /**
      * Retrieves and removes the Future representing the next

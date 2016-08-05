@@ -30,7 +30,6 @@ namespace efc {
  * <pre>   {@code
  *   Deque<Integer> stack = new ArrayDeque<Integer>();}</pre>
  *
- * @author  Jonathan Payne
  * @since   JDK1.0
  */
 
@@ -80,7 +79,7 @@ public:
 			EVector<E>::removeElementAt(len - 1);
 
 			return obj;
-		}}
+        }}
 	}
 
 	/**
@@ -96,9 +95,9 @@ public:
 			int     len = EVector<E>::size();
 
 			if (len == 0)
-				throw EEmptyStackException("Empty stack.", __FILE__, __LINE__);
+				throw EEmptyStackException(__FILE__, __LINE__, "Empty stack.");
 			return EVector<E>::elementAt(len - 1);
-		}}
+        }}
 	}
 
 	/**
@@ -133,7 +132,7 @@ public:
 				return EVector<E>::size() - i;
 			}
 			return -1;
-		}}
+        }}
 	}
 };
 

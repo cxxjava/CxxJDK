@@ -31,7 +31,6 @@ namespace efc {
  * thread that was providing data bytes to the connected
  * piped output stream is no longer alive.
  *
- * @author  James Gosling
  * @version 1.40, 12/01/05
  * @see     java.io.PipedOutputStream
  * @since   JDK1.0
@@ -66,6 +65,10 @@ public:
      * <code>PipedOutputStream</code> before being used.
      */
     EPipedInputStream();
+
+    // TODO:
+    EPipedInputStream(const EPipedInputStream& that);
+    EPipedInputStream& operator= (const EPipedInputStream& that);
 
     /**
      * Causes this piped input stream to be connected
@@ -131,7 +134,7 @@ public:
      * @exception  IOException  if an I/O error occurs.
      * @since   JDK1.0.2
      */
-    virtual int available() THROWS(EIOException);
+    virtual long available() THROWS(EIOException);
 
     /**
      * Closes this piped input stream and releases any system resources

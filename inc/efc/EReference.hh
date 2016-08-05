@@ -9,6 +9,7 @@
 #define EREFERENCE_HH_
 
 #include "EObject.hh"
+#include "ESharedPtr.hh"
 
 namespace efc {
 
@@ -18,13 +19,12 @@ namespace efc {
  * implemented in close cooperation with the garbage collector, this class may
  * not be subclassed directly.
  *
- * @author   Mark Reinhold
  * @since    1.2
  */
 template<typename T>
 class EReference : public EObject {
 public:
-	EReference(T o) : referent(o) {
+	EReference(sp<T>& o) : referent(o) {
 	}
 
 	/* -- Referent accessor and setters -- */
@@ -37,8 +37,8 @@ public:
 	 * @return   The object to which this reference refers, or
 	 *           <code>null</code> if this reference object has been cleared
 	 */
-	T get() {
-		return referent;
+	sp<T> get() {
+		return referent.lock();
 	}
 
 	/**
@@ -49,11 +49,11 @@ public:
 	 * clears references it does so directly, without invoking this method.
 	 */
 	void clear() {
-		referent = null;
+		referent.reset();
 	}
 
 private:
-	T referent;
+	sp<T> referent;
 };
 
 } /* namespace efc */

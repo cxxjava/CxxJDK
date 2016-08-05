@@ -65,6 +65,7 @@ public:
 	 *          <code>false</code> otherwise.
 	 */
 	boolean equals(char that);
+	virtual boolean equals(EObject* obj);
 
 	/**
 	 * Returns a String object representing this character's value.
@@ -75,7 +76,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Determines if the specified character is a lowercase character.

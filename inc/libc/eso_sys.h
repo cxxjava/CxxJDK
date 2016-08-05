@@ -41,6 +41,7 @@ es_bool_t eso_is_bigendian(void);
 /**
  * Get backtrace information.
  */
+char* eso_backtrace_get_from(es_string_t **trace, int top);
 char* eso_backtrace_get(es_string_t **trace);
 
 /**

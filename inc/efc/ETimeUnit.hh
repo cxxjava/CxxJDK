@@ -45,7 +45,6 @@ namespace efc {
  * same granularity as the given <tt>TimeUnit</tt>.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class EThread;

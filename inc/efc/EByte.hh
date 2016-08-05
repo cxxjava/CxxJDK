@@ -84,7 +84,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 	/**
      * Assuming the specified String represents a byte, returns
@@ -101,7 +101,7 @@ public:
 	/**
 	 * Returns a hash code for this <code>Byte</code>.
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Compares this object to the specified object.  The result is
@@ -114,6 +114,7 @@ public:
 	 * 			<code>false</code> otherwise.
 	 */
 	boolean equals(EByte *obj);
+	virtual boolean equals(EObject* obj);
 
 private:
 	/**

@@ -56,7 +56,6 @@ namespace efc {
  *
  * @see		Deflater
  * @version 	1.47, 04/07/06
- * @author 	David Connelly
  *
  */
 

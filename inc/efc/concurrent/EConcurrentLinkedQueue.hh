@@ -59,7 +59,6 @@ namespace efc {
  * Java Collections Framework</a>.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  *
  */
@@ -85,7 +84,7 @@ private:
      */
 
     class Node {
-    private:
+    public:
     	sp<E> item; //volatile?
         sp<Node> next; //volatile?
 
@@ -95,6 +94,7 @@ private:
 
         Node(E* x, Node* n) { item = x; next = n; }
         Node(sp<E> x, sp<Node> n) { item = x; next = n; }
+        Node(es_nullptr_t x, es_nullptr_t n) { }
 
         sp<E> getItem() {
             return atomic_load(&item);
@@ -108,6 +108,10 @@ private:
         	sp<E> t(val);
         	atomic_store(&item, t);
         }
+		void setItem(es_nullptr_t) {
+			sp<E> t;
+			atomic_store(&item, t);
+		}
         void setItem(sp<E> val) {
         	atomic_store(&item, val);
         }
@@ -127,6 +131,10 @@ private:
         void setNext(sp<Node> val) {
         	atomic_store(&next, val);
         }
+        void setNext(es_nullptr_t) {
+        	sp<Node> t;
+			atomic_store(&next, t);
+		}
     };
 
 public:
@@ -135,7 +143,7 @@ public:
     	sp<Node> node = head;
     	while (node != null) {
     		sp<Node> next = node->getNext();
-    		node->setNext(null);
+    		node->next = null;
     		node = next;
     	}
     }
@@ -173,7 +181,7 @@ public:
         sp<E> x(e);
         boolean r = offer(x);
 		if (!r) {
-			x.detach();
+			x.dismiss();
 		}
 		return r;
     }
@@ -353,13 +361,19 @@ public:
      */
     boolean remove(E* o) {
         if (o == null) return false;
+        sp<Node> pred = null;
         for (sp<Node> p = first(); p != null; p = p->getNext()) {
             sp<E> item = p->getItem();
-            sp<E> nullPtr;
             if (item != null &&
                 o->equals(item.get()) &&
-                p->casItem(item, nullPtr))
-                return true;
+                p->casItem(item, null)) {
+            	//@see: java8
+            	sp<Node> next = p->getNext();
+            	if (pred != null && next != null)
+					pred->casNext(p, next);
+            	return true;
+            }
+            pred = p;
         }
         return false;
     }

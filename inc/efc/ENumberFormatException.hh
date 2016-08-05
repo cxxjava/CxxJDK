@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ENUMBERFORMATEXCEPTION       ENumberFormatException(__FILE__, __LINE__, errno)
-#define ENUMBERFORMATEXCEPTIONS(msg) ENumberFormatException(msg, __FILE__, __LINE__, errno)
+#define ENUMBERFORMATEXCEPTIONS(msg) ENumberFormatException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown to indicate that the application has attempted to convert 
@@ -39,14 +39,13 @@ public:
 	 * Constructs an <code>IllegalArgumentException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ENumberFormatException(const char *s, const char *_file_, int _line_,
-			int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	ENumberFormatException(const char *_file_, int _line_,
+			const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 

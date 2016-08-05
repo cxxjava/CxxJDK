@@ -35,8 +35,6 @@ namespace efc {
  *
  * @param <E> the type of elements maintained by this set
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.29, 04/21/06
  * @see Collection
  * @see AbstractCollection
@@ -114,14 +112,11 @@ public:
      * @return <tt>true</tt> if the specified object is equal to this set
      */
     virtual boolean equals(EObject* o) {
-		if (!o)
-			return false;
-
 		if (o == this)
 	    	return true;
 
 		ECollection<E>* c = dynamic_cast<ECollection<E>*>(o);
-		if (c->size() != size())
+		if (!c || c->size() != size())
 	    	return false;
         
 		return containsAll(c);
@@ -288,7 +283,7 @@ public:
 	    	return true;
 
 		ECollection<int>* c = static_cast<ECollection<int>*>(o);
-		if (c->size() != size())
+		if (!c || c->size() != size())
 	    	return false;
 
 		return containsAll(c);
@@ -453,7 +448,7 @@ public:
 	    	return true;
 
 		ECollection<llong>* c = static_cast<ECollection<llong>*>(o);
-		if (c->size() != size())
+		if (!c || c->size() != size())
 	    	return false;
 
 		return containsAll(c);

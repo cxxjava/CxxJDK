@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EINTERRUPTEDEXCEPTION        EInterruptedException(__FILE__, __LINE__, errno)
-#define EINTERRUPTEDEXCEPTIONS(msg)  EInterruptedException(msg, __FILE__, __LINE__, errno)
+#define EINTERRUPTEDEXCEPTIONS(msg)  EInterruptedException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown when a thread is waiting, sleeping, or otherwise occupied,
@@ -27,7 +27,6 @@ namespace efc {
  *      throw new InterruptedException();
  * </pre>
  *
- * @author  Frank Yellin
  * @see     java.lang.Object#wait()
  * @see     java.lang.Object#wait(long)
  * @see     java.lang.Object#wait(long, int)
@@ -55,14 +54,13 @@ public:
 	 * Constructs an <code>EInterruptedException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EInterruptedException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	EInterruptedException(const char *_file_,
+			int _line_, const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 

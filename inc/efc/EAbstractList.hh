@@ -9,8 +9,11 @@
 #define EABSTRACTLIST_HH_
 
 #include "EList.hh"
+#include "EListIterator.hh"
 #include "EAbstractCollection.hh"
+#include "EIndexOutOfBoundsException.hh"
 #include "EUnsupportedOperationException.hh"
+#include "ENoSuchElementException.hh"
 
 namespace efc {
 
@@ -52,8 +55,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.52, 06/16/06
  * @since 1.2
  */
@@ -69,10 +70,10 @@ protected:
 	EAbstractList() {
 	}
 
-	template<typename ELI>
-	class ListIterator: public EIterator<ELI> {
+private:
+	class ListIterator: public EListIterator<E> {
 	public:
-		ListIterator(EAbstractList<ELI> *list, int index=0) {
+		ListIterator(EAbstractList<E> *list, int index=0) {
 			abslist = list;
 
 			cursor = index;
@@ -86,29 +87,39 @@ protected:
 			return cursor != abslist->size();
 		}
 
-		ELI next() {
-			ELI next = abslist->getAt(cursor);
+		E next() {
+			E next = abslist->getAt(cursor);
 			lastRet = cursor++;
 			return next;
 		}
 
 		void remove() {
 			if (lastRet >= 0) {
-				ELI o = abslist->getAt(lastRet);
+				E o = abslist->getAt(lastRet);
 				abslist->remove(o);
 				if (lastRet < cursor)
 					cursor--;
 				lastRet = -1;
 			}
 		}
+		E moveOut() {
+			if (lastRet >= 0) {
+				E o = abslist->removeAt(lastRet);
+				if (lastRet < cursor)
+					cursor--;
+				lastRet = -1;
+				return o;
+			}
+			return null;
+		}
 
 		boolean hasPrevious() {
 			return cursor != 0;
 		}
 
-		ELI previous() {
+		E previous() {
 			int i = cursor - 1;
-			ELI previous = abslist->getAt(i);
+			E previous = abslist->getAt(i);
 			lastRet = cursor = i;
 			return previous;
 		}
@@ -121,20 +132,20 @@ protected:
 		    return cursor-1;
 		}
 
-		void set(ELI e) {
+		void set(E e) {
 			if (lastRet == -1)
 				return;
 
-			abslist->set(lastRet, e);
+			abslist->setAt(lastRet, e);
 		}
 
-		void add(ELI e) {
-			abslist->add(cursor++, e);
+		void add(E e) {
+			abslist->addAt(cursor++, e);
 			lastRet = -1;
 		}
 
 	private:
-		EAbstractList<ELI> *abslist;
+		EAbstractList<E> *abslist;
 
 		/**
 		 * Index of element to be returned by subsequent call to next.
@@ -279,7 +290,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int indexOf(E o) {
-		ListIterator<E> e(this);
+		ListIterator e(this);
 		while (e.hasNext())
 			if (o == e.next())
 				return e.previousIndex();
@@ -298,7 +309,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int lastIndexOf(E o) {
-		ListIterator<E> e(this);
+		ListIterator e(this);
 		while (e.hasPrevious())
 			if (o == e.previous())
 				return e.nextIndex();
@@ -349,7 +360,37 @@ public:
 	 * @see #modCount
 	 */
 	virtual EIterator<E>* iterator(int index=0) {
-		return new ListIterator<E>(this, index);
+		return new ListIterator(this, index);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns a straightforward implementation of the
+	 * {@code ListIterator} interface that extends the implementation of the
+	 * {@code Iterator} interface returned by the {@code iterator()} method.
+	 * The {@code ListIterator} implementation relies on the backing list's
+	 * {@code get(int)}, {@code set(int, E)}, {@code add(int, E)}
+	 * and {@code remove(int)} methods.
+	 *
+	 * <p>Note that the list iterator returned by this implementation will
+	 * throw an {@link UnsupportedOperationException} in response to its
+	 * {@code remove}, {@code set} and {@code add} methods unless the
+	 * list's {@code remove(int)}, {@code set(int, E)}, and
+	 * {@code add(int, E)} methods are overridden.
+	 *
+	 * <p>This implementation can be made to throw runtime exceptions in the
+	 * face of concurrent modification, as described in the specification for
+	 * the (protected) {@link #modCount} field.
+	 *
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	EListIterator<E>* listIterator(int index = 0) {
+		if (index < 0 || index > size()) {
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());
+		}
+		return new ListIterator(this, index);
 	}
 };
 
@@ -366,10 +407,10 @@ protected:
 	EAbstractList() {
 	}
 
-	template<typename ELI>
-	class ListIterator: public EIterator<ELI> {
+private:
+	class ListIterator: public EListIterator<int> {
 	public:
-		ListIterator(EAbstractList<ELI> *list, int index=0) {
+		ListIterator(EAbstractList<int> *list, int index=0) {
 			abslist = list;
 
 			cursor = index;
@@ -380,29 +421,39 @@ protected:
 			return cursor != abslist->size();
 		}
 
-		ELI next() {
-			ELI next = abslist->getAt(cursor);
+		int next() {
+			int next = abslist->getAt(cursor);
 			lastRet = cursor++;
 			return next;
 		}
 
 		void remove() {
 			if (lastRet >= 0) {
-				ELI o = abslist->getAt(lastRet);
-				abslist->remove(o);
+				abslist->removeAt(lastRet);
 				if (lastRet < cursor)
 					cursor--;
 				lastRet = -1;
 			}
 		}
 
+		int moveOut() {
+			if (lastRet >= 0) {
+				int o = abslist->removeAt(lastRet);
+				if (lastRet < cursor)
+					cursor--;
+				lastRet = -1;
+				return o;
+			}
+			throw ENoSuchElementException(__FILE__, __LINE__);
+		}
+
 		boolean hasPrevious() {
 			return cursor != 0;
 		}
 
-		ELI previous() {
+		int previous() {
 			int i = cursor - 1;
-			ELI previous = abslist->getAt(i);
+			int previous = abslist->getAt(i);
 			lastRet = cursor = i;
 			return previous;
 		}
@@ -415,20 +466,20 @@ protected:
 		    return cursor-1;
 		}
 
-		void set(ELI e) {
+		void set(int e) {
 			if (lastRet == -1)
 				return;
 
-			abslist->set(lastRet, e);
+			abslist->setAt(lastRet, e);
 		}
 
-		void add(ELI e) {
-			abslist->add(cursor++, e);
+		void add(int e) {
+			abslist->addAt(cursor++, e);
 			lastRet = -1;
 		}
 
 	private:
-		EAbstractList<ELI> *abslist;
+		EAbstractList<int> *abslist;
 
 		/**
 		 * Index of element to be returned by subsequent call to next.
@@ -573,7 +624,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int indexOf(int o) {
-		ListIterator<int> e(this);
+		ListIterator e(this);
 		while (e.hasNext())
 			if (o == e.next())
 				return e.previousIndex();
@@ -592,7 +643,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int lastIndexOf(int o) {
-		ListIterator<int> e(this);
+		ListIterator e(this);
 		while (e.hasPrevious())
 			if (o == e.previous())
 				return e.nextIndex();
@@ -643,7 +694,37 @@ public:
 	 * @see #modCount
 	 */
 	virtual EIterator<int>* iterator(int index=0) {
-		return new ListIterator<int>(this, index);
+		return new ListIterator(this, index);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns a straightforward implementation of the
+	 * {@code ListIterator} interface that extends the implementation of the
+	 * {@code Iterator} interface returned by the {@code iterator()} method.
+	 * The {@code ListIterator} implementation relies on the backing list's
+	 * {@code get(int)}, {@code set(int, E)}, {@code add(int, E)}
+	 * and {@code remove(int)} methods.
+	 *
+	 * <p>Note that the list iterator returned by this implementation will
+	 * throw an {@link UnsupportedOperationException} in response to its
+	 * {@code remove}, {@code set} and {@code add} methods unless the
+	 * list's {@code remove(int)}, {@code set(int, E)}, and
+	 * {@code add(int, E)} methods are overridden.
+	 *
+	 * <p>This implementation can be made to throw runtime exceptions in the
+	 * face of concurrent modification, as described in the specification for
+	 * the (protected) {@link #modCount} field.
+	 *
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	EListIterator<int>* listIterator(int index = 0) {
+		if (index < 0 || index > size()) {
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());
+		}
+		return new ListIterator(this, index);
 	}
 };
 
@@ -660,10 +741,10 @@ protected:
 	EAbstractList() {
 	}
 
-	template<typename ELI>
-	class ListIterator: public EIterator<ELI> {
+private:
+	class ListIterator: public EListIterator<llong> {
 	public:
-		ListIterator(EAbstractList<ELI> *list, int index=0) {
+		ListIterator(EAbstractList<llong> *list, int index=0) {
 			abslist = list;
 
 			cursor = index;
@@ -674,29 +755,39 @@ protected:
 			return cursor != abslist->size();
 		}
 
-		ELI next() {
-			ELI next = abslist->getAt(cursor);
+		llong next() {
+			llong next = abslist->getAt(cursor);
 			lastRet = cursor++;
 			return next;
 		}
 
 		void remove() {
 			if (lastRet >= 0) {
-				ELI o = abslist->getAt(lastRet);
-				abslist->remove(o);
+				abslist->removeAt(lastRet);
 				if (lastRet < cursor)
 					cursor--;
 				lastRet = -1;
 			}
 		}
 
+		llong moveOut() {
+			if (lastRet >= 0) {
+				llong o = abslist->removeAt(lastRet);
+				if (lastRet < cursor)
+					cursor--;
+				lastRet = -1;
+				return o;
+			}
+			throw ENoSuchElementException(__FILE__, __LINE__);
+		}
+
 		boolean hasPrevious() {
 			return cursor != 0;
 		}
 
-		ELI previous() {
+		llong previous() {
 			int i = cursor - 1;
-			ELI previous = abslist->getAt(i);
+			llong previous = abslist->getAt(i);
 			lastRet = cursor = i;
 			return previous;
 		}
@@ -709,20 +800,20 @@ protected:
 		    return cursor-1;
 		}
 
-		void set(ELI e) {
+		void set(llong e) {
 			if (lastRet == -1)
 				return;
 
-			abslist->set(lastRet, e);
+			abslist->setAt(lastRet, e);
 		}
 
-		void add(ELI e) {
-			abslist->add(cursor++, e);
+		void add(llong e) {
+			abslist->addAt(cursor++, e);
 			lastRet = -1;
 		}
 
 	private:
-		EAbstractList<ELI> *abslist;
+		EAbstractList<llong> *abslist;
 
 		/**
 		 * Index of element to be returned by subsequent call to next.
@@ -867,7 +958,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int indexOf(llong o) {
-		ListIterator<llong> e(this);
+		ListIterator e(this);
 		while (e.hasNext())
 			if (o == e.next())
 				return e.previousIndex();
@@ -886,7 +977,7 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual int lastIndexOf(llong o) {
-		ListIterator<llong> e(this);
+		ListIterator e(this);
 		while (e.hasPrevious())
 			if (o == e.previous())
 				return e.nextIndex();
@@ -937,7 +1028,37 @@ public:
 	 * @see #modCount
 	 */
 	virtual EIterator<llong>* iterator(int index=0) {
-		return new ListIterator<llong>(this, index);
+		return new ListIterator(this, index);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns a straightforward implementation of the
+	 * {@code ListIterator} interface that extends the implementation of the
+	 * {@code Iterator} interface returned by the {@code iterator()} method.
+	 * The {@code ListIterator} implementation relies on the backing list's
+	 * {@code get(int)}, {@code set(int, E)}, {@code add(int, E)}
+	 * and {@code remove(int)} methods.
+	 *
+	 * <p>Note that the list iterator returned by this implementation will
+	 * throw an {@link UnsupportedOperationException} in response to its
+	 * {@code remove}, {@code set} and {@code add} methods unless the
+	 * list's {@code remove(int)}, {@code set(int, E)}, and
+	 * {@code add(int, E)} methods are overridden.
+	 *
+	 * <p>This implementation can be made to throw runtime exceptions in the
+	 * face of concurrent modification, as described in the specification for
+	 * the (protected) {@link #modCount} field.
+	 *
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	EListIterator<llong>* listIterator(int index = 0) {
+		if (index < 0 || index > size()) {
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());
+		}
+		return new ListIterator(this, index);
 	}
 };
 

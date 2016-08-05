@@ -42,7 +42,6 @@ namespace efc {
  * customized task classes.
  *
  * @since 1.5
- * @author Doug Lea
  * @param <V> The result type returned by this FutureTask's {@code get} methods
  */
 
@@ -57,10 +56,10 @@ private:
 	template<typename T>
 	class RunnableAdapter : public ECallable<T> {
 	private:
-		ERunnable* task;
+		sp<ERunnable> task;
 		sp<T> result;
 	public:
-		RunnableAdapter(ERunnable* task, sp<T> result) {
+		RunnableAdapter(sp<ERunnable> task, sp<T> result) {
 			this->task = task;
 			this->result = result;
 		}
@@ -85,10 +84,6 @@ protected:
 
 public:
 	virtual ~EFutureTask(){
-		if (callable && owns) {
-			delete callable;
-		}
-
 		WaitNode* p = waiters;
 		while (p) {
 			WaitNode* n = p->next;
@@ -116,7 +111,7 @@ public:
 	 * @param  callable the callable task
 	 * @throws NullPointerException if the callable is null
 	 */
-	EFutureTask(ECallable<V> *callable) : runner(null), waiters(null), owns(false) {
+	EFutureTask(sp<ECallable<V> > callable) : runner(null), waiters(null) {
 		if (callable == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		this->callable = callable;
@@ -135,7 +130,7 @@ public:
 	 * {@code Future<?> f = new FutureTask<Void>(runnable, null)}
 	 * @throws NullPointerException if the runnable is null
 	 */
-	EFutureTask(ERunnable *runnable, sp<V> result) : runner(null), waiters(null), owns(true) {
+	EFutureTask(sp<ERunnable> runnable, sp<V> result) : runner(null), waiters(null) {
 		//@see: this.callable = Executors.callable(runnable, result);
 		/*
 		 * this->callable = EExecutors::callable(runnable, result);
@@ -214,7 +209,7 @@ public:
 										 null, EThread::currentThread()))
 			return;
 		try {
-			ECallable<V> *c = callable;
+			sp<ECallable<V> > c = callable;
 			if (c != null && state == NEW) {
 				sp<V> result;
 				boolean ran;
@@ -289,7 +284,7 @@ protected:
 	 */
 	void setException(EThrowable& t) {
 		if (EUnsafe::compareAndSwapInt(&this->state, NEW, COMPLETING)) {
-			outexception = new EThrowable(t.getMessage(), t.getSourceFile(), t.getSourceLine());
+			outexception = new EThrowable(t.getSourceFile(), t.getSourceLine(), t.getMessage());
 			EUnsafe::putOrdered(&this->state, (int)EXCEPTIONAL); // final state
 			finishCompletion();
 		}
@@ -312,7 +307,7 @@ protected:
 		boolean ran = false;
 		int s = state;
 		try {
-			ECallable<V> *c = callable;
+			sp<ECallable<V> > c = callable;
 			if (c != null && s == NEW) {
 				try {
 					c->call(); // don't set result
@@ -370,7 +365,7 @@ private:
 	};
 
 	/** The underlying callable; nulled out after running */
-	ECallable<V> *callable;
+	sp<ECallable<V> > callable;
 	/** The result to return or exception to throw from get() */
 	sp<V> outcome; // non-volatile, protected by state reads/writes
 	sp<EThrowable> outexception;
@@ -378,9 +373,6 @@ private:
 	EThread* volatile runner;
 	/** Treiber stack of waiting threads */
 	WaitNode* volatile waiters;
-
-	// need to free callable?
-	boolean owns;// = false;
 
 	/**
 	 * Returns result or throws exception for completed task.
@@ -395,7 +387,7 @@ private:
 			throw ECancellationException(__FILE__, __LINE__);
 		EThrowable* t = outexception.get();
 		if (t) {
-			throw EExecutionException(t->getMessage(), t->getSourceFile(), t->getSourceLine());
+			throw EExecutionException(t->getSourceFile(), t->getSourceLine(), t->getMessage());
 		}
 		else {
 			throw EExecutionException(__FILE__, __LINE__);

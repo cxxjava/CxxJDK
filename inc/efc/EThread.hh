@@ -19,6 +19,10 @@
 
 namespace efc {
 
+namespace nio {
+class EInterruptibleChannel;
+}
+
 class EThreadGroup;
 class EParker;
 class EInterruptible;
@@ -110,7 +114,6 @@ class MainThreadLocal;
  * one thread may have the same name. If a name is not specified when
  * a thread is created, a new name is generated for it.
  *
- * @author  unascribed
  * @see     Runnable
  * @see     Runtime#exit(int)
  * @see     #run()
@@ -315,7 +318,7 @@ public:
 	 * @param   target   the object whose <code>run</code> method is called.
 	 * @see     #Thread(ThreadGroup, Runnable, String)
 	 */
-	EThread(ERunnable* target, boolean owned=false);
+	EThread(sp<ERunnable> target);
 
 	/**
 	 * Allocates a new <code>Thread</code> object. This constructor has
@@ -330,7 +333,7 @@ public:
 	 *             thread in the specified thread group.
 	 * @see        #Thread(ThreadGroup, Runnable, String)
 	 */
-	EThread(sp<EThreadGroup> group, ERunnable* target, boolean owned=false);
+	EThread(sp<EThreadGroup> group, sp<ERunnable> target);
 
 	/**
 	 * Allocates a new <code>Thread</code> object. This constructor has
@@ -361,7 +364,7 @@ public:
 	 * @param   name     the name of the new thread.
 	 * @see     #Thread(ThreadGroup, Runnable, String)
 	 */
-	EThread(ERunnable* target, const char *name, boolean owned=false);
+	EThread(sp<ERunnable> target, const char *name);
 
 	/**
 	 * Allocates a new <code>Thread</code> object so that it has
@@ -417,7 +420,7 @@ public:
 	 * @see        ThreadGroup#checkAccess()
 	 * @see        SecurityManager#checkAccess
 	 */
-	EThread(sp<EThreadGroup> group, ERunnable* target, const char* name, boolean owned=false,
+	EThread(sp<EThreadGroup> group, sp<ERunnable> target, const char* name,
 			ulong stacksize = 0, ulong guardsize = 0) THROWS(EIllegalArgumentException);
 
 	//TODO:
@@ -700,7 +703,7 @@ public:
 	 *
 	 * @return  a string representation of this thread.
 	 */
-	EString toString();
+	EStringBase toString();
 
 	/**
 	 * Returns the handler invoked when this thread abruptly terminates
@@ -936,9 +939,7 @@ public:
 
 protected:
 	friend class MainThreadLocal;
-	template<typename>
 	friend class EThreadLocal;
-	template<typename>
 	friend class EInheritableThreadLocal;
 
 	/**
@@ -951,19 +952,19 @@ protected:
 	 */
 	EObject* inheritableValues; //EThreadLocal::Values
 
-	EThread(boolean only4main);
+	EThread(const int only4main);
 
 private:
 	friend class EParker;
 	friend class EUnsafe;
 	friend class EThreadStatusChanger;
+	friend class nio::EInterruptibleChannel;
 
 	/* C thread */
 	es_thread_t *thread;
 
 	/* What will be run. */
-	ERunnable   *target;
-	boolean owned; //=false;
+	sp<ERunnable> target;
 
 	/* Thread name */
 	EString      name;
@@ -1002,6 +1003,10 @@ private:
 	EInterruptible* volatile blocker;
 	ESimpleLock* blockerLock;
 
+	/* Set the blocker field; invoked via sun.misc.SharedSecrets from java.nio code
+	 */
+	void blockedOn(EInterruptible* b);
+
 	// JSR166 per-thread parker
 	EParker* parker;
 
@@ -1039,7 +1044,7 @@ private:
 	 *        zero to indicate that this parameter is to be ignored.
 	 * @param ismain the main thread flag
 	 */
-	void init(sp<EThreadGroup> g, ERunnable* target, const char* name, boolean owned,
+	void init(sp<EThreadGroup> g, sp<ERunnable> target, const char* name,
 			 ulong stacksize, ulong guardsize, boolean ismain=false);
 
 	/**
@@ -1059,7 +1064,7 @@ private:
 	/**
 	 * @see: jvm os::sleep
 	 */
-	int sleep0(llong millis, bool interruptible);
+	int sleep0(llong millis, boolean interruptible);
 
 	/**
 	 * Create a native thread.
@@ -1074,13 +1079,6 @@ private:
 public:
 	/* Thread ID */
 	ulong tid;
-
-#if 0
-	EAtomicCounter parkCount; //only for test
-	EAtomicCounter unparkCount;
-	EAtomicCounter parkCount0;
-	EAtomicCounter unparkCount0;
-#endif
 };
 
 } /* namespace efc */

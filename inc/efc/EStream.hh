@@ -10,8 +10,12 @@ namespace efc {
 
 class EStream : public EObject {
 public:
-	EStream();
 	virtual ~EStream();
+	EStream();
+
+	//TODO:
+	EStream(const EStream& that);
+	EStream& operator= (const EStream& that);
 
 public:
 	void open(const char* filename, const char* mode)

@@ -29,7 +29,6 @@ namespace efc {
  * a byte cannot be written for any reason,
  * an <code>IOException</code> is thrown.
  *
- * @author  Frank Yellin
  * @version 1.23, 05/23/06
  * @see     java.io.DataInput
  * @see     java.io.DataOutputStream

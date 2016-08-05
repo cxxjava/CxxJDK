@@ -24,7 +24,6 @@ namespace efc {
  * group, but not to access information about its thread group's
  * parent thread group or any other thread groups.
  *
- * @author  unascribed
  * @since   JDK1.0
  */
 /* The locking strategy for this code is to try to lock only one level of the
@@ -77,6 +76,10 @@ public:
 	 * @since   JDK1.0
 	 */
 	EThreadGroup(sp<EThreadGroup> parent, const char* name);
+
+	// unsupported.
+	EThreadGroup(const EThreadGroup& that);
+	EThreadGroup& operator= (const EThreadGroup& that);
 
 	/**
 	 * Returns the name of this thread group.
@@ -327,7 +330,7 @@ public:
 	 * @see     java.lang.ThreadGroup#checkAccess()
 	 * @since   JDK1.0
 	 */
-	int enumerate(EA<EThreadGroup*>* list);
+	int enumerate(ea<EThreadGroup>* list);
 
 	/**
 	 * Copies into the specified array references to every active
@@ -359,7 +362,7 @@ public:
 	 * @see     java.lang.ThreadGroup#checkAccess()
 	 * @since   JDK1.0
 	 */
-	int enumerate(EA<EThreadGroup*>* list, boolean recurse);
+	int enumerate(ea<EThreadGroup>* list, boolean recurse);
 
 	/**
 	 * Interrupts all threads in this thread group.
@@ -440,7 +443,7 @@ public:
 	 * @return  a string representation of this thread group.
 	 * @since   JDK1.0
 	 */
-	EString toString();
+	EStringBase toString();
 
 protected:
 	friend class EThread;
@@ -484,7 +487,7 @@ private:
 	sp<EThreadGroup> parent;
 
 	int enumerate(EA<EThread*>* list, int n, boolean recurse);
-	int enumerate(EA<EThreadGroup*>* list, int n, boolean recurse);
+	int enumerate(ea<EThreadGroup>* list, int n, boolean recurse);
 
 	/**
 	 * Adds the specified Thread group to this group.

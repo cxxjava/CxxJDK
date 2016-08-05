@@ -13,7 +13,7 @@
 namespace efc {
 
 #define ETIMEOUTEXCEPTION       ETimeoutException(__FILE__, __LINE__, errno)
-#define ETIMEOUTEXCEPTIONS(msg) ETimeoutException(msg, __FILE__, __LINE__, errno)
+#define ETIMEOUTEXCEPTIONS(msg) ETimeoutException(__FILE__, __LINE__, msg)
 
 /**
  * Exception thrown when a blocking operation times out.  Blocking
@@ -24,7 +24,6 @@ namespace efc {
  * declared and thrown.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class ETimeoutException: public EException {
@@ -45,14 +44,12 @@ public:
 	 * Constructs an <code>ETimeoutException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ETimeoutException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EException(s, _file_, _line_, errn) {
+	ETimeoutException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EException(_file_, _line_, s, errn) {
 	}
 };
 

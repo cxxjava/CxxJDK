@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EINTERRUPTEDIOEXCEPTION       EInterruptedIOException(__FILE__, __LINE__, errno)
-#define EINTERRUPTEDIOEXCEPTIONS(msg) EInterruptedIOException(msg, __FILE__, __LINE__, errno)
+#define EINTERRUPTEDIOEXCEPTIONS(msg) EInterruptedIOException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that an I/O operation has been interrupted. An
@@ -23,7 +23,6 @@ namespace efc {
  * indicates how many bytes were successfully transferred before
  * the interruption occurred.
  *
- * @author  unascribed
  * @see     java.io.InputStream
  * @see     java.io.OutputStream
  * @see     java.lang.Thread#interrupt()
@@ -48,14 +47,12 @@ public:
 	 * Constructs an <code>EInterruptedIOException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EInterruptedIOException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EIOException(s, _file_, _line_, errn) {
+	EInterruptedIOException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EIOException(_file_, _line_, s, errn) {
 	}
 };
 

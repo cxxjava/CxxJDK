@@ -56,8 +56,6 @@ namespace efc {
  * Collections Framework</a>.  Unlike the new collection
  * implementations, {@code Vector} is synchronized.
  *
- * @author  Lee Boynton
- * @author  Jonathan Payne
  * @version 1.106, 06/16/06
  * @see Collection
  * @see List
@@ -111,7 +109,7 @@ public:
 	void setThreadSafe(boolean safe=true) {
 		SYNCHRONIZED(this) {
 			_threadSafe = safe;
-		}}
+		}
 	}
 
 	/**
@@ -120,7 +118,7 @@ public:
 	boolean getThreadSafe() {
 		SYNCHRONIZED(this) {
 			return _threadSafe;
-		}}
+		}
 	}
 
 	/**

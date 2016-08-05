@@ -32,8 +32,6 @@ namespace efc {
  * PrintWriter}</code> class should be used in situations that require writing
  * characters rather than bytes.
  *
- * @author     Frank Yellin
- * @author     Mark Reinhold
  * @since      JDK1.0
  */
 
@@ -54,6 +52,10 @@ public:
 	 * @see java.io.PrintWriter#PrintWriter(java.io.OutputStream, boolean)
 	 */
 	EPrintStream(EOutputStream *out, boolean autoFlush=false);
+
+	// TODO:
+	EPrintStream(const EPrintStream& that);
+	EPrintStream& operator= (const EPrintStream& that);
 
 	/**
 	 * Writes <code>len</code> bytes from the specified byte array starting at

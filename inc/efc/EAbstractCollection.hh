@@ -41,8 +41,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author  Josh Bloch
- * @author  Neal Gafter
  * @version 1.38, 06/16/06
  * @see Collection
  * @since 1.2
@@ -285,12 +283,44 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<E> *e = iterator();
-		while (e->hasNext()) {
-			e->next();
-			e->remove();
+		EIterator<E> *it = iterator();
+		while (it->hasNext()) {
+			it->next();
+			it->remove();
 		}
-		delete e;
+		delete it;
+	}
+
+	//  String conversion
+
+	/**
+	 * Returns a string representation of this collection.  The string
+	 * representation consists of a list of the collection's elements in the
+	 * order they are returned by its iterator, enclosed in square brackets
+	 * (<tt>"[]"</tt>).  Adjacent elements are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Elements are converted to strings as
+	 * by {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this collection
+	 */
+	EStringBase toString() {
+		EIterator<E>* it = iterator();
+		if (! it->hasNext()) {
+			delete it;
+			return "[]";
+		}
+
+		EStringBase sb;
+		sb.append('[');
+		for (;;) {
+			E e = it->next();
+			sb.append((void*)e == (void*)this ? "(this Collection)" : e->toString().c_str());
+			if (! it->hasNext()) {
+				delete it;
+				return sb.append(']');
+			}
+			sb.append(',').append(' ');
+		}
 	}
 };
 
@@ -533,12 +563,44 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<int> *e = iterator();
-		while (e->hasNext()) {
-			e->next();
-			e->remove();
+		EIterator<int> *it = iterator();
+		while (it->hasNext()) {
+			it->next();
+			it->remove();
 		}
-		delete e;
+		delete it;
+	}
+
+	//  String conversion
+
+	/**
+	 * Returns a string representation of this collection.  The string
+	 * representation consists of a list of the collection's elements in the
+	 * order they are returned by its iterator, enclosed in square brackets
+	 * (<tt>"[]"</tt>).  Adjacent elements are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Elements are converted to strings as
+	 * by {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this collection
+	 */
+	EStringBase toString() {
+		EIterator<int>* it = iterator();
+		if (! it->hasNext()) {
+			delete it;
+			return "[]";
+		}
+
+		EStringBase sb;
+		sb.append('[');
+		for (;;) {
+			int e = it->next();
+			sb.append(e);
+			if (! it->hasNext()) {
+				delete it;
+				return sb.append(']');
+			}
+			sb.append(',').append(' ');
+		}
 	}
 };
 
@@ -781,12 +843,44 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<llong> *e = iterator();
-		while (e->hasNext()) {
-			e->next();
-			e->remove();
+		EIterator<llong> *it = iterator();
+		while (it->hasNext()) {
+			it->next();
+			it->remove();
 		}
-		delete e;
+		delete it;
+	}
+
+	//  String conversion
+
+	/**
+	 * Returns a string representation of this collection.  The string
+	 * representation consists of a list of the collection's elements in the
+	 * order they are returned by its iterator, enclosed in square brackets
+	 * (<tt>"[]"</tt>).  Adjacent elements are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Elements are converted to strings as
+	 * by {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this collection
+	 */
+	EStringBase toString() {
+		EIterator<llong>* it = iterator();
+		if (! it->hasNext()) {
+			delete it;
+			return "[]";
+		}
+
+		EStringBase sb;
+		sb.append('[');
+		for (;;) {
+			llong e = it->next();
+			sb.append(e);
+			if (! it->hasNext()) {
+				delete it;
+				return sb.append(']');
+			}
+			sb.append(',').append(' ');
+		}
 	}
 };
 

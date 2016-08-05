@@ -115,7 +115,6 @@ namespace efc {
  * @see java.util.concurrent.LinkedBlockingQueue
  * @see java.util.concurrent.PriorityBlockingQueue
  * @since 1.5
- * @author Doug Lea
  * @param <E> the type of elements held in this collection
  */
 

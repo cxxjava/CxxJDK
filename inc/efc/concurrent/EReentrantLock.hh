@@ -510,7 +510,7 @@ public:
 	 *
 	 * @return a string identifying this lock, as well as its lock state
 	 */
-	EString toString();
+	virtual EStringBase toString();
 
 private:
 	/** Synchronizer providing all implementation mechanics */

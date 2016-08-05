@@ -229,11 +229,11 @@ typedef double                  es_real64_t;
 typedef es_ssize_t              es_ptrdiff_t;
 typedef es_ssize_t              es_off_t;
 
-typedef signed char             es_bool_t;
+typedef unsigned char           es_bool_t;
 
-typedef char                    es_string_t;      /*用于表示动态分配的字符串*/
-typedef unsigned short          es_wstring_t;     /*用于表示动态分配的宽字符串*/
-typedef void                    es_data_t;        /*用于表示动态分配的二进制数据*/
+typedef char                    es_string_t;
+typedef unsigned short          es_wstring_t;
+typedef void                    es_data_t;
 
 typedef void es_func_t(void);
 

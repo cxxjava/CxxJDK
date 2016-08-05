@@ -74,7 +74,6 @@ namespace efc {
  *
  * @param <E> the type of elements maintained by this set
  *
- * @author  Josh Bloch
  * @see Set
  * @see TreeSet
  * @see SortedMap

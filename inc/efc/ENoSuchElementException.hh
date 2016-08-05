@@ -13,14 +13,13 @@
 namespace efc {
 
 #define ENOSUCHELEMENTEXCEPTION        ENoSuchElementException(__FILE__, __LINE__, errno)
-#define ENOSUCHELEMENTEXCEPTIONS(msg)  ENoSuchElementException(msg, __FILE__, __LINE__, errno)
+#define ENOSUCHELEMENTEXCEPTIONS(msg)  ENoSuchElementException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown by the <code>nextElement</code> method of an
  * <code>Enumeration</code> to indicate that there are no more
  * elements in the enumeration.
  *
- * @author  unascribed
  * @see     java.util.Enumeration
  * @see     java.util.Enumeration#nextElement()
  * @since   JDK1.0
@@ -44,14 +43,13 @@ public:
 	 * Constructs an <code>ENoSuchElementException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ENoSuchElementException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-				ERuntimeException(s, _file_, _line_, errn) {
+	ENoSuchElementException(const char *_file_,
+			int _line_, const char *s) :
+				ERuntimeException(_file_, _line_, s) {
 	}
 };
 

@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EINDEXOUTOFBOUNDSEXCEPTION       EIndexOutOfBoundsException(__FILE__, __LINE__, errno)
-#define EINDEXOUTOFBOUNDSEXCEPTIONS(msg) EIndexOutOfBoundsException(msg, __FILE__, __LINE__, errno)
+#define EINDEXOUTOFBOUNDSEXCEPTIONS(msg) EIndexOutOfBoundsException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown to indicate that an index of some sort (such as to an array,
@@ -40,14 +40,13 @@ public:
 	 * Constructs an <code>EIndexOutOfBoundsException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EIndexOutOfBoundsException(const char *s, const char *_file_,
-			int _line_, int errn = 0) :
-			EException(s, _file_, _line_, errn) {
+	EIndexOutOfBoundsException(const char *_file_,
+			int _line_, const char *s) :
+			EException(_file_, _line_, s) {
 	}
 };
 

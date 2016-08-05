@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EOUTOFMEMORYERROR       EOutOfMemoryError(__FILE__, __LINE__, errno)
-#define EOUTOFMEMORYERRORS(msg) EOutOfMemoryError(msg, __FILE__, __LINE__, errno)
+#define EOUTOFMEMORYERRORS(msg) EOutOfMemoryError(__FILE__, __LINE__, msg)
 
 /**
  * The class <code>EOutOfMemoryError</code> and its subclasses are a form of
@@ -37,13 +37,12 @@ public:
 	/**
      * Constructs an <code>EOutOfMemoryError</code> with the specified detail message.
      *
-     * @param   s   the detail message.
 	 * @param   _file_   __FILE__
 	 * @param   _line_   __LINE__
-	 * @param   errn     errno
+     * @param   s   the detail message.
      */
-	EOutOfMemoryError(const char *s, const char *_file_, int _line_, int errn = 0) :
-			EThrowable(s, _file_, _line_, errn) {
+	EOutOfMemoryError(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EThrowable(_file_, _line_, s, errn) {
 	}
 };
 

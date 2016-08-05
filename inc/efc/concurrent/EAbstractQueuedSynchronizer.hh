@@ -15,11 +15,10 @@
 #include "ECollection.hh"
 #include "ECondition.hh"
 #include "ELinkedList.hh"
+#include "EArrayList.hh"
 #include "EAbstractOwnableSynchronizer.hh"
 #include "ENullPointerException.hh"
 #include "EInterruptedException.hh"
-
-//#define DEBUG
 
 namespace efc {
 
@@ -272,11 +271,9 @@ namespace efc {
  * </pre>
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 abstract class EAbstractQueuedSynchronizer : public EAbstractOwnableSynchronizer {
-protected:
 	/**
 	 * Wait queue node class.
 	 *
@@ -356,12 +353,14 @@ protected:
 	 * expert group, for helpful ideas, discussions, and critiques
 	 * on the design of this class.
 	 */
+
+private:
 	class Node : public EObject {
 	public:
 		/** Marker to indicate a node is waiting in shared mode */
-		static Node SHARED; // = new Node();
+		static sp<Node> SHARED; // = new Node();
 		/** Marker to indicate a node is waiting in exclusive mode */
-		static Node* EXCLUSIVE; // = null;
+		static sp<Node> EXCLUSIVE; // = null;
 
 		enum WaitStatus {
 			/** waitStatus value to indicate thread has cancelled */
@@ -424,7 +423,7 @@ protected:
 		 * cancelled thread never succeeds in acquiring, and a thread only
 		 * cancels itself, not any other node.
 		 */
-		Node* volatile prev;
+		sp<Node> prev;
 
 		/**
 		 * Link to the successor node that the current node/thread
@@ -439,7 +438,7 @@ protected:
 		 * point to the node itself instead of null, to make life
 		 * easier for isOnSyncQueue.
 		 */
-		Node* volatile next;
+		sp<Node> next;
 
 		/**
 		 * The thread that enqueued this node.  Initialized on
@@ -447,10 +446,6 @@ protected:
 		 */
 		EThread* volatile thread;
 
-#ifdef DEBUG
-		EThread* ownerThread;
-		EThread* pendThread;
-#endif
 		/**
 		 * Link to next node waiting on condition, or the special
 		 * value SHARED.  Because condition queues are accessed only
@@ -461,13 +456,15 @@ protected:
 		 * we save a field by using special value to indicate shared
 		 * mode.
 		 */
-		Node* nextWaiter;
+		sp<Node> nextWaiter;
+
+		int pendedTimestamp; //!
 
 		/**
 		 * Returns true if node is waiting in shared mode
 		 */
 		boolean isShared() {
-			return nextWaiter == &SHARED;
+			return atomic_load(&nextWaiter) == SHARED;
 		}
 
 		/**
@@ -477,8 +474,8 @@ protected:
 		 *
 		 * @return the predecessor of this node
 		 */
-		Node* predecessor() THROWS(ENullPointerException) {
-			Node* p = prev;
+		sp<Node> predecessor() THROWS(ENullPointerException) {
+			sp<Node> p = atomic_load(&prev);
 			if (p == null)
 				throw ENullPointerException(__FILE__, __LINE__);
 			else
@@ -486,42 +483,20 @@ protected:
 		}
 
 		virtual ~Node() {
-//			if (next != this) {
-//				Node* p = next;
-//				next = null;
-//				delete p;
-//			}
-//			if (nextWaiter && nextWaiter != &SHARED) {
-//				delete nextWaiter; //TODO?
-//			}
 		}
 
 		Node() :
-			waitStatus(0), prev(null), next(null), thread(null), nextWaiter(null) { // Used to establish initial head or SHARED marker
-#ifdef DEBUG
-			ownerThread = EThread::currentThread();
-			pendThread = null;
-#endif
+			waitStatus(0), thread(null) { // Used to establish initial head or SHARED marker
 		}
 
-		Node(EThread* thread, Node* mode) :
-			waitStatus(0), prev(null), next(null) {     // Used by addWaiter
-			this->nextWaiter = mode;
+		Node(EThread* thread, sp<Node>& mode): waitStatus(0) { // Used by addWaiter
+			atomic_store(&this->nextWaiter, mode);
 			this->thread = thread;
-#ifdef DEBUG
-			ownerThread = EThread::currentThread();
-			pendThread = null;
-#endif
 		}
 
-		Node(EThread* thread, int waitStatus) :
-				prev(null), next(null), nextWaiter(null) { // Used by Condition
+		Node(EThread* thread, int waitStatus) { // Used by Condition
 			this->waitStatus = waitStatus;
 			this->thread = thread;
-#ifdef DEBUG
-			ownerThread = EThread::currentThread();
-			pendThread = null;
-#endif
 		}
 	};
 
@@ -548,9 +523,9 @@ public:
 		EAbstractQueuedSynchronizer* aqs;
 
 		/** First node of condition queue. */
-		Node* firstWaiter;
+		sp<Node> firstWaiter;
 		/** Last node of condition queue. */
-		Node* lastWaiter;
+		sp<Node> lastWaiter;
 
 		// Internal methods
 
@@ -558,7 +533,7 @@ public:
 		 * Adds a new waiter to wait queue.
 		 * @return its new wait node
 		 */
-		Node* addConditionWaiter();
+		sp<Node> addConditionWaiter();
 
 		/**
 		 * Removes and transfers nodes until hit non-cancelled one or
@@ -566,13 +541,13 @@ public:
 		 * to inline the case of no waiters.
 		 * @param first (non-null) the first node on condition queue
 		 */
-		void doSignal(Node* first);
+		void doSignal(sp<Node>& first);
 
 		/**
 		 * Removes and transfers all nodes.
 		 * @param first (non-null) the first node on condition queue
 		 */
-		void doSignalAll(Node* first);
+		void doSignalAll(sp<Node>& first);
 
 		/**
 		 * Unlinks cancelled waiter nodes from condition queue.
@@ -595,7 +570,7 @@ public:
 		 * before signalled, REINTERRUPT if after signalled, or
 		 * 0 if not interrupted.
 		 */
-		int checkInterruptWhileWaiting(Node* node);
+		int checkInterruptWhileWaiting(sp<Node>& node);
 
 		/**
 		 * Throws InterruptedException, reinterrupts current thread, or
@@ -926,14 +901,6 @@ public:
 	 */
 	boolean isQueued(EThread* thread);
 
-//	/**
-//	 * Return {@code true} if the queue is empty or if the given thread
-//	 * is at the head of the queue. This is reliable only if
-//	 * <tt>current</tt> is actually Thread.currentThread() of caller.
-//	 */
-//	boolean isFirst(EThread* current);
-//	boolean fullIsFirst(EThread* current);
-
 	// Instrumentation and monitoring methods
 
 	/**
@@ -990,7 +957,7 @@ public:
 	 *
 	 * @return a string identifying this synchronizer, as well as its state
 	 */
-	EString toString();
+	EStringBase toString();
 
 	// Instrumentation methods for conditions
 
@@ -1154,7 +1121,7 @@ protected:
 	 * @param arg the acquire argument
 	 * @return {@code true} if interrupted while waiting
 	 */
-	boolean acquireQueued(Node* node, int arg);
+	boolean acquireQueued(sp<Node>& node, int arg);
 
 	// Main exported methods
 
@@ -1304,7 +1271,7 @@ protected:
 	 * @param node the node
 	 * @return true if is reacquiring
 	 */
-	boolean isOnSyncQueue(Node* node);
+	boolean isOnSyncQueue(sp<Node>& node);
 
 	/**
 	 * Transfers a node from a condition queue onto sync queue.
@@ -1313,7 +1280,7 @@ protected:
 	 * @return true if successfully transferred (else the node was
 	 * cancelled before signal).
 	 */
-	boolean transferForSignal(Node* node);
+	boolean transferForSignal(sp<Node>& node);
 
 	/**
 	 * Transfers node, if necessary, to sync queue after a cancelled
@@ -1323,7 +1290,7 @@ protected:
 	 * @param node its node
 	 * @return true if cancelled before the node was signalled
 	 */
-	boolean transferAfterCancelledWait(Node* node);
+	boolean transferAfterCancelledWait(sp<Node>& node);
 
 	/**
 	 * Invokes release with current state value; returns saved state.
@@ -1331,7 +1298,7 @@ protected:
 	 * @param node the condition node for this wait
 	 * @return previous sync state
 	 */
-	int fullyRelease(Node* node);
+	int fullyRelease(sp<Node>& node);
 
 private:
 	/**
@@ -1340,36 +1307,18 @@ private:
 	 * If head exists, its waitStatus is guaranteed not to be
 	 * CANCELLED.
 	 */
-	Node* volatile head;
+	sp<Node> head;
 
 	/**
 	 * Tail of the wait queue, lazily initialized.  Modified only via
 	 * method enq to add new wait node.
 	 */
-	Node* volatile tail;
+	sp<Node> tail;
 
 	/**
 	 * The synchronization state.
 	 */
 	volatile int state;
-
-#if AQS_SUPPORT_THREAD_DAEMON
-	/**
-	 * For fixed bug #20150507
-	 */
-	volatile byte releaseSyncState;
-#endif
-
-//	ESpinLock syncLock;
-//	ESimpleLock syncLock;
-
-	//
-	EThreadLocal<ELinkedList<Node*>*> pending;
-
-	/**
-	 * Pend node for delete delay.
-	 */
-	void pendMove(Node* node);
 
 	// Queuing utilities
 
@@ -1378,7 +1327,7 @@ private:
 	 * @param node the node to insert
 	 * @return node's predecessor
 	 */
-	Node* enq(Node* node);
+	sp<Node> enq(sp<Node>& node);
 
 	/**
 	 * Creates and enqueues node for current thread and given mode.
@@ -1386,7 +1335,7 @@ private:
 	 * @param mode Node.EXCLUSIVE for exclusive, Node.SHARED for shared
 	 * @return the new node
 	 */
-	Node* addWaiter(Node* mode);
+	sp<Node> addWaiter(sp<Node>& mode);
 
 	/**
 	 * Sets head of queue to be node, thus dequeuing. Called only by
@@ -1395,14 +1344,14 @@ private:
 	 *
 	 * @param node the node
 	 */
-	void setHead(Node* node);
+	void setHead(sp<Node>& node);
 
 	/**
 	 * Wakes up node's successor, if one exists.
 	 *
 	 * @param node the node
 	 */
-	void unparkSuccessor(Node* node);
+	void unparkSuccessor(sp<Node>& node);
 
 	/**
 	 * Release action for shared mode -- signal successor and ensure
@@ -1419,7 +1368,7 @@ private:
 	 * @param node the node
 	 * @param propagate the return value from a tryAcquireShared
 	 */
-	void setHeadAndPropagate(Node* node, int propagate);
+	void setHeadAndPropagate(sp<Node>& node, int propagate);
 
 	// Utilities for various versions of acquire
 
@@ -1428,7 +1377,7 @@ private:
 	 *
 	 * @param node the node
 	 */
-	void cancelAcquire(Node* node);
+	void cancelAcquire(sp<Node>& node);
 
 	/**
 	 * Checks and updates status for a node that failed to acquire.
@@ -1439,7 +1388,7 @@ private:
 	 * @param node the node
 	 * @return {@code true} if thread should block
 	 */
-	static boolean shouldParkAfterFailedAcquire(Node* pred, Node* node);
+	static boolean shouldParkAfterFailedAcquire(sp<Node>& pred, sp<Node>& node);
 
 	/**
 	 * Convenience method to interrupt current thread.
@@ -1499,27 +1448,27 @@ private:
 	 * Called only when needed by isOnSyncQueue.
 	 * @return true if present
 	 */
-	boolean findNodeFromTail(Node* node);
+	boolean findNodeFromTail(sp<Node>& node);
 
 	/**
 	 * CAS head field. Used only by enq.
 	 */
-	boolean compareAndSetHead(Node* update);
+	boolean compareAndSetHead(sp<Node>& update);
 
 	/**
 	 * CAS tail field. Used only by enq.
 	 */
-	boolean compareAndSetTail(Node* expect, Node* update);
+	boolean compareAndSetTail(sp<Node>& expect, sp<Node>& update);
 
 	/**
 	 * CAS waitStatus field of a node.
 	 */
-	static boolean compareAndSetWaitStatus(Node* node, int expect, int update);
+	static boolean compareAndSetWaitStatus(sp<Node>& node, int expect, int update);
 
 	/**
 	 * CAS next field of a node.
 	 */
-	static boolean compareAndSetNext(Node* node, Node* expect, Node* update);
+	static boolean compareAndSetNext(sp<Node>& node, sp<Node>& expect, sp<Node> update);
 };
 
 } /* namespace efc */

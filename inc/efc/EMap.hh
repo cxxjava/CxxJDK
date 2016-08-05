@@ -86,7 +86,6 @@ namespace efc {
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Josh Bloch
  * @version 1.56, 04/21/06
  * @see HashMap
  * @see TreeMap

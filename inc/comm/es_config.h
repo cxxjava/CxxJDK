@@ -12,14 +12,21 @@
 
 #elif defined(__sun) //solaris
 
+#define HAVE_EVPORT  //solaris evport
+
 #elif defined(__linux__) //linux
 
+#define HAVE_EPOLL   //linux epoll
+
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) //bsd
+
+#define HAVE_KQUEUE  //bsd kqueue
 
 #else //other.
 
 #endif
 
+#define HAVE_SELECT  //default
 
 /**
  * The accept4 system call which exists from kernel 2.6.28
@@ -30,10 +37,5 @@
 //#define HAVE_IPV6
 
 #define HAVE_THREADS
-
-/**
- *
- */
-#define AQS_SUPPORT_THREAD_DAEMON 0
 
 #endif /* ES_CONFIG_H_ */

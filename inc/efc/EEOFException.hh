@@ -13,7 +13,7 @@
 namespace efc {
 
 #define EEOFEXCEPTION       EEOFException(__FILE__, __LINE__, errno)
-#define EEOFEXCEPTIONS(msg) EEOFException(msg, __FILE__, __LINE__, errno)
+#define EEOFEXCEPTIONS(msg) EEOFException(__FILE__, __LINE__, msg)
 
 /**
  * Signals that an end of file or end of stream has been reached
@@ -24,7 +24,6 @@ namespace efc {
  * end of stream rather than throwing an exception.
  * <p>
  *
- * @author  Frank Yellin
  * @see     java.io.DataInputStream
  * @see     java.io.IOException
  * @since   JDK1.0
@@ -48,14 +47,12 @@ public:
 	 * Constructs an <code>EEOFException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	EEOFException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EIOException(s, _file_, _line_, errn) {
+	EEOFException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EIOException(_file_, _line_, s, errn) {
 	}
 };
 

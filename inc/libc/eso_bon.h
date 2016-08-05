@@ -24,15 +24,15 @@ struct es_bon_node_t {
 	es_bon_node_t    *next;
 	es_bon_node_t    *attr0;
 	es_uint8_t        dtype:4;   /* node data type:
-			                      0x00£ºstring The encoded string(default is utf-8)
-    		                      0x01£ºbinary The origin binary data
-    		                      0x02£ºi8 8-bits signed integer(int8, uint8, bool, byte)
-    		                      0x03£ºi16 16-bits signed integer(int16, uint16)
-    		                      0x04£ºi32 32-bits signed integer(int32, uint32, float)
-    		                      0x05£ºi64 64-bits signed integer(int64, uint64, double)
-    		                      0x06£ºfloat  32-bits float
-    		                      0x07£ºdouble 64-bits float
-    		                      0x08£ºvarint variant integer(int32, int64, uint32, uint64, sint32, sint64, bool, enum)
+			                      0x00Â£Âºstring The encoded string(default is utf-8)
+    		                      0x01Â£Âºbinary The origin binary data
+    		                      0x02Â£Âºi8 8-bits signed integer(int8, uint8, bool, byte)
+    		                      0x03Â£Âºi16 16-bits signed integer(int16, uint16)
+    		                      0x04Â£Âºi32 32-bits signed integer(int32, uint32, float)
+    		                      0x05Â£Âºi64 64-bits signed integer(int64, uint64, double)
+    		                      0x06Â£Âºfloat  32-bits float
+    		                      0x07Â£Âºdouble 64-bits float
+    		                      0x08Â£Âºvarint variant integer(int32, int64, uint32, uint64, sint32, sint64, bool, enum)
     		                      */
 	es_uint8_t        isattr:1; //1-attribute node, 0-element node
 	es_uint8_t        _last_:1; /*private*/

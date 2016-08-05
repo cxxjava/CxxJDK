@@ -24,7 +24,6 @@ namespace efc {
  * deal with numerically-based classes.
  *
  * @since 1.5
- * @author Doug Lea
  */
 
 class EAtomicLLong: public EObject {
@@ -144,7 +143,7 @@ public:
      * Returns the String representation of the current value.
      * @return the String representation of the current value.
      */
-    EString toString();
+    EStringBase toString();
 
 
     int intValue();

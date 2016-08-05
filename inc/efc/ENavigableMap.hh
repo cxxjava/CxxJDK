@@ -57,8 +57,6 @@ namespace efc {
  * <a href="{@docRoot}/../technotes/guides/collections/index.html">
  * Java Collections Framework</a>.
  *
- * @author Doug Lea
- * @author Josh Bloch
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  * @since 1.6

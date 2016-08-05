@@ -91,10 +91,6 @@ namespace efc {
  * @param <K> the type of keys maintained by this map
  * @param <V> the type of mapped values
  *
- * @author  Doug Lea
- * @author  Josh Bloch
- * @author  Arthur van Hoff
- * @author  Neal Gafter
  * @version 1.73, 03/13/07
  * @see     Object#hashCode()
  * @see     Collection
@@ -126,11 +122,7 @@ class EHashMap: public EAbstractMap<K, V>,
 		virtual public EMap<K, V> {
 public:
 	class Entry: public EMapEntry<K, V> {
-	#if defined(_MSC_VER) && (_MSC_VER<=1200)
-	public:
-	#else
 	private:
-	#endif
 		friend class EHashMap;
 		K key;
 		V value;
@@ -254,6 +246,14 @@ private:
 			current = null;
 			delete _map->removeEntryForKey(k);
 		}
+
+		Entry* moveOutEntry() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			K k = current->key;
+			current = null;
+			return _map->removeEntryForKey(k);
+		}
 	};
 
 	template<typename EI>
@@ -266,6 +266,10 @@ private:
 		EI next() {
 			return HashIterator<EI>::nextEntry();
 		}
+
+		EI moveOut() {
+			return HashIterator<EI>::moveOutEntry();
+		}
 	};
 
 	class ValueIterator: public HashIterator<V> {
@@ -277,6 +281,13 @@ private:
 		V next() {
 			return HashIterator<V>::nextEntry()->getValue();
 		}
+
+		V moveOut() {
+			Entry* e = HashIterator<V>::moveOutEntry();
+			V v = e->getValue();
+			delete e;
+			return v;
+		}
 	};
 
 	class KeyIterator: public HashIterator<K> {
@@ -287,6 +298,13 @@ private:
 
 		K next() {
 			return HashIterator<K>::nextEntry()->getKey();
+		}
+
+		K moveOut() {
+			Entry* e = HashIterator<K>::moveOutEntry();
+			K k = e->getKey();
+			delete e;
+			return k;
 		}
 	};
 
@@ -364,11 +382,7 @@ private:
 		}
 	};
 
-#if defined(_MSC_VER) && (_MSC_VER<=1200)
-public:
-#else
 private:
-#endif
 	/**
 	 * The table, resized as necessary. Length MUST Always be a power of two.
 	 */
@@ -416,6 +430,8 @@ private:
 	 * require explicit knowledge of subclasses.)
 	 */
 	void init(uint initialCapacity, float loadFactor, boolean autoFreeKey, boolean autoFreeValue) {
+		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
+			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
 		if (initialCapacity > HM_MAXIMUM_CAPACITY)
 			initialCapacity = HM_MAXIMUM_CAPACITY;
 
@@ -483,16 +499,15 @@ private:
 
 public:
 	/**
-	 * Constructs an empty <tt>HashMap</tt> with the specified initial
-	 * capacity and load factor.
-	 *
-	 * @param  initialCapacity the initial capacity
-	 * @param  loadFactor      the load factor
-	 * @throws IllegalArgumentException if the initial capacity is negative
-	 *         or the load factor is nonpositive
+	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+	 * (16) and the default load factor (0.75).
 	 */
-	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeKey, boolean autoFreeValue) {
-		init(initialCapacity, loadFactor, autoFreeKey, autoFreeValue);
+	EHashMap() {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true, true);
+	}
+	explicit
+	EHashMap(boolean autoFreeKey, boolean autoFreeValue) {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeKey, autoFreeValue);
 	}
 
 	/**
@@ -502,16 +517,27 @@ public:
 	 * @param  initialCapacity the initial capacity.
 	 * @throws IllegalArgumentException if the initial capacity is negative.
 	 */
+	explicit
+	EHashMap(uint initialCapacity) {
+		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, true, true);
+	}
+	explicit
 	EHashMap(uint initialCapacity, boolean autoFreeKey, boolean autoFreeValue) {
 		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeKey, autoFreeValue);
 	}
 
 	/**
-	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
-	 * (16) and the default load factor (0.75).
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and load factor.
+	 *
+	 * @param  initialCapacity the initial capacity
+	 * @param  loadFactor      the load factor
+	 * @throws IllegalArgumentException if the initial capacity is negative
+	 *         or the load factor is nonpositive
 	 */
-	EHashMap(boolean autoFreeKey = true, boolean autoFreeValue = true) {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeKey, autoFreeValue);
+	explicit
+	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeKey, boolean autoFreeValue) {
+		init(initialCapacity, loadFactor, autoFreeKey, autoFreeValue);
 	}
 
 	virtual ~EHashMap() {
@@ -521,9 +547,84 @@ public:
 		delete _entrySet;
 	}
 
-	//TODO:
-	EHashMap(const EHashMap<K, V>& that);
-	EHashMap<K, V>& operator= (const EHashMap<K, V>& that);
+	EHashMap(const EHashMap<K, V>& that) {
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeKey = t->_autoFreeKey;
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false, false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+	}
+
+	EHashMap<K, V>& operator= (const EHashMap<K, V>& that) {
+		if (this == &that) return *this;
+
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		//1.
+		clear();
+
+		delete[] _table;
+		delete _entrySet;
+
+		//2.
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeKey = t->_autoFreeKey;
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false, false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+
+		return *this;
+	}
 
 	// internal utilities
 
@@ -761,6 +862,7 @@ public:
 				else
 					prev->next = next;
 				e->recordRemoval(this);
+				e->next = null;
 				return e;
 			}
 			prev = e;
@@ -940,18 +1042,12 @@ public:
 
 //=============================================================================
 
-#if !(defined(_MSC_VER) && (_MSC_VER<=1200))
-
 template<typename V>
 class EHashMap<int, V> : public EAbstractMap<int, V>,
 		virtual public EMap<int, V> {
 public:
 	class Entry: public EMapEntry<int, V> {
-	#if defined(_MSC_VER) && (_MSC_VER<=1200)
-	public:
-	#else
 	private:
-	#endif
 		friend class EHashMap;
 		int key;
 		V value;
@@ -1071,6 +1167,14 @@ private:
 			current = null;
 			delete _map->removeEntryForKey(k);
 		}
+
+		Entry* moveOutEntry() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			int k = current->key;
+			current = null;
+			return _map->removeEntryForKey(k);
+		}
 	};
 
 	template<typename EI>
@@ -1083,6 +1187,10 @@ private:
 		EI next() {
 			return HashIterator<EI>::nextEntry();
 		}
+
+		EI moveOut() {
+			return HashIterator<EI>::moveOutEntry();
+		}
 	};
 
 	class ValueIterator: public HashIterator<V> {
@@ -1094,6 +1202,13 @@ private:
 		V next() {
 			return HashIterator<V>::nextEntry()->getValue();
 		}
+
+		V moveOut() {
+			Entry* e = HashIterator<V>::moveOutEntry();
+			V v = e->getValue();
+			delete e;
+			return v;
+		}
 	};
 
 	class KeyIterator: public HashIterator<int> {
@@ -1104,6 +1219,13 @@ private:
 
 		int next() {
 			return HashIterator<int>::nextEntry()->getKey();
+		}
+
+		int moveOut() {
+			Entry* e = HashIterator<int>::moveOutEntry();
+			int k = e->getKey();
+			delete e;
+			return k;
 		}
 	};
 
@@ -1181,11 +1303,7 @@ private:
 		}
 	};
 
-#if defined(_MSC_VER) && (_MSC_VER<=1200)
-public:
-#else
 private:
-#endif
 	/**
 	 * The table, resized as necessary. Length MUST Always be a power of two.
 	 */
@@ -1232,6 +1350,8 @@ private:
 	 * require explicit knowledge of subclasses.)
 	 */
 	void init(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
+			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
 		if (initialCapacity > HM_MAXIMUM_CAPACITY)
 			initialCapacity = HM_MAXIMUM_CAPACITY;
 
@@ -1275,16 +1395,15 @@ private:
 
 public:
 	/**
-	 * Constructs an empty <tt>HashMap</tt> with the specified initial
-	 * capacity and load factor.
-	 *
-	 * @param  initialCapacity the initial capacity
-	 * @param  loadFactor      the load factor
-	 * @throws IllegalArgumentException if the initial capacity is negative
-	 *         or the load factor is nonpositive
+	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+	 * (16) and the default load factor (0.75).
 	 */
-	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
-		init(initialCapacity, loadFactor, autoFreeValue);
+	EHashMap() {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true);
+	}
+	explicit
+	EHashMap(boolean autoFreeValue) {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
 	}
 
 	/**
@@ -1294,16 +1413,23 @@ public:
 	 * @param  initialCapacity the initial capacity.
 	 * @throws IllegalArgumentException if the initial capacity is negative.
 	 */
+	explicit
 	EHashMap(uint initialCapacity, boolean autoFreeValue) {
 		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
 	}
 
 	/**
-	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
-	 * (16) and the default load factor (0.75).
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and load factor.
+	 *
+	 * @param  initialCapacity the initial capacity
+	 * @param  loadFactor      the load factor
+	 * @throws IllegalArgumentException if the initial capacity is negative
+	 *         or the load factor is nonpositive
 	 */
-	EHashMap(boolean autoFreeValue = true) {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	explicit
+	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+		init(initialCapacity, loadFactor, autoFreeValue);
 	}
 
 	virtual ~EHashMap() {
@@ -1313,9 +1439,82 @@ public:
 		delete _entrySet;
 	}
 
-	//TODO:
-	EHashMap(const EHashMap<int, V>& that);
-	EHashMap<int, V>& operator= (const EHashMap<int, V>& that);
+	EHashMap(const EHashMap<int, V>& that) {
+		EHashMap<int, V>* t = (EHashMap<int, V>*)&that;
+
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+	}
+
+	EHashMap<int, V>& operator= (const EHashMap<int, V>& that) {
+		if (this == &that) return *this;
+
+		EHashMap<int, V>* t = (EHashMap<int, V>*)&that;
+
+		//1.
+		clear();
+
+		delete[] _table;
+		delete _entrySet;
+
+		//2.
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+
+		return *this;
+	}
 
 	// internal utilities
 
@@ -1542,6 +1741,7 @@ public:
 				else
 					prev->next = next;
 				e->recordRemoval(this);
+				e->next = null;
 				return e;
 			}
 			prev = e;
@@ -1721,11 +1921,7 @@ class EHashMap<llong, V> : public EAbstractMap<llong, V>,
 		virtual public EMap<llong, V> {
 public:
 	class Entry: public EMapEntry<llong, V> {
-	#if defined(_MSC_VER) && (_MSC_VER<=1200)
-	public:
-	#else
 	private:
-	#endif
 		friend class EHashMap;
 		llong key;
 		V value;
@@ -1845,6 +2041,14 @@ private:
 			current = null;
 			delete _map->removeEntryForKey(k);
 		}
+
+		Entry* moveOutEntry() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			llong k = current->key;
+			current = null;
+			return _map->removeEntryForKey(k);
+		}
 	};
 
 	template<typename EI>
@@ -1857,6 +2061,10 @@ private:
 		EI next() {
 			return HashIterator<EI>::nextEntry();
 		}
+
+		EI moveOut() {
+			return HashIterator<EI>::moveOutEntry();
+		}
 	};
 
 	class ValueIterator: public HashIterator<V> {
@@ -1868,6 +2076,13 @@ private:
 		V next() {
 			return HashIterator<V>::nextEntry()->getValue();
 		}
+
+		V moveOut() {
+			Entry* e = HashIterator<V>::moveOutEntry();
+			V v = e->getValue();
+			delete e;
+			return v;
+		}
 	};
 
 	class KeyIterator: public HashIterator<llong> {
@@ -1878,6 +2093,13 @@ private:
 
 		llong next() {
 			return HashIterator<llong>::nextEntry()->getKey();
+		}
+
+		llong moveOut() {
+			Entry* e = HashIterator<llong>::moveOutEntry();
+			llong k = e->getKey();
+			delete e;
+			return k;
 		}
 	};
 
@@ -1955,11 +2177,7 @@ private:
 		}
 	};
 
-#if defined(_MSC_VER) && (_MSC_VER<=1200)
-public:
-#else
 private:
-#endif
 	/**
 	 * The table, resized as necessary. Length MUST Always be a power of two.
 	 */
@@ -2006,6 +2224,8 @@ private:
 	 * require explicit knowledge of subclasses.)
 	 */
 	void init(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
+			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
 		if (initialCapacity > HM_MAXIMUM_CAPACITY)
 			initialCapacity = HM_MAXIMUM_CAPACITY;
 
@@ -2049,6 +2269,30 @@ private:
 
 public:
 	/**
+	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+	 * (16) and the default load factor (0.75).
+	 */
+	EHashMap() {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true);
+	}
+	explicit
+	EHashMap(boolean autoFreeValue) {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	}
+
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and the default load factor (0.75).
+	 *
+	 * @param  initialCapacity the initial capacity.
+	 * @throws IllegalArgumentException if the initial capacity is negative.
+	 */
+	explicit
+	EHashMap(uint initialCapacity, boolean autoFreeValue) {
+		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	}
+
+	/**
 	 * Constructs an empty <tt>HashMap</tt> with the specified initial
 	 * capacity and load factor.
 	 *
@@ -2061,25 +2305,6 @@ public:
 		init(initialCapacity, loadFactor, autoFreeValue);
 	}
 
-	/**
-	 * Constructs an empty <tt>HashMap</tt> with the specified initial
-	 * capacity and the default load factor (0.75).
-	 *
-	 * @param  initialCapacity the initial capacity.
-	 * @throws IllegalArgumentException if the initial capacity is negative.
-	 */
-	EHashMap(uint initialCapacity, boolean autoFreeValue) {
-		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
-	}
-
-	/**
-	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
-	 * (16) and the default load factor (0.75).
-	 */
-	EHashMap(boolean autoFreeValue = true) {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
-	}
-
 	virtual ~EHashMap() {
 		clear();
 
@@ -2087,9 +2312,82 @@ public:
 		delete _entrySet;
 	}
 
-	//TODO:
-	EHashMap(const EHashMap<llong, V>& that);
-	EHashMap<llong, V>& operator= (const EHashMap<llong, V>& that);
+	EHashMap(const EHashMap<llong, V>& that) {
+		EHashMap<llong, V>* t = (EHashMap<llong, V>*)&that;
+
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+	}
+
+	EHashMap<llong, V>& operator= (const EHashMap<llong, V>& that) {
+		if (this == &that) return *this;
+
+		EHashMap<llong, V>* t = (EHashMap<llong, V>*)&that;
+
+		//1.
+		clear();
+
+		delete[] _table;
+		delete _entrySet;
+
+		//2.
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+
+		return *this;
+	}
 
 	// internal utilities
 
@@ -2319,6 +2617,7 @@ public:
 				else
 					prev->next = next;
 				e->recordRemoval(this);
+				e->next = null;
 				return e;
 			}
 			prev = e;
@@ -2488,8 +2787,6 @@ public:
 		return _autoFreeValue;
 	}
 };
-
-#endif //!(defined(_MSC_VER) && (_MSC_VER<=1200))
 
 } /* namespace efc */
 #endif //!__EHashMap_H__

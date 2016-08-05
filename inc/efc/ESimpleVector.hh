@@ -20,6 +20,10 @@ public:
 	ESimpleVector(int size = 10, boolean autofree = TRUE);
 	virtual ~ESimpleVector();
 
+	//TODO:
+	ESimpleVector(const ESimpleVector& that);
+	ESimpleVector& operator= (const ESimpleVector& that);
+
 public:
 	//Returns an enumeration of the components of this vector.
 	ESimpleEnumeration* elements();

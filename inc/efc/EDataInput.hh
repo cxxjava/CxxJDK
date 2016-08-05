@@ -173,7 +173,6 @@ namespace efc {
  * <li><a href="../lang/Character.html#unicode">Supplementary characters</a>
  *     are represented in the form of surrogate pairs.
  * </ul>
- * @author  Frank Yellin
  * @version 1.25, 04/10/06
  * @see     java.io.DataInputStream
  * @see     java.io.DataOutput

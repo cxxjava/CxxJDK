@@ -13,13 +13,12 @@
 namespace efc {
 
 #define ESOCKETEXCEPTION       ESocketException(__FILE__, __LINE__, errno)
-#define ESOCKETEXCEPTIONS(msg) ESocketException(msg, __FILE__, __LINE__, errno)
+#define ESOCKETEXCEPTIONS(msg) ESocketException(__FILE__, __LINE__, msg)
 
 /**
  * Thrown to indicate that there is an error in the underlying 
  * protocol, such as a TCP error. 
  *
- * @author  Jonathan Payne
  * @version 1.18, 11/17/05
  * @since   JDK1.0
  */
@@ -42,14 +41,12 @@ public:
 	 * Constructs an <code>ESocketException</code> with the
 	 * specified detail message.
 	 *
-	 * @param   s   the detail message.
 	 * @param   _file_   __FILE__.
 	 * @param   _line_   __LINE__.
-	 * @param   errn   the errno.
+	 * @param   s   the detail message.
 	 */
-	ESocketException(const char *s, const char *_file_, int _line_, int errn =
-			0) :
-			EIOException(s, _file_, _line_, errn) {
+	ESocketException(const char *_file_, int _line_, const char *s, int errn = 0) :
+			EIOException(_file_, _line_, s, errn) {
 	}
 };
 

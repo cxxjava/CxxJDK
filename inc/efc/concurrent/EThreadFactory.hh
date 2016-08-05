@@ -31,7 +31,6 @@ namespace efc {
  * useful simple implementation, that sets the created thread context
  * to known values before returning it.
  * @since 1.5
- * @author Doug Lea
  */
 
 interface EThreadFactory : virtual public EObject {
@@ -44,7 +43,7 @@ interface EThreadFactory : virtual public EObject {
      * @return constructed thread, or {@code null} if the request to
      *         create a thread is rejected
      */
-	virtual EThread* newThread(ERunnable* r) = 0;
+	virtual EThread* newThread(sp<ERunnable> r) = 0;
 };
 
 } /* namespace efc */

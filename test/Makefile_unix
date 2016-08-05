@@ -1,0 +1,91 @@
+################OPTION###################
+# release or debug
+VERTYPE=RELEASE
+
+KERNEL:=$(shell uname)
+LIBDIR = linux
+
+ARCH:=$(shell uname -m)
+RC:=$(ARCH)
+BIT32:=i686
+BIT64:=x86_64
+
+$(info KERNEL=$(KERNEL))
+$(info ARCH=$(ARCH))
+
+ifeq ($(KERNEL),Darwin)
+    LIBDIR = osx
+endif
+
+ifeq ($(RC),$(BIT32))
+	SHAREDLIB = -lefc32 -leso32 -lrt -lm -ldl -lpthread -lcrypto
+else
+	SHAREDLIB = -lefc64 -leso64 -liconv -ldl -lpthread -lcrypto
+endif
+
+ifeq ($(VERTYPE), RELEASE)
+CCOMPILEOPTION = -c -g -O2
+CPPCOMPILEOPTION = -std=c++11 -c -g -O2 -fpermissive
+TESTEFC = testefc
+TESTC11 = testc11
+TESTNIO = testnio
+TESTBON = testbon
+else
+CCOMPILEOPTION = -c -g
+CPPCOMPILEOPTION = -std=c++11 -c -g -fpermissive -DDEBUG
+TESTEFC = testefc_r
+TESTC11 = testc11_r
+TESTNIO = testnio_r
+TESTBON = testbon_r
+endif
+
+CCOMPILE = gcc
+CPPCOMPILE = g++
+INCLUDEDIR = -I../inc \
+	-I../inc/comm \
+	-I../inc/efc \
+	-I../inc/efc/concurrent \
+	-I../inc/efc/nio \
+	-I../inc/libc \
+
+LINK = g++
+LINKOPTION = -std=c++11 -g
+LIBDIRS = -L../lib/$(LIBDIR)
+APPENDLIB = 
+
+BASE_OBJS = main.o 
+
+TESTEFC_OBJS = testefc.o
+
+TESTC11_OBJS = testc11.o
+
+TESTNIO_OBJS = testnio.o
+
+TESTBON_OBJS = testbon.o
+
+
+$(TESTEFC): $(BASE_OBJS) $(TESTEFC_OBJS) $(APPENDLIB)
+	$(LINK) $(LINKOPTION) -o $(TESTEFC) $(LIBDIRS) $(BASE_OBJS) $(TESTEFC_OBJS) $(SHAREDLIB) $(APPENDLIB)
+
+$(TESTC11): $(BASE_OBJS) $(TESTC11_OBJS) $(APPENDLIB)
+	$(LINK) $(LINKOPTION) -o $(TESTC11) $(LIBDIRS) $(BASE_OBJS) $(TESTC11_OBJS) $(SHAREDLIB) $(APPENDLIB)
+
+$(TESTNIO): $(BASE_OBJS) $(TESTNIO_OBJS) $(APPENDLIB)
+	$(LINK) $(LINKOPTION) -o $(TESTNIO) $(LIBDIRS) $(BASE_OBJS) $(TESTNIO_OBJS) $(SHAREDLIB) $(APPENDLIB)
+
+$(TESTBON): $(BASE_OBJS) $(TESTBON_OBJS) $(APPENDLIB)
+	$(LINK) $(LINKOPTION) -o $(TESTBON) $(LIBDIRS) $(BASE_OBJS) $(TESTBON_OBJS) $(SHAREDLIB) $(APPENDLIB)
+
+clean: 
+	rm -f $(BASE_OBJS) $(TESTEFC_OBJS) $(TESTC11_OBJS) $(TESTNIO_OBJS) $(TESTBON_OBJS)
+
+all: clean $(TESTEFC) $(TESTC11) $(TESTNIO) $(TESTBON) clean
+.PRECIOUS:%.cpp %.c
+.SUFFIXES:
+.SUFFIXES:  .c .o .cpp
+
+.cpp.o:
+	$(CPPCOMPILE) -c -o $*.o $(CPPCOMPILEOPTION) $(INCLUDEDIR)  $*.cpp
+
+.c.o:
+	$(CCOMPILE) -c -o $*.o $(CCOMPILEOPTION) $(INCLUDEDIR) $*.c

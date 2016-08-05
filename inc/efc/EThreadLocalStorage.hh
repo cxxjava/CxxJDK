@@ -18,6 +18,10 @@ public:
 
 	EThreadLocalStorage();
 
+	// unsupported.
+	EThreadLocalStorage(const EThreadLocalStorage& that);
+	EThreadLocalStorage& operator= (const EThreadLocalStorage& that);
+
 	/**
 	 * Returns the value in the current thread's copy of this
 	 * thread-local variable.  If the variable has no value for the
@@ -40,7 +44,7 @@ public:
 	void set(void* value);
 
 private:
-	int thread_key;
+	long thread_key;
 };
 
 } /* namespace efc */

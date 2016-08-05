@@ -70,9 +70,9 @@ namespace efc {
  * @since 1.4
  */
 
-class EInetAddress {
+class EInetAddress : virtual public EObject {
 public:
-	virtual ~EInetAddress(){}
+	virtual ~EInetAddress();
 
     EInetAddress();
     EInetAddress(const char* hostName, byte addr[4]);
@@ -272,7 +272,7 @@ public:
      *
      * @return  a hash code value for this IP address.
      */
-    int hashCode();
+    virtual int hashCode();
     
     /**
      * Compares this object against the specified object.
@@ -291,6 +291,7 @@ public:
      * @see     java.net.InetAddress#getAddress()
      */
     boolean equals(EInetAddress *obj);
+    virtual boolean equals(EObject* obj);
     
     /**
      * Converts this IP address to a <code>String</code>. The 
@@ -302,7 +303,7 @@ public:
      *
      * @return  a string representation of this IP address.
      */
-    EString toString();
+    virtual EStringBase toString();
     
 	/*
      * Returns the InetAddress representing anyLocalAddress

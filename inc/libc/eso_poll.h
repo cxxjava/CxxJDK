@@ -33,24 +33,11 @@
 #ifndef __POLL_H__
 #define __POLL_H__
 
-#if defined(__sun) //solaris evport
-#define HAVE_EVPORT
-#else
-    #if defined(__linux__) //linux epoll
-	#define HAVE_EPOLL
-    #else
-        #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) //bsd kqueue
-        #define HAVE_KQUEUE
-        #else //win etc.
-        #define HAVE_SELECT
-        #endif
-    #endif
-#endif
-
 #include <time.h>
 
 #include "es_types.h"
 #include "es_status.h"
+#include "es_config.h"
 
 #ifdef __cplusplus
 extern "C" {

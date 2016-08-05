@@ -30,7 +30,7 @@ public:
     /**
      * Tests if this stack is empty.
      */
-    es_bool_t               empty();
+    boolean                 empty();
     
     /**
      * Returns the 0-based position where an object is on this stack. 
@@ -46,7 +46,7 @@ public:
      *          the object is located; the return value <code>-1</code>
      *          indicates that the object is not on the stack.
      */
-    es_int32_t              search(EObject *o);
+    int                     search(EObject *o);
 };
 
 } /* namespace efc */

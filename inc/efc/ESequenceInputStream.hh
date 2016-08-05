@@ -25,7 +25,6 @@ namespace efc {
  * and so on, until end of file is reached
  * on the last of the contained input streams.
  *
- * @author  Author van Hoff
  * @version 1.33, 06/07/06
  * @since   JDK1.0
  */
@@ -84,7 +83,7 @@ public:
 	 *
 	 * @since   JDK1.1
 	 */
-	virtual int available() THROWS(EIOException);
+	virtual long available() THROWS(EIOException);
 
 	/**
 	 * Reads the next byte of data from this input stream. The byte is
