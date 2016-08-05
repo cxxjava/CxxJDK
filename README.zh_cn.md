@@ -4,20 +4,20 @@
 *英文版本: [English](README.md)*
 
 ### 目录
-  - [特点](#特点：)
-  - [示例](#示例：)
-  - [性能](#性能：)
-  - [特性](#特性：)
-  - [TODO](#TODO：)
-  - [Support](#Support：)
+  - [特点](#特点)
+  - [示例](#示例)
+  - [性能](#性能)
+  - [特性](#特性)
+  - [TODO](#todo)
+  - [Support](#support)
 
-####特点：
+####特点
 * 跨平台：同时支持Linux32/64、OSX64、Win64等平台；
 * 高性能：同时具备C/C++和Java并发库的优点，性能爆棚；
 * 类丰富：实现JDK丰富的类库，从此摆脱C++贫类库的困境；
 * 易开发：先java开发，再使用`CxxJDK`进行翻译，So easy!
 
-####示例： 
+####示例
 `java:`
 
 ```
@@ -89,7 +89,7 @@ int main(int argc, const char **argv) {
 [testbon.cpp](test/testbon.cpp)  
 [testc11.cpp](test/testc11.cpp)
 
-####性能：
+####性能
 EConcurrentHashmap测试: 
 
 `软件环境:`
@@ -112,9 +112,9 @@ put 20线程 && get 20线程
 
 ![test_concurrentHashmap](img/test_concurrentHashmap.gif)
 
-####特性：
+####特性
 
-**--BASE--**
+######base:
 
 | jdk类 | cxxjdk类 |
 | -- | -- |
@@ -278,7 +278,7 @@ put 20线程 && get 20线程
 |   try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}   |
 
                     
-**--CONCURRENT--**
+######concurrent:
 
 | jdk类 | cxxjdk类 |
 | -- | -- |
@@ -346,7 +346,7 @@ put 20线程 && get 20线程
 | ArrayList*                                |   ESharedArrLst                        |
 
 
-**--NIO--**
+######nio:
 
 | jdk类 | cxxjdk类 |
 | -- | -- |
@@ -384,7 +384,7 @@ put 20线程 && get 20线程
 | UnresolvedAddressException      |  EUnresolvedAddressException        |
 
 
-**--OTHER--**
+######other:
 
 | cxxjdk类 | 类描述 |
 | -- | -- |
@@ -407,10 +407,10 @@ put 20线程 && get 20线程
    
 
 
-####TODO：
+####TODO
     java.net.DatagramSocket；
     java.nio.channels.DatagramChannel；
     java.security.*;
 
-####Support：
+####Support
 Email: [cxxjava@163.com](mailto:cxxjava@163.com)

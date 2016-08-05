@@ -4,20 +4,20 @@
 *chinese version: [简体中文](README.zh_cn.md)*
 
 ### Table of Contents
-  - [Characteristics](#Characteristics:)
-  - [Example](#Example:)
-  - [Performance](#Performance:)
-  - [Features](#Features:)
-  - [TODO](#TODO:)
-  - [Support](#Support:)
+  - [Characteristics](characteristics)
+  - [Example](#example)
+  - [Performance](#performance)
+  - [Features](#features)
+  - [TODO](#todo)
+  - [Support](#support)
 
-####Characteristics:
+####Characteristics
 * Cross platform: support Linux32/64, OSX64, Win64 platforms;
 * High performance: with the advantages of C/C++ and Java concurrent Libraries tegother, bursting performance;
 * Class rich: to achieve JDK rich class library, get rid of the plight of the poor class library C++;
 * Easy to develop: first, use the java development, and then use the `CxxJDK` for translation, So easy!
 
-####Example: 
+####Example
 `java:`
 
 ```
@@ -89,7 +89,7 @@ more examples:
 [testbon.cpp](test/testbon.cpp)  
 [testc11.cpp](test/testc11.cpp)
 
-####Performance:
+####Performance
 EConcurrentHashmap Test: 
 
 `software environment:`
@@ -111,9 +111,9 @@ Total Number of Cores:	2
 
 ![test_concurrentHashmap](img/test_concurrentHashmap.gif)
 
-####Features:
+####Features
 
-**--BASE--**
+######base:
 
 | jdk class | cxxjdk class |
 | -- | -- |
@@ -277,7 +277,7 @@ Total Number of Cores:	2
 |   try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}   |
 
                     
-**--CONCURRENT--**
+######concurrent:
 
 | jdk class | cxxjdk class |
 | -- | -- |
@@ -345,7 +345,7 @@ Total Number of Cores:	2
 | ArrayList*                                |   ESharedArrLst                        |
 
 
-**--NIO--**
+######nio:
 
 | jdk class | cxxjdk class |
 | -- | -- |
@@ -383,7 +383,7 @@ Total Number of Cores:	2
 | UnresolvedAddressException      |  EUnresolvedAddressException        |
 
 
-**--OTHER--**
+######other:
 
 | cxxjdk class | class description |
 | -- | -- |
@@ -405,11 +405,11 @@ Total Number of Cores:	2
 | EAtomic               | C++ wrapper for atomic operation |
    
 
-####TODO: 
+####TODO
     java.net.DatagramSocket；
     java.nio.channels.DatagramChannel；
     java.security.*;
 
-####Support:
+####Support
 Email: [cxxjava@163.com](mailto:cxxjava@163.com)
    
