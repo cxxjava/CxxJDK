@@ -82,9 +82,29 @@
 #endif
 
 #ifdef CPP11_SUPPORT
+#if defined( __clang__ ) && !defined( _LIBCPP_VERSION )
 typedef decltype(nullptr) es_nullptr_t;
 #else
 typedef std::nullptr_t    es_nullptr_t;
+#endif
+#else
+//@see: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/nullptr#Solution_and_Sample_Code
+const // It is a const object...
+class es_nullptr_t
+{
+  public:
+    template<class T>
+    inline operator T*() const // convertible to any type of null non-member pointer...
+    { return 0; }
+
+    template<class C, class T>
+    inline operator T C::*() const   // or any type of null member pointer...
+    { return 0; }
+
+  private:
+    void operator&() const;  // Can't take address of nullptr
+
+} nullptr = {};
 #endif
 
 #ifndef null

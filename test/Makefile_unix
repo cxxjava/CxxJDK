@@ -4,6 +4,8 @@ VERTYPE=RELEASE
 
 KERNEL:=$(shell uname)
 LIBDIR = linux
+#CPPSTD = c++98
+CPPSTD = c++11
 
 ARCH:=$(shell uname -m)
 RC:=$(ARCH)
@@ -25,14 +27,14 @@ endif
 
 ifeq ($(VERTYPE), RELEASE)
 CCOMPILEOPTION = -c -g -O2
-CPPCOMPILEOPTION = -std=c++11 -c -g -O2 -fpermissive
+CPPCOMPILEOPTION = -std=$(CPPSTD) -c -g -O2 -fpermissive
 TESTEFC = testefc
 TESTC11 = testc11
 TESTNIO = testnio
 TESTBON = testbon
 else
 CCOMPILEOPTION = -c -g
-CPPCOMPILEOPTION = -std=c++11 -c -g -fpermissive -DDEBUG
+CPPCOMPILEOPTION = -std=$(CPPSTD) -c -g -fpermissive -DDEBUG
 TESTEFC = testefc_r
 TESTC11 = testc11_r
 TESTNIO = testnio_r
@@ -49,7 +51,7 @@ INCLUDEDIR = -I../inc \
 	-I../inc/libc \
 
 LINK = g++
-LINKOPTION = -std=c++11 -g
+LINKOPTION = -std=$(CPPSTD) -g
 LIBDIRS = -L../lib/$(LIBDIR)
 APPENDLIB = 
 
@@ -89,3 +91,4 @@ all: clean $(TESTEFC) $(TESTC11) $(TESTNIO) $(TESTBON) clean
 
 .c.o:
 	$(CCOMPILE) -c -o $*.o $(CCOMPILEOPTION) $(INCLUDEDIR) $*.c
+

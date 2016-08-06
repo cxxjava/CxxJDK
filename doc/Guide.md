@@ -405,7 +405,17 @@ SP容器内的对象生命期由对象的智能指针决定；
   ```
 
 ###编译说明：
-* xcode编译提示："error: control may reach end of non-void function"
+* c++11支持：
+
+| 操作系统 | 编译器版本 |
+| ------ | ------- |
+| Win64 | Visual C++ 2010 sp1 及以上 |
+| Linux | Gcc 4.8 及以上 |
+| OS X | XCode 最新版 |
+
+* xcode编译提示："error: control may reach end of non-void function"  
+
+```
 @see:
 template<class T> sp<T> atomic_load( sp<T> const * p )
 {
@@ -413,12 +423,14 @@ template<class T> sp<T> atomic_load( sp<T> const * p )
     return *p;
 	}
 }
+```
 解决方法：
 Build Settings-->Mismatched Return Type-->Yes
 
-* c++11编译时，在xcode下需要libc++库配合(使用libstdc++时编译报错)。
+* xcode c++11编译：  
+设置 "C++ Language Dialect" 选项为 "c11"; 设置 "C++ Standard Library" 选项为 "libc++ (LLVM standard C++ library with C++11 support)"
 
-* vs2010 make 编译：  
+* vs2010 sp1 make 编译：  
 1) "C:\Program Files\Microsoft Visual Studio 10.0\VC\bin\vcvars32.bat"
 2) bmake.exe -f Makefile_win
 

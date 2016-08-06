@@ -828,15 +828,7 @@ inline shared_count::shared_count( weak_count const & r, sp_nothrow_tag ): pi_( 
 
 namespace detail {
 
-#if defined( __clang__ ) && !defined( _LIBCPP_VERSION )
-
-    typedef decltype(nullptr) sp_nullptr_t;
-
-#else
-
-    typedef std::nullptr_t sp_nullptr_t;
-
-#endif
+typedef es_nullptr_t sp_nullptr_t;
 
 // sp_element, element_type
 
