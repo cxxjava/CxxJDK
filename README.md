@@ -8,6 +8,7 @@
   - [Example](#example)
   - [Performance](#performance)
   - [Features](#features)
+  - [Manual](#manual)
   - [TODO](#todo)
   - [Support](#support)
 
@@ -404,6 +405,8 @@ Total Number of Cores:	2
 | EOS                   | Utils for OS              |
 | EAtomic               | C++ wrapper for atomic operation |
    
+####Manual
+See [Guide document](doc/Guide.md).
 
 ####TODO
     java.net.DatagramSocket；

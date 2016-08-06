@@ -8,6 +8,7 @@
   - [示例](#示例)
   - [性能](#性能)
   - [特性](#特性)
+  - [手册](#手册)
   - [TODO](#todo)
   - [Support](#support)
 
@@ -406,6 +407,8 @@ put 20线程 && get 20线程
 | EAtomic               | C++ wrapper for atomic operation |
    
 
+####手册
+详见[Guide文档](doc/Guide.md)
 
 ####TODO
     java.net.DatagramSocket；
