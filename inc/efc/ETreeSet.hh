@@ -173,7 +173,7 @@ public:
 	 * @return an Iterator over the elements in this set
 	 * @see ConcurrentModificationException
 	 */
-	EIterator<E>* iterator(int index=0) {
+	sp<EIterator<E> > iterator(int index=0) {
 		return map_->navigableKeySet()->iterator();
 	}
 
@@ -183,7 +183,7 @@ public:
 	 * @return an iterator over the elements in this set in descending order
 	 * @since 1.6
 	 */
-	EIterator<E>* descendingIterator() {
+	sp<EIterator<E> > descendingIterator() {
 		return map_->descendingKeySet()->iterator();
 	}
 

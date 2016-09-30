@@ -251,7 +251,7 @@ public:
      *
      * @return an iterator over the elements in this queue
      */
-    EIterator<E>* iterator(int index=0) {
+    sp<EIterator<E> > iterator(int index=0) {
         return new Itr(this);
     }
     

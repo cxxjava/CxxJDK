@@ -11,7 +11,6 @@
 #include "EIllegalStateException.hh"
 
 namespace efc {
-namespace nio {
 
 #define EILLEGALBLOCKINGMODEEXCEPTION       EIllegalBlockingModeException(__FILE__, __LINE__, errno)
 #define EILLEGALBLOCKINGMODEEXCEPTIONS(msg) EIllegalBlockingModeException(__FILE__, __LINE__, msg)
@@ -52,6 +51,5 @@ public:
 	}
 };
 
-} /* namespace nio */
 } /* namespace efc */
 #endif /* EILLEGALBLOCKINGMODEEXCEPTION_HH_ */

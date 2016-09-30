@@ -330,7 +330,7 @@ public:
 	template<typename E>
 	static E max(ECollection<E> *coll,
 			EComparator<E> *comp) {
-		EIterator<E> *i = coll->iterator();
+		sp<EIterator<E> > i = coll->iterator();
 		E candidate = i->next();
 
 		while (i->hasNext()) {
@@ -338,7 +338,6 @@ public:
 			if (comp->compare(next, candidate) > 0)
 				candidate = next;
 		}
-		delete i;
 		return candidate;
 	}
 
@@ -367,7 +366,7 @@ public:
 	template<typename E>
 	static E min(ECollection<E> *coll,
 			EComparator<E> *comp) {
-		EIterator<E> *i = coll->iterator();
+		sp<EIterator<E> > i = coll->iterator();
 		E candidate = i->next();
 
 		while (i->hasNext()) {
@@ -375,7 +374,6 @@ public:
 			if (comp->compare(next, candidate) < 0)
 				candidate = next;
 		}
-		delete i;
 		return candidate;
 	}
 
@@ -441,37 +439,37 @@ public:
 			}
 		}
 		int size() {
-			SYNCBLOCK(lock_) {return collection_->size();}
+            SYNCBLOCK(lock_) {return collection_->size();}}
 		}
 		boolean isEmpty() {
-			SYNCBLOCK(lock_) {return collection_->isEmpty();}
+            SYNCBLOCK(lock_) {return collection_->isEmpty();}}
 		}
 		boolean contains(E o) {
-			SYNCBLOCK(lock_) {return collection_->contains(o);}
+            SYNCBLOCK(lock_) {return collection_->contains(o);}}
 		}
-		EIterator<E>* iterator(int index=0) {
+		sp<EIterator<E> > iterator(int index=0) {
 			return collection_->iterator(index); // Must be manually synched and freed by user!
 		}
 		boolean add(E e) {
-			SYNCBLOCK(lock_) {return collection_->add(e);}
+            SYNCBLOCK(lock_) {return collection_->add(e);}}
 		}
 		boolean remove(E o) {
-			SYNCBLOCK(lock_) {return collection_->remove(o);}
+            SYNCBLOCK(lock_) {return collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
-			SYNCBLOCK(lock_) {return collection_->containsAll(c);}
+            SYNCBLOCK(lock_) {return collection_->containsAll(c);}}
 		}
 		boolean removeAll(ECollection<E> *c) {
-			SYNCBLOCK(lock_) {return collection_->removeAll(c);}
+            SYNCBLOCK(lock_) {return collection_->removeAll(c);}}
 		}
 		boolean retainAll(ECollection<E> *c) {
-			SYNCBLOCK(lock_) {return collection_->retainAll(c);}
+            SYNCBLOCK(lock_) {return collection_->retainAll(c);}}
 		}
 		void clear() {
-			SYNCBLOCK(lock_) {collection_->clear();}
+            SYNCBLOCK(lock_) {collection_->clear();}}
 		}
 		EStringBase toString() {
-			SYNCBLOCK(lock_) {return collection_->toString();}
+            SYNCBLOCK(lock_) {return collection_->toString();}}
 		}
 
 	protected:
@@ -521,40 +519,40 @@ public:
 			SynchronizedCollection<E>(s, mutex, autoFree) {
 		}
 		int size() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->size();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->size();}}
 		}
 		boolean isEmpty() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}}
 		}
 		boolean contains(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}}
 		}
-		EIterator<E>* iterator(int index=0) {
+		sp<EIterator<E> > iterator(int index=0) {
 			return SynchronizedCollection<E>::collection_->iterator(index); // Must be manually synched and freed by user!
 		}
 		boolean add(E e) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}}
 		}
 		boolean remove(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->containsAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->containsAll(c);}}
 		}
 		boolean retainAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->retainAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->retainAll(c);}}
 		}
 		boolean removeAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->removeAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->removeAll(c);}}
 		}
 		void clear() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}}
 		}
 		boolean equals(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->equals(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->equals(o);}}
 		}
 		int hashCode() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->hashCode();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->hashCode();}}
 		}
 	};
 
@@ -600,63 +598,63 @@ public:
 		}
 
 		boolean equals(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->equals(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->equals(o);}}
 		}
 		int hashCode() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->hashCode();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->hashCode();}}
 		}
 
 		E getAt(int index) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->getAt(index);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->getAt(index);}}
 		}
 		E setAt(int index, E element) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->setAt(index, element);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->setAt(index, element);}}
 		}
 		void addAt(int index, E element) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {list->addAt(index, element);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {list->addAt(index, element);}}
 		}
 		E removeAt(int index) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->removeAt(index);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->removeAt(index);}}
 		}
 
 		int indexOf(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->indexOf(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->indexOf(o);}}
 		}
 		int lastIndexOf(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->lastIndexOf(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->lastIndexOf(o);}}
 		}
 
 		int size() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->size();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->size();}}
 		}
 		boolean isEmpty() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}}
 		}
 		boolean contains(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}}
 		}
-		EIterator<E>* iterator(int index=0) {
+		sp<EIterator<E> > iterator(int index=0) {
 			return SynchronizedCollection<E>::collection_->iterator(index); // Must be manually synched and freed by user!
 		}
 		boolean add(E e) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}}
 		}
 		boolean remove(E o) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->containsAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->containsAll(c);}}
 		}
 		boolean removeAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->removeAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->removeAll(c);}}
 		}
 		boolean retainAll(ECollection<E> *c) {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->retainAll(c);}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->retainAll(c);}}
 		}
 		void clear() {
-			SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}
+            SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}}
 		}
-		EListIterator<E>* listIterator(int index = 0) {
+		sp<EListIterator<E> > listIterator(int index = 0) {
 			return list->listIterator(index); // Must be manually synched by user
 		}
 	};
@@ -734,28 +732,28 @@ public:
 		}
 
 		int size() {
-			SYNCBLOCK(mutex) {return m->size();}
+            SYNCBLOCK(mutex) {return m->size();}}
 		}
 		boolean isEmpty() {
-			SYNCBLOCK(mutex) {return m->isEmpty();}
+            SYNCBLOCK(mutex) {return m->isEmpty();}}
 		}
 		boolean containsKey(K key) {
-			SYNCBLOCK(mutex) {return m->containsKey(key);}
+            SYNCBLOCK(mutex) {return m->containsKey(key);}}
 		}
 		boolean containsValue(V value) {
-			SYNCBLOCK(mutex) {return m->containsValue(value);}
+            SYNCBLOCK(mutex) {return m->containsValue(value);}}
 		}
 		V get(K key) {
-			SYNCBLOCK(mutex) {return m->get(key);}
+            SYNCBLOCK(mutex) {return m->get(key);}}
 		}
 		V put(K key, V value, boolean *absent=null) {
-			SYNCBLOCK(mutex) {return m->put(key, value, absent);}
+            SYNCBLOCK(mutex) {return m->put(key, value, absent);}}
 		}
 		V remove(K key) {
-			SYNCBLOCK(mutex) {return m->remove(key);}
+            SYNCBLOCK(mutex) {return m->remove(key);}}
 		}
 		void clear() {
-			SYNCBLOCK(mutex) {m->clear();}
+            SYNCBLOCK(mutex) {m->clear();}}
 		}
 
 		ESet<K>* keySet() {
@@ -763,7 +761,7 @@ public:
 				if (keySet_==null)
 					keySet_ = new SynchronizedSet<K>(m->keySet(), mutex, false);
 				return keySet_;
-			}
+            }}
 		}
 
 		ESet<EMapEntry<K,V>*>* entrySet() {
@@ -771,7 +769,7 @@ public:
 				if (entrySet_==null)
 					entrySet_ = new SynchronizedSet<EMapEntry<K,V>*>(m->entrySet(), mutex, false);
 				return entrySet_;
-			}
+            }}
 		}
 
 		ECollection<V>* values() {
@@ -779,31 +777,31 @@ public:
 				if (values_==null)
 					values_ = new SynchronizedCollection<V>(m->values(), mutex, false);
 				return values_;
-			}
+            }}
 		}
 		boolean equals(EMap<K,V>* o) {
-			SYNCBLOCK(mutex) {return m->equals(o);}
+            SYNCBLOCK(mutex) {return m->equals(o);}}
 		}
 		int hashCode() {
-			SYNCBLOCK(mutex) {return m->hashCode();}
+            SYNCBLOCK(mutex) {return m->hashCode();}}
 		}
 		EStringBase toString() {
-			SYNCBLOCK(mutex) {return m->toString();}
+            SYNCBLOCK(mutex) {return m->toString();}}
 		}
 
 		/**
 		 * Auto free.
 		 */
 		void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
-			SYNCBLOCK(mutex) {m->setAutoFree(autoFreeKey, autoFreeValue);}
+            SYNCBLOCK(mutex) {m->setAutoFree(autoFreeKey, autoFreeValue);}}
 		}
 
 		boolean getAutoFreeKey() {
-			SYNCBLOCK(mutex) {return m->getAutoFreeKey();}
+            SYNCBLOCK(mutex) {return m->getAutoFreeKey();}}
 		}
 
 		boolean getAutoFreeValue() {
-			SYNCBLOCK(mutex) {return m->getAutoFreeValue();}
+            SYNCBLOCK(mutex) {return m->getAutoFreeValue();}}
 		}
 	};
 
@@ -857,16 +855,16 @@ public:
 		boolean contains(E o) {return c->contains(o);}
 		EStringBase toString()           {return c->toString();}
 
-		EIterator<E>* iterator(int index=0) {
+		sp<EIterator<E> > iterator(int index=0) {
 			class UnmodifiableIterator : public EIterator<E> {
 			private:
-				EIterator<E>* i;
+				sp<EIterator<E> > i;
 			public:
 				UnmodifiableIterator(ECollection<E>* c) {
 					i = c->iterator();
 				}
 				~UnmodifiableIterator() {
-					delete i;
+					//
 				}
 				boolean hasNext() {return i->hasNext();}
 				E next()          {return i->next();}
@@ -938,7 +936,7 @@ public:
 		boolean contains(E o) {
 			return UnmodifiableCollection<E>::c->contains(o);
 		}
-		EIterator<E>* iterator(int index=0) {
+		sp<EIterator<E> > iterator(int index=0) {
 			return UnmodifiableCollection<E>::c->iterator(index);
 		}
 		boolean add(E e) {
@@ -1008,17 +1006,17 @@ public:
 			UnmodifiableEntrySet(ESet<EMapEntry<K,V>*>* s) : UnmodifiableSet<EMapEntry<K,V>*>(s) {
 			}
 		public:
-			EIterator<EMapEntry<K,V>*>* iterator(int index=0) {
+			sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
 				class UnmodifiableEntrySetIterator {
 				private:
-					EIterator<EMapEntry<K,V>*>* i;
+					sp<EIterator<EMapEntry<K,V>*> > i;
 
 				public:
 					UnmodifiableEntrySetIterator() {
 						i = UnmodifiableCollection<EMapEntry<K,V>*>::c->iterator();
 					}
 					~UnmodifiableEntrySetIterator() {
-						delete i;
+						//
 					}
 
 					boolean hasNext() {
@@ -1053,15 +1051,13 @@ public:
 			 * when o is a Map.Entry, and calls o.setValue.
 			 */
 			boolean containsAll(ECollection<EMapEntry<K,V>*> coll) {
-				EIterator<EMapEntry<K,V>*>* e = coll->iterator();
+				sp<EIterator<EMapEntry<K,V>*> > e = coll->iterator();
 				while (e->hasNext()) {
 					if (!contains(e->next())) // Invokes safe contains() above
 					{
-						delete e;
 						return false;
 					}
 				}
-				delete e;
 				return true;
 			}
 			boolean equals(UnmodifiableEntrySet* o) {

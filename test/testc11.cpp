@@ -77,7 +77,7 @@ static void test_finally() {
 		} catch (...) {
 			LOG("exception.");
 		}
-	}
+    }}
 
 	//==================================
 
@@ -116,14 +116,27 @@ static void test_finally() {
 //			throw EException(__FILE__, __LINE__, "11111"); //error!
 
 			LOG("at here 11.");
-		}
+        }}
 	) {
 		LOG("at here 0.");
 
 //		throw EException(__FILE__, __LINE__, "00000");
 
 		LOG("at here 0.");
-	}
+    }}
+}
+
+static void test_threadx() {
+	int n = 999;
+
+	EThreadX* tx = EThreadX::execute([&](){
+		LOG("execute: n=%d", n);
+	});
+
+//	tx->start(); //exception: Already started.
+
+	tx->join();
+	delete tx;
 }
 
 MAIN_IMPL(testc11) {
@@ -136,7 +149,8 @@ MAIN_IMPL(testc11) {
 	do {
 		try {
 //		test_scopeExit();
-		test_finally();
+//		test_finally();
+		test_threadx();
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());
 		} catch (...) {

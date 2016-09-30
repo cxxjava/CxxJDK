@@ -11,7 +11,6 @@
 #include "EIllegalStateException.hh"
 
 namespace efc {
-namespace nio {
 
 #define ENOCONNECTIONPENDINGEXCEPTION        ENoConnectionPendingException(__FILE__, __LINE__, errno)
 #define ENOCONNECTIONPENDINGEXCEPTIONS(msg)  ENoConnectionPendingException(__FILE__, __LINE__, msg)
@@ -50,6 +49,5 @@ public:
 	}
 };
 
-} /* namespace nio */
 } /* namespace efc */
 #endif /* ENOCONNECTIONPENDINGEXCEPTION_HH_ */

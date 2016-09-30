@@ -291,6 +291,15 @@ interface ESocketOptions : virtual public EObject {
      * @see Socket#getOOBInline
      */
     const static int _SO_OOBINLINE;// = 0x1003;
+
+    /* ip_mreq; add an IP group membership */
+    const static int _IP_ADD_MEMBERSHIP; // = 0x0c
+
+    /* ip_mreq; drop an IP group membership */
+    const static int _IP_DROP_MEMBERSHIP; // = 0x0d
+
+    /* u_char; set/get IP multicast ttl */
+    const static int _IP_MULTICAST_TTL; // = 0x0d
 };
 
 } /* namespace efc */

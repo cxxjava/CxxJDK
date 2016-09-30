@@ -2,7 +2,7 @@
  * EURLEncoder.hh
  *
  *  Created on: 2013-3-16
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EURLEncoder_HH_

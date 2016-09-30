@@ -718,7 +718,7 @@ private:
 	void signalNotEmpty() {
 		SYNCBLOCK(&takeLock) {
 			notEmpty->signal();
-		}
+        }}
 	}
 
 	/**
@@ -727,7 +727,7 @@ private:
 	void signalNotFull() {
 		SYNCBLOCK(&putLock) {
 			notFull->signal();
-		}
+        }}
 	}
 
 	/**

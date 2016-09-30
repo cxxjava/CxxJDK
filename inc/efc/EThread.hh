@@ -2,7 +2,7 @@
  * EThread.hh
  *
  *  Created on: 2013-3-19
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ETHREAD_HH_
@@ -18,10 +18,6 @@
 #include "ESharedPtr.hh"
 
 namespace efc {
-
-namespace nio {
-class EInterruptibleChannel;
-}
 
 class EThreadGroup;
 class EParker;
@@ -620,6 +616,16 @@ public:
 	const char* getName();
 
 	/**
+	 * Tests if this Thread is main thread.
+	 */
+	boolean isMainThread();
+
+	/**
+	 * Tests if this Thread is c thread.
+	 */
+	boolean isCThread();
+
+	/**
 	 * Returns the thread group to which this thread belongs.
 	 * This method returns null if this thread has died
 	 * (been stopped).
@@ -698,12 +704,17 @@ public:
 	State getState();
 
 	/**
+	 * Get the binding target object.
+	 */
+	sp<ERunnable> getTarget();
+
+	/**
 	 * Returns a string representation of this thread, including the
 	 * thread's name and priority.
 	 *
 	 * @return  a string representation of this thread.
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Returns the handler invoked when this thread abruptly terminates
@@ -876,6 +887,16 @@ public:
 	 */
 	static int getThreadsCount();
 
+	/**
+	 * C thread initialize.
+	 */
+	static EThread* c_init();
+
+	/**
+	 * Returns count of alive c threads.
+	 */
+	static int getCThreadsCount();
+
 public:
 	/**
 	 * Parks the current thread for a particular number of nanoseconds, or
@@ -937,6 +958,10 @@ public:
 	 */
 	void unpark();
 
+	/* Set the blocker field; invoked via sun.misc.SharedSecrets from java.nio code
+	 */
+	void blockedOn(EInterruptible* b);
+
 protected:
 	friend class MainThreadLocal;
 	friend class EThreadLocal;
@@ -952,13 +977,13 @@ protected:
 	 */
 	EObject* inheritableValues; //EThreadLocal::Values
 
-	EThread(const int only4main);
+	// Create a thread from c thread.
+	EThread(const char* name, const int c_tid);
 
 private:
 	friend class EParker;
 	friend class EUnsafe;
 	friend class EThreadStatusChanger;
-	friend class nio::EInterruptibleChannel;
 
 	/* C thread */
 	es_thread_t *thread;
@@ -1003,10 +1028,6 @@ private:
 	EInterruptible* volatile blocker;
 	ESimpleLock* blockerLock;
 
-	/* Set the blocker field; invoked via sun.misc.SharedSecrets from java.nio code
-	 */
-	void blockedOn(EInterruptible* b);
-
 	// JSR166 per-thread parker
 	EParker* parker;
 
@@ -1017,6 +1038,9 @@ private:
 
 	/* Whether or not the thread is a daemon thread. */
 	boolean daemon;
+
+	// C thread id, 0 is main thread, >0 other c thread.
+	int c_tid;// = -1;
 
 	// clean up callback at thread exit
 	CleanupCallback* cleanupCallback;
@@ -1033,6 +1057,7 @@ private:
 
 	// Count of alive threads.
 	static volatile int threadsCount;
+	static volatile int c_threadsCount;
 
 	/**
 	 * Initializes a Thread.

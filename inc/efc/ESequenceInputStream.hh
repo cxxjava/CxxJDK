@@ -148,6 +148,7 @@ public:
 
 protected:
 	EEnumeration<EInputStream*>* _e;
+	boolean _eOwned;
 	EInputStream* _in;
 
 	/**

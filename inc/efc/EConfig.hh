@@ -96,7 +96,7 @@ public:
 	 */
 	const char* getName();
 
-	EStringBase toString();
+	virtual EStringBase toString();
 
 private:
 	ESimpleMap* m_vmap; //key = values

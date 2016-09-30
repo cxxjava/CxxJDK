@@ -2,7 +2,7 @@
  * EBits.hh
  *
  *  Created on: 2013-3-19
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EBITS_HH_

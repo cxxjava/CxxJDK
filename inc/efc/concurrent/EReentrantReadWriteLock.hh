@@ -2,7 +2,7 @@
  * EReentrantReadWriteLock.hh
  *
  *  Created on: 2013-3-18
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EREENTRANTREADWRITELOCK_HH_
@@ -370,7 +370,7 @@ public:
 		 *
 		 * @return a string identifying this lock, as well as its lock state
 		 */
-		EStringBase toString();
+		virtual EStringBase toString();
 
 	private:
 		rwlock::Sync *sync;
@@ -632,7 +632,7 @@ public:
 		 *
 		 * @return a string identifying this lock, as well as its lock state
 		 */
-		EStringBase toString();
+		virtual EStringBase toString();
 
 		/**
 		 * Queries if this write lock is held by the current thread.
@@ -817,7 +817,7 @@ public:
 	 *
 	 * @return a string identifying this lock, as well as its lock state
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 protected:
 	/**

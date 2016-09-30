@@ -40,22 +40,19 @@ namespace efc {
 			...
 		) {
 			...
-		}
+		}}
 	}
  */
 
 template <typename F>
 class EScopeGuard {
 public:
-	EScopeGuard(F f) : f(f), d(false), o(true) {}
+	EScopeGuard(F f) : f(f), d(false) {}
     ~EScopeGuard() { if(!d) { f();} }
     void dismiss() { d = true; }
-    boolean begin() {return o;}
-    void end() {o = false;}
 private:
     F f;
     boolean d;
-    boolean o;
 };
 
 template <typename F>
@@ -69,8 +66,8 @@ EScopeGuard<F> MakeScopeGuard(F f) {
 #define ON_SCOPE_EXIT(code) \
     auto STRING_JOIN2(scope_exit_, __LINE__) = MakeScopeGuard([&](){code;})
 
-#define ON_FINALLY_NOTHROW(code) \
-    for (auto __scope_exit__ = MakeScopeGuard([&](){ try{ code; } catch(...){} }); __scope_exit__.begin(); __scope_exit__.end())
+#define ON_FINALLY_NOTHROW(code) { \
+    auto __scope_exit__ = MakeScopeGuard([&](){ try{ code; } catch(...){} });
 
 } /* namespace efc */
 

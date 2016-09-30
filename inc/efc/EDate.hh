@@ -2,7 +2,7 @@
  * EDate.hh
  *
  *  Created on: 2013-3-19
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EDATE_HH_
@@ -164,7 +164,7 @@ public:
 	 * @return  a string representation of this date.
 	 * @since CLDC 1.1
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Returns a hash code value for this object. The result is the
@@ -176,7 +176,7 @@ public:
 	 *
 	 * @return  a hash code value for this object.
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Compares two dates for equality.

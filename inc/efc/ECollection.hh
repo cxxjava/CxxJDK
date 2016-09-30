@@ -2,7 +2,7 @@
  * ECollection.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ECOLLECTION_HH_
@@ -155,7 +155,7 @@ interface ECollection : virtual public EIterable<E>
      *
      * @return an <tt>Iterator</tt> over the elements in this collection
      */
-	virtual EIterator<E>* iterator(int index=0) = 0;
+	virtual sp<EIterator<E> > iterator(int index=0) = 0;
 
     // Modification Operations
 

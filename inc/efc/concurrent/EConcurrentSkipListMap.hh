@@ -328,12 +328,11 @@ private:
 	static EList<E>* toList(ECollection<E>* c) {
 		// Using size() here would be a pessimization.
 		EList<E>* list = new EArrayList<E>();
-		EIterator<E>* iter = c->iterator();
+		sp<EIterator<E> > iter = c->iterator();
 		while (iter->hasNext()) {
 			E e = iter->next();
 			list->add(e);
 		}
-		delete iter;
 		return list;
 	}
 
@@ -1278,12 +1277,11 @@ private:
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
 	void putAll(EMap<K*, V*>* m) {
-		EIterator<EMapEntry<K*,V*>*>* iter = m->entrySet()->iterator();
+		sp<EIterator<EMapEntry<K*,V*>*> > iter = m->entrySet()->iterator();
 		while (iter->hasNext()) {
 			EMapEntry<K*,V*>* e = iter->next();
 			put(e->getKey(), e->getValue());
 		}
-		delete iter;
 	}
 
 	/**
@@ -1311,7 +1309,7 @@ private:
 			q = q->down;
 		}
 
-		EIterator<EMapEntry<K*, V*>*>* it = map->entrySet()->iterator();
+		sp<EIterator<EMapEntry<K*, V*>*> > it = map->entrySet()->iterator();
 		while (it->hasNext()) {
 			EMapEntry<K*, V*>* e = it->next();
 			unsigned int rnd = (unsigned int)EThreadLocalRandom::current()->nextInt();
@@ -1325,7 +1323,6 @@ private:
 			K* k = e->getKey();
 			V* v = e->getValue();
 			if (k == null || v == null) {
-				delete it;
 				throw ENullPointerException(__FILE__, __LINE__);
 			}
 			Node* z = new Node(k, v, null);
@@ -1346,7 +1343,6 @@ private:
 				}
 			}
 		}
-		delete it;
 		head_ = h;
 	}
 

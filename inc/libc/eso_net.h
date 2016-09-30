@@ -116,6 +116,18 @@ int eso_net_read(const int fd, void *buf, int len);
 int eso_net_write(const int fd, const void *buf, int len);
 
 /**
+ * recv data
+ * Returns number of bytes read, -1 = failure, -2 = timeout
+ */
+int eso_net_recvfrom(const int fd, void *buf, int len, int flags, struct ip_addr *raddr, int *rport);
+
+/**
+ * send data
+ * Returns number of bytes write, -1 = failure, -2 = timeout
+ */
+int eso_net_sendto(const int fd, const void *buf, int len, int flags, const char *ip, int port);
+
+/**
  * Enable/disable SO_TIMEOUT with the specified timeout.
  */
 int eso_net_sotimeout(const int fd, int timeout);

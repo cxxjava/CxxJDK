@@ -118,7 +118,7 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value.
 	 */
-	EStringBase toString() {
+	virtual EStringBase toString() {
 		return EStringBase::valueOf((llong)get());
 	}
 

@@ -2,7 +2,7 @@
  * EFork.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EFork_HH_
@@ -138,7 +138,7 @@ public:
 	 *
 	 * @return  a string representation of this process.
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 	
 	/**
 	 * Wait for any current child process to die and return information 

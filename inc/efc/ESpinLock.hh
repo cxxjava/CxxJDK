@@ -2,7 +2,7 @@
  * ESpinLock.hh
  *
  *  Created on: 2013-3-18
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ESpinLock_HH_

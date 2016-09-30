@@ -313,6 +313,12 @@ public: \
 		} \
 	} \
  \
+	EA(E* data, int length) : \
+ 		_length(length), _owned(true), _type(MEM_NEW) { \
+		_array = new E[length]; \
+		eso_memcpy(_array, data, length*sizeof(E)); \
+ 	} \
+\
 	EA(E* data, int length, boolean owned, MEMType type) : \
 		_array(data), _length(length), _owned(owned), _type(type) { \
 	} \

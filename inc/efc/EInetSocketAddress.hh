@@ -2,7 +2,7 @@
  * EInetSocketAddress.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EInetSocketAddress_HH_
@@ -97,12 +97,6 @@ public:
 
     /**
      *
-     */
-    EInetSocketAddress(const EInetSocketAddress& that);
-    EInetSocketAddress& operator= (const EInetSocketAddress& that);
-
-    /**
-     *
      * Creates an unresolved socket address from a hostname and a port number.
      * <p>
      * No attempt will be made to resolve the hostname into an InetAddress.
@@ -130,6 +124,11 @@ public:
      * @return the port number.
      */
     int getPort();
+
+    /**
+     * Sets the port number.
+     */
+    void setPort(int port);
 
     /**
      * 
@@ -206,11 +205,11 @@ private:
 	/* The hostname of the Socket Address
      * @serial
      */     
-    EString* hostname;
+    sp<EString> hostname;
     /* The IP address of the Socket Address
      * @serial
      */
-    EInetAddress* addr;
+    sp<EInetAddress> addr;
     /* The port number of the Socket Address
      * @serial
      */   

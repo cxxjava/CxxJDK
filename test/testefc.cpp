@@ -56,6 +56,30 @@ class Count {
 volatile int Count::count1 = 1;
 volatile int Count::count2 = 1;
 
+static void test_null(void) {
+	EInteger* i1 = NULL;
+	if (i1 == null) {
+		LOG("i1 == null");
+	}
+	EInteger* i2 = null;
+	if (i2 == NULL) {
+		LOG("i2 == NULL");
+	}
+
+	if (null == NULL) {
+		LOG("null == NULL");
+	}
+	if (null != NULL) {
+		LOG("null != NULL");
+	}
+	if (NULL == null) {
+		LOG("NULL == null");
+	}
+	if (NULL != null) {
+		LOG("NULL != null");
+	}
+}
+
 static void test_interface() {
 	interface IA : virtual public EObject {
 		virtual void func() = 0;
@@ -279,11 +303,17 @@ static void test_lock(int flag) {
 	{
 	public:
 		void testLock(int flag) {
-			SYNCHRONIZED(this) {
-				printf("SYNCHRONIZED 1 ##%d\n", flag);
+			for (int i=0; i<10; i++) {
 				SYNCHRONIZED(this) {
-					printf("SYNCHRONIZED 2 ##%d\n", flag);
-				}
+					printf("SYNCHRONIZED 1 ##%d\n", flag);
+					SYNCHRONIZED(this) {
+						printf("SYNCHRONIZED 2 ##%d\n", flag);
+
+						//if (i == 5) continue; //!
+						if (i == 5) break; //!
+						printf("i=%d\n", i);
+					}}
+				}}
 			}
 
 			printf("end of testLock()\n");
@@ -311,11 +341,15 @@ static void test_lock(int flag) {
 	lock = new ESpinLock();
 	lock->lock();
 	printf("lock1\n");
+#if 0
 	lock->lock();
 	printf("lock2\n");
 	lock->unlock();
+#endif
 	lock->unlock();
 	delete lock;
+
+	printf("test_lock(int) end.\n");
 }
 
 
@@ -437,7 +471,7 @@ public:
 
 					SYNCBLOCK(lock2_) {
 						//
-					}
+					}}
 
 //					XXX xxx;
 //					SYNCHRONIZED(&xxx) {
@@ -625,7 +659,7 @@ static void test_thread3() {
 //						printf("signalAll()...\n");
 				}
 //				printf("state=%d, m=%d, n=%d\n", t->x.state, m, n);
-			}
+			}}
 
 //			EThread::sleep(500);
 		}
@@ -650,7 +684,7 @@ static void test_thread3() {
 			}
 			x.termination->await();
 		}
-	}
+	}}
 
 	for (int i=0; i<arr.size(); i++) {
 		AAAA* t = arr.getAt(i);
@@ -721,7 +755,7 @@ static void test_thread4() {
 //						printf("signalAll()...\n");
 				}
 //				printf("state=%d, m=%d, n=%d\n", t->x.state, m, n);
-			}
+			}}
 
 //			EThread::sleep(500);
 		}
@@ -744,7 +778,7 @@ static void test_thread4() {
 			}
 			x.termination->await();
 		}
-	}
+	}}
 
 	EThread::sleep(500); //FIXME: wait all thread destroyed.
 
@@ -1236,13 +1270,256 @@ static void test_condition()
 	printf("end of test_condition.\n");
 }
 
-static void test_number()
+static void test_number_int()
 {
+	int i, l;
+
+	EInteger ll(9);
+	EString s = ll.toString();
+	LOG("1s=%s", s.c_str());
+	llong n = EInteger::parseInt("1234567890");
+	LOG("n=%lld", n);
+
+	s  = EInteger::toOctalString(99999);
+	LOG("2s=%s", s.c_str());
+
+	s = EInteger::toUnsignedString(-323244, 10);
+	LOG("3s=%s", s.c_str()); //4294644052
+	s = EInteger::toUnsignedString(-323244, 9);
+	LOG("3s=%s", s.c_str()); //12068115084
+
+	ll = EInteger::decode("0x88778");
+	ES_ASSERT(ll.value == 558968);
+	LOG("ll=%lld", ll.value);
+	ll = EInteger::decode("#88778");
+	LOG("ll=%lld", ll.value);
+	ll = EInteger::decode("027");
+	LOG("ll=%lld", ll.value);
+
+	i = EInteger::compareUnsigned(1, -1);
+	ES_ASSERT(i == -1);
+	LOG("i=%d", i);
+
+	ll = EInteger::divideUnsigned(-995445454, 65);
+	ES_ASSERT(ll.value == 50761874);
+	LOG("ll=%lld", ll.value);
+
+	ll = EInteger::remainderUnsigned(-995445454, 65);
+	LOG("ll=%lld", ll.value);
+
+	i = EInteger::numberOfLeadingZeros(43432134);
+	ES_ASSERT(i == 6);
+	LOG("i=%d", i);
+	i = EInteger::bitCount(43432134);
+	ES_ASSERT(i == 13);
+	LOG("i=%d", i);
+	i = EInteger::numberOfLeadingZeros(0);
+	ES_ASSERT(i == 32);
+	LOG("i=%d", i);
+	i = EInteger::bitCount(0);
+	ES_ASSERT(i == 0);
+	LOG("i=%d", i);
+
+	i = EInteger::numberOfLeadingZeros(-43432134);
+	ES_ASSERT(i == 0);
+	LOG("i=%d", i);
+	i = EInteger::bitCount(-43432134);
+	ES_ASSERT(i == 19);
+	LOG("i=%d", i);
+
+	i = EInteger::numberOfTrailingZeros(43432134);
+	ES_ASSERT(i == 1);
+	LOG("i=%d", i);
+	i = EInteger::numberOfTrailingZeros(-43432134);
+	ES_ASSERT(i == 1);
+	LOG("i=%d", i);
+	i = EInteger::numberOfTrailingZeros(0);
+	ES_ASSERT(i == 32);
+	LOG("i=%d", i);
+
+	l = EInteger::highestOneBit(43432134);
+	ES_ASSERT(l == 33554432);
+	LOG("l=%lld", l);
+	l = EInteger::highestOneBit(-43432134);
+	ES_ASSERT(l == -2147483648);
+	LOG("l=%lld", l);
+	l = EInteger::highestOneBit(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = EInteger::lowestOneBit(43432134);
+	ES_ASSERT(l == 2);
+	LOG("l=%lld", l);
+	l = EInteger::lowestOneBit(-43432134);
+	ES_ASSERT(l == 2);
+	LOG("l=%lld", l);
+	l = EInteger::lowestOneBit(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = EInteger::divideUnsigned(-995445454, 65);
+	ES_ASSERT(l == 50761874);
+	LOG("l=%lld", l);
+
+	l = EInteger::rotateLeft(-995445454, 65);
+	ES_ASSERT(l == -1990890907);
+	LOG("l=%lld", l);
+
+	l = EInteger::rotateRight(-995445454, 65);
+	ES_ASSERT(l == 1649760921);
+	LOG("l=%lld", l);
+
+	l = EInteger::reverse(995445454);
+	ES_ASSERT(l == 1934797532);
+	LOG("l=%lld", l);
+	l = EInteger::reverse(-995445454);
+	ES_ASSERT(l == 1286427939);
+	LOG("l=%lld", l);
+
+	l = EInteger::signum(995445454);
+	ES_ASSERT(l == 1);
+	LOG("l=%lld", l);
+	l = EInteger::signum(-995445454);
+	ES_ASSERT(l == -1);
+	LOG("l=%lld", l);
+	l = EInteger::signum(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = EInteger::reverseBytes(43432134);
+	ES_ASSERT(l == -960981502);
+	LOG("l=%lld", l);
+	l = EInteger::reverseBytes(-43432134);
+	ES_ASSERT(l == 977758717);
+	LOG("l=%lld", l);
+	l = EInteger::reverseBytes(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+}
+
+static void test_number_long()
+{
+	int i;
+	llong l;
+
 	ELLong ll(9);
 	EString s = ll.toString();
-	LOG("s=%s", s.c_str());
+	LOG("1s=%s", s.c_str());
 	llong n = ELLong::parseLLong("1234567890");
-	LOG("n=%ld", n);
+	LOG("n=%lld", n);
+
+	s  = ELLong::toOctalString(99999);
+	LOG("2s=%s", s.c_str());
+
+	s = ELLong::toUnsignedString(-323244, 10);
+	LOG("3s=%s", s.c_str()); //18446744073709228372
+	s = ELLong::toUnsignedString(-323244, 9);
+	LOG("3s=%s", s.c_str()); //145808576354216171387
+
+	ll = ELLong::decode("0x88778");
+	LOG("ll=%lld", ll.value);
+	ll = ELLong::decode("#88778");
+	LOG("ll=%lld", ll.value);
+	ll = ELLong::decode("027");
+	LOG("ll=%lld", ll.value);
+
+	i = ELLong::compareUnsigned(1, -1);
+	LOG("i=%d", i);
+
+	ll = ELLong::divideUnsigned(-995445454, 65);
+	LOG("ll=%lld", ll.value);
+
+	ll = ELLong::remainderUnsigned(-995445454, 65);
+	LOG("ll=%lld", ll.value);
+
+	i = ELLong::numberOfLeadingZeros(43432134);
+	ES_ASSERT(i == 38);
+	LOG("i=%d", i);
+	i = ELLong::bitCount(43432134);
+	ES_ASSERT(i == 13);
+	LOG("i=%d", i);
+	i = ELLong::numberOfLeadingZeros(0);
+	ES_ASSERT(i == 64);
+	LOG("i=%d", i);
+	i = ELLong::bitCount(0);
+	ES_ASSERT(i == 0);
+	LOG("i=%d", i);
+
+	i = ELLong::numberOfLeadingZeros(-43432134);
+	ES_ASSERT(i == 0);
+	LOG("i=%d", i);
+	i = ELLong::bitCount(-43432134);
+	ES_ASSERT(i == 51);
+	LOG("i=%d", i);
+
+	i = ELLong::numberOfTrailingZeros(43432134);
+	ES_ASSERT(i == 1);
+	LOG("i=%d", i);
+	i = ELLong::numberOfTrailingZeros(-43432134);
+	ES_ASSERT(i == 1);
+	LOG("i=%d", i);
+	i = ELLong::numberOfTrailingZeros(0);
+	ES_ASSERT(i == 64);
+	LOG("i=%d", i);
+
+	l = ELLong::highestOneBit(43432134);
+	ES_ASSERT(l == 33554432);
+	LOG("l=%lld", l);
+	l = ELLong::highestOneBit(-43432134);
+	ES_ASSERT(l == -9223372036854775808);
+	LOG("l=%lld", l);
+	l = ELLong::highestOneBit(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = ELLong::lowestOneBit(43432134);
+	ES_ASSERT(l == 2);
+	LOG("l=%lld", l);
+	l = ELLong::lowestOneBit(-43432134);
+	ES_ASSERT(l == 2);
+	LOG("l=%lld", l);
+	l = ELLong::lowestOneBit(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = ELLong::divideUnsigned(-995445454, 65);
+	ES_ASSERT(l == 283796062657140094);
+	LOG("l=%lld", l);
+
+	l = ELLong::rotateLeft(-995445454, 65);
+	ES_ASSERT(l == -1990890907);
+	LOG("l=%lld", l);
+
+	l = ELLong::rotateRight(-995445454, 65);
+	ES_ASSERT(l == 9223372036357053081);
+	LOG("l=%lld", l);
+
+	l = ELLong::reverse(995445454);
+	ES_ASSERT(l == 8309892124321513472);
+	LOG("l=%lld", l);
+	l = ELLong::reverse(-995445454);
+	ES_ASSERT(l == 5525165930960650239);
+	LOG("l=%lld", l);
+
+	l = ELLong::signum(995445454);
+	ES_ASSERT(l == 1);
+	LOG("l=%lld", l);
+	l = ELLong::signum(-995445454);
+	ES_ASSERT(l == -1);
+	LOG("l=%lld", l);
+	l = ELLong::signum(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
+
+	l = ELLong::reverseBytes(43432134);
+	ES_ASSERT(l == -4127384123150958592);
+	LOG("l=%lld", l);
+	l = ELLong::reverseBytes(-43432134);
+	ES_ASSERT(l == 4199441717188886527);
+	LOG("l=%lld", l);
+	l = ELLong::reverseBytes(0);
+	ES_ASSERT(l == 0);
+	LOG("l=%lld", l);
 }
 
 static void test_filepath()
@@ -1340,9 +1617,9 @@ static void test_strToken() {
 class ComparatorTst: public EComparator<EInteger*> {
 public:
 	int compare(EInteger* o1, EInteger* o2) {
-		if (o1->longValue() > o2->longValue())
+		if (o1->llongValue() > o2->llongValue())
 			return 1;
-		else if (o1->longValue() < o2->longValue())
+		else if (o1->llongValue() < o2->llongValue())
 			return -1;
 		else
 			return 0;
@@ -1355,9 +1632,9 @@ public:
 
 	}
 	int compareTo(ComparableTst* o) {
-		if (this->longValue() > o->longValue())
+		if (this->llongValue() > o->llongValue())
 			return 1;
-		else if (this->longValue() < o->longValue())
+		else if (this->llongValue() < o->llongValue())
 			return -1;
 		else
 			return 0;
@@ -1372,7 +1649,7 @@ static void test_arraylist() {
 
 	//0
 	EArrayList<EInteger*> *list = new EArrayList<EInteger*>(true, 100);
-	EIterator<EInteger*> *iter = null;
+	sp<EIterator<EInteger*> > iter = null;
 
 	list->add(new EInteger(1));
 	list->add(new EInteger(0));
@@ -1412,17 +1689,15 @@ static void test_arraylist() {
 	while (iter->hasNext()) {
 		printf("iter->next()=%d\n", iter->next()->intValue());
 	}
-	delete iter;
 
-	EListIterator<EInteger*>* listiter = list->listIterator();
+	sp<EListIterator<EInteger*> > listiter = list->listIterator();
 	while (listiter->hasNext()) {
 		printf("listiter->next()=%d\n", listiter->next()->intValue());
 	}
-	delete listiter;
 
 	EInteger* max = ECollections::max(list, &ct);
 	EInteger* min = ECollections::min(list, &ct);
-	printf("max=%ld, min=%ld\n", max->longValue(), min->longValue());
+	printf("max=%ld, min=%ld\n", max->llongValue(), min->llongValue());
 
 	EInteger* I = list->getAt(1);
 	printf("i=%d\n", I->intValue());
@@ -1447,7 +1722,6 @@ static void test_arraylist() {
 		printf("iter->next()=%d\n", iter->next()->intValue());
 		iter->remove();
 	}
-	delete iter;
 
 	delete list;
 
@@ -1489,12 +1763,11 @@ static void test_arraylist() {
 
 	ECollections::sort(list1);
 
-	EIterator<EString*> *iter1 = list1->iterator();
+	sp<EIterator<EString*> > iter1 = list1->iterator();
 	while (iter1->hasNext()) {
 		printf("iter->next()=%s\n", iter1->next()->c_str());
 		iter1->remove();
 	}
-	delete iter1;
 	printf("list1->size=%d\n", list1->size());
 
 	delete list1;
@@ -1534,11 +1807,10 @@ static void test_arraylist() {
 
 	ECollections::sort(list3);
 
-	EIterator<ComparableTst*> *iter3 = list3->iterator();
+	sp<EIterator<ComparableTst*> > iter3 = list3->iterator();
 	while (iter3->hasNext()) {
 		printf("iter3->next()=%d\n", iter3->next()->intValue());
 	}
-	delete iter3;
 	delete list3;
 
 
@@ -1555,12 +1827,11 @@ static void test_arraylist() {
 	llong l = (llong) list4->getAt(1);
 	printf("l=%lld\n", l);
 
-	EIterator<llong> *iter4 = list4->iterator();
+	sp<EIterator<llong> > iter4 = list4->iterator();
 	while (iter4->hasNext()) {
 		printf("iter->next()=%lld\n", iter4->next());
 		iter4->remove();
 	}
-	delete iter4;
 	delete list4;
 
 	//TODO...
@@ -1640,12 +1911,11 @@ static void test_linkedlist()
 
 //	list1->clear();
 
-	EIterator<EString*> *iter1 = list1->iterator();
+	sp<EIterator<EString*> > iter1 = list1->iterator();
 	while (iter1->hasNext()) {
 		printf("iter->next()=%s\n", iter1->next()->c_str());
 		iter1->remove();
 	}
-	delete iter1;
 	printf("list1->size=%d\n", list1->size());
 
 	delete list1;
@@ -1658,20 +1928,18 @@ static void test_linkedlist()
 		EString* s = list.getAt(10000-1);
 		LOG("s=%s", s->c_str());
 
-		EListIterator<EString*>* listiter = list.listIterator(list.size());
+		sp<EListIterator<EString*> > listiter = list.listIterator(list.size());
 		while (listiter->hasPrevious()) {
 			EString* s = listiter->previous();
 			LOG("s=%s", s->c_str());
 		}
-		delete listiter;
 
-		EIterator<EString*>* iter = list.iterator();
+		sp<EIterator<EString*> > iter = list.iterator();
 		while (iter->hasNext()) {
 			EString* s = iter->next();
 //			LOG("s=%s", s->c_str());
 			iter->remove();
 		}
-		delete iter;
 	}
 }
 
@@ -1719,12 +1987,11 @@ static void test_arraydeque() {
 	LOG("poll s=%s", s->c_str());
 	delete s;
 
-	EIterator<EString*>* iter = ad.iterator();
+	sp<EIterator<EString*> > iter = ad.iterator();
 	while (iter->hasNext()) {
 		EString* s = iter->next();
 		LOG("s=%s", s->c_str());
 	}
-	delete iter;
 
 	s = ad.pop();
 	LOG("pop s=%s", s->c_str());
@@ -1736,7 +2003,6 @@ static void test_arraydeque() {
 		EString* s = iter->next();
 		LOG("s_=%s", s->c_str());
 	}
-	delete iter;
 	ad_.addFirst(new EString("x0"));
 	ad_.addLast(new EString("x15"));
 
@@ -1748,7 +2014,6 @@ static void test_arraydeque() {
 //		iter->remove();
 		delete iter->moveOut();
 	}
-	delete iter;
 }
 
 class CompratorByLastModified: public EComparator<EFile*> {
@@ -1769,11 +2034,10 @@ static void test_file() {
 	EFile file("/");
 
 	EArray<EString*> names = file.list();
-	EIterator<EString*> *iter = names.iterator();
+	sp<EIterator<EString*> > iter = names.iterator();
 	while (iter->hasNext()) {
 		LOG("name=%s", iter->next()->c_str());
 	}
-	delete iter;
 
 	EArray<EString*> names2 = file.list();
 	iter = names2.iterator();
@@ -1782,11 +2046,10 @@ static void test_file() {
 	}
 
 	EArray<EFile*> files = file.listFiles();
-	EIterator<EFile*> *iter2 = files.iterator();
+	sp<EIterator<EFile*> > iter2 = files.iterator();
 	while (iter2->hasNext()) {
 		LOG("name3=%s", iter2->next()->toString().c_str());
 	}
-	delete iter2;
 	LOG("\n");
 	CompratorByLastModified c;
 	ECollections::sort(&files, &c);
@@ -1795,7 +2058,6 @@ static void test_file() {
 		EFile *f = iter2->next();
 		LOG("name3=%s, lastModified=%lld", f->toString().c_str(), f->lastModified());
 	}
-	delete iter2;
 
 	LOG("file.toString=%s", file.toString().c_str());
 
@@ -2090,11 +2352,10 @@ static void test_hashmap() {
 		EHashMap<EString*, EString*> hashmap_(hashmap);
 
 		ECollection<EString*> *values = hashmap.values();
-		EIterator<EString*> *iterS = values->iterator();
+		sp<EIterator<EString*> > iterS = values->iterator();
 		while(iterS->hasNext()) {
 			LOG("v=%s", iterS->next()->c_str());
 		}
-		delete iterS;
 
 		//=======================
 
@@ -2104,11 +2365,10 @@ static void test_hashmap() {
 		hashmap__ = hashmap_;
 		{
 			ECollection<EString*> *values = hashmap__.values();
-			EIterator<EString*> *iterS = values->iterator();
+			sp<EIterator<EString*> > iterS = values->iterator();
 			while(iterS->hasNext()) {
 				LOG("v=%s", iterS->next()->c_str());
 			}
-			delete iterS;
 		}
 
 		hashmap__.setAutoFree(false, false);
@@ -2129,21 +2389,19 @@ static void test_hashmap() {
 	LOG(v1->c_str());
 
 	ECollection<EString*> *values = hashmap.values();
-	EIterator<EString*> *iterS = values->iterator();
+	sp<EIterator<EString*> > iterS = values->iterator();
 	while(iterS->hasNext()) {
 		LOG("v=%s", iterS->next()->c_str());
 	}
-	delete iterS;
 
 	ESet<EMapEntry<EString*, EString*>*> *set = hashmap.entrySet();
 	LOG("set size=%d", set->size());
-	EIterator<EMapEntry<EString*, EString*>*> *iter = set->iterator();
+	sp<EIterator<EMapEntry<EString*, EString*>*> > iter = set->iterator();
 	while(iter->hasNext()) {
 		LOG("key=%s", iter->next()->getKey()->c_str());
 		//iter->remove();
 		break;
 	}
-	delete iter;
 
 	LOG("map size=%d", hashmap.size());
 
@@ -2174,14 +2432,13 @@ static void test_hashmap() {
 
 	ESet<EMapEntry<int, EString*>*> *setI = hashmapi.entrySet();
 	LOG("set size=%d", setI->size());
-	EIterator<EMapEntry<int, EString*>*> *iterI = setI->iterator();
+	sp<EIterator<EMapEntry<int, EString*>*> > iterI = setI->iterator();
 	while(iterI->hasNext()) {
 		LOG("key=%d", iterI->next()->getKey());
 		//iterI->remove();
 	}
 	hashmapi.setAutoFree(false);
 	hashmapi.setAutoFree(true);
-	delete iterI;
 
 	EHashMap<llong, EString*> hashmapL;
 	hashmapL.put(2222222, new EString("10"));
@@ -2191,12 +2448,11 @@ static void test_hashmap() {
 
 	ESet<EMapEntry<llong, EString*>*> *setL = hashmapL.entrySet();
 	LOG("set size=%d", setL->size());
-	EIterator<EMapEntry<llong, EString*>*> *iterL = setL->iterator();
+	sp<EIterator<EMapEntry<llong, EString*>*> > iterL = setL->iterator();
 	while(iterL->hasNext()) {
 		LOG("key=%lld", iterL->next()->getKey());
 		//iterL->remove();
 	}
-	delete iterL;
 
 	//test object copy
 	{
@@ -2216,11 +2472,10 @@ static void test_hashset() {
 	ESet<EString*>* set = &hashset;
 	LOG("set.toString():%s", set->toString().c_str());
 
-	EIterator<EString*> *iter = hashset.iterator();
+	sp<EIterator<EString*> > iter = hashset.iterator();
 	while(iter->hasNext()) {
 		LOG("set v=%s", iter->next()->c_str());
 	}
-	delete iter;
 
 	EString s3("3");
 	EString s4("4");
@@ -2233,7 +2488,6 @@ static void test_hashset() {
 	while(iter->hasNext()) {
 		LOG("set v_=%s", iter->next()->c_str());
 	}
-	delete iter;
 
 	//test operator=
 	hashset = hashset_;
@@ -2241,7 +2495,6 @@ static void test_hashset() {
 	while(iter->hasNext()) {
 		LOG("set v=%s", iter->next()->c_str());
 	}
-	delete iter;
 }
 
 static void test_treemap() {
@@ -2271,7 +2524,7 @@ static void test_treemap() {
 	}
 
 	ESet<EMapEntry<EInteger*,EString*>*>* es = tm.entrySet();
-	EIterator<EMapEntry<EInteger*,EString*>*>* iter = es->iterator();
+	sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter = es->iterator();
 	while (iter->hasNext()) {
 		EMapEntry<EInteger*,EString*>* me = iter->next();
 		LOG("K=%d, V=%s", me->getKey()->intValue(), me->getValue()->c_str());
@@ -2279,7 +2532,6 @@ static void test_treemap() {
 //		iter->remove();
 //		delete iter->moveOut();
 	}
-	delete iter;
 
 //	return;
 
@@ -2306,13 +2558,11 @@ static void test_treeset() {
 	ts.add(new EString("x3"));
 	ts.add(new EString("x4"));
 
-	EIterator<EString*>* iter = ts.iterator();
+	sp<EIterator<EString*> > iter = ts.iterator();
 	while (iter->hasNext()) {
 		EString* s = iter->next();
 		LOG("s=%s", s->c_str());
 	}
-	delete iter;
-
 }
 
 static void test_math() {
@@ -2375,11 +2625,10 @@ static void test_array() {
 		EArray<EString*> namesyy = *namesxx;
 		delete namesxx;
 		LOG("auto=%d\n", namesyy.getAutoFree());
-		EIterator<EString*> *iter = namesyy.iterator();
+		sp<EIterator<EString*> > iter = namesyy.iterator();
 		while (iter->hasNext()) {
 			LOG("namesyy=%s", iter->next()->c_str());
 		}
-		delete iter;
 
 		EArray<EString*> nameszz;
 		nameszz = namesyy;
@@ -2387,7 +2636,6 @@ static void test_array() {
 		while (iter->hasNext()) {
 			LOG("nameszz=%s", iter->next()->c_str());
 		}
-		delete iter;
 	}
 #endif
 
@@ -2514,6 +2762,19 @@ static void test_array() {
 	for (int i=0; i<sizeof(b1); i++) {
 		LOG("b1=%d", b1[i]);
 	}
+
+#if 1
+	EA<EA<int>*> bb(10);
+	for (int i=0; i<bb.length(); i++) {
+		bb[i] = new EA<int>(2);
+		(*bb[i])[0] = i;
+		(*bb[i])[1] = i;
+	}
+	for (int i=0; i<bb.length(); i++) {
+		EA<int>* x = bb[i];
+		LOG("i=%d, %d:%d", i, x->getAt(0), x->getAt(1));
+	}
+#endif
 }
 
 static void test_buffer() {
@@ -2882,7 +3143,39 @@ static void test_process() {
 	process.waitFor();
 }
 
-static void test_socket() {
+static void test_inetaddress() {
+	EInetAddress localAddr = EInetAddress::getLocalHost();
+	LOG("hostName=%s", localAddr.getHostName());
+	LOG("canonicalHostName=%s", localAddr.getCanonicalHostName());
+	LOG("localAddr=%s", localAddr.toString().c_str());
+
+	try {
+		//EInetAddress zzqAddr = EInetAddress::getByName("ZZQ"); //EUnknownHostException
+		EInetAddress zzqAddr = EInetAddress::getByName("www.baidu.com");
+		LOG("hostName=%s", zzqAddr.getHostName());
+		LOG("canonicalHostName=%s", zzqAddr.getCanonicalHostName());
+	} catch (EUnknownHostException& e) {
+		e.printStackTrace();
+	}
+
+	try {
+		EInetAddress zzqAddr = EInetAddress::getByName("141.146.8.66");
+		LOG("hostName=%s", zzqAddr.getHostName());
+		LOG("canonicalHostName=%s", zzqAddr.getCanonicalHostName());
+
+		EInetAddress zzqAddr2 = EInetAddress::getByName("1.2.3.4");
+		LOG("hostName=%s", zzqAddr2.getHostName());
+		LOG("canonicalHostName=%s", zzqAddr2.getCanonicalHostName());
+	} catch (EUnknownHostException& e) {
+		e.printStackTrace();
+	}
+
+//	return;
+
+	EInetAddress ia127 = EInetAddress::getByName("127.0.0.1");
+	boolean reachable = ia127.isReachable(3000);
+	LOG("ip=%s, reachable=%d", ia127.getHostAddress().c_str(), reachable);
+
 	EInetAddress ia = EInetAddress::getByName("0.0.0.10");
 	LOG("ip(int)=%d", ia.getAddress());
 
@@ -2891,8 +3184,15 @@ static void test_socket() {
 		LOG("addr1=%s", arr1[i]->getHostAddress().c_str());
 	}
 
+	reachable = arr1[0]->isReachable(3000);
+	LOG("ip=%s, reachable=%d", arr1[0]->getHostAddress().c_str(), reachable);
+
 	EArray<EInetAddress*> arr2 = EInetAddress::getAllByName("11.22.33.44");
 	LOG("addr2=%s, %d", arr2[0]->getHostAddress().c_str(), arr2[0]->getAddress());
+	reachable = arr2[0]->isReachable(3000);
+	LOG("ip=%s, reachable=%d", arr2[0]->getHostAddress().c_str(), reachable);
+
+//	return;
 
 	EArray<EInetAddress*> arr3 = EInetAddress::getAllByName(null);
 	LOG("addr3=%s", arr3[0]->getHostAddress().c_str());
@@ -2905,38 +3205,14 @@ static void test_socket() {
 		e.printStackTrace();
 	}
 
-	EInetAddress localAddr = EInetAddress::getLocalHost();
-	LOG("localHostName=%s", localAddr.getHostName()); //返回本机名
-	LOG("localCanonicalHostName=%s", localAddr.getHostName()); //返回本机名
-	LOG("localAddr=%s", localAddr.toString().c_str());
-
 	//test copy constructor
 	{
 		EInetAddress localAddr_(localAddr);
 		LOG("localAddr_=%s", localAddr_.toString().c_str());
 	}
+}
 
-	try {
-		//EInetAddress zzqAddr = EInetAddress::getByName("ZZQ"); //EUnknownHostException
-		EInetAddress zzqAddr = EInetAddress::getByName("www.baidu.com");
-		LOG("hostName=%s", zzqAddr.getHostName()); //不必再访问DNS服务器，直接返回域名
-		LOG("canonicalHostName=%s", zzqAddr.getCanonicalHostName());
-	} catch (EUnknownHostException& e) {
-		e.printStackTrace();
-	}
-
-	try {
-		EInetAddress zzqAddr = EInetAddress::getByName("141.146.8.66");
-		LOG("hostName=%s", zzqAddr.getHostName()); //需要访问DNS服务器才能得到域名
-		LOG("canonicalHostName=%s", zzqAddr.getCanonicalHostName());
-
-		EInetAddress zzqAddr2 = EInetAddress::getByName("1.2.3.4"); //IP地址不存在
-		LOG("hostName=%s", zzqAddr2.getHostName()); //直接返回IP地址
-		LOG("canonicalHostName=%s", zzqAddr2.getCanonicalHostName());
-	} catch (EUnknownHostException& e) {
-		e.printStackTrace();
-	}
-
+static void test_socket() {
 	char buffer[4096];
 	int ret;
 	EInetSocketAddress isa("www.baidu.com", 80);
@@ -2952,7 +3228,8 @@ static void test_socket() {
 //	ESocket *socket = new ESocket(isa.getAddress(), 80, &localAddr, 8898);
 	ESocket *socket = new ESocket();
 	socket->setReceiveBufferSize(10240);
-	socket->connect(&isa, 3000);
+//	socket->connect(&isa, 3000);
+	socket->connect("www.baidu.com", 80, 3000);
 //	LOG("laddr=%s, lport=%d", socket->getLocalAddress()->getHostName(), socket->getLocalPort());
 	socket->setSoTimeout(3000);
 	char *get_str = "GET / HTTP/1.1\r\n"
@@ -2989,6 +3266,7 @@ static void test_socket() {
 static void test_serversocket() {
 //	EServerSocket *serverSocket = new EServerSocket(8787);
 	EServerSocket *serverSocket = new EServerSocket();
+	serverSocket->setReuseAddress(true);
 	serverSocket->bind(8787);
 	LOG("serverSocket=%s", serverSocket->toString().c_str());
 	int count = 0;
@@ -3303,6 +3581,29 @@ static void test_gzipstream() {
 	eso_buffer_free(&buffer);
 }
 
+static void test_sequencestream() {
+	EByteArrayInputStream bis1((void*)"1234567890", 10);
+	EByteArrayInputStream bis2((void*)"0987654321", 10);
+	ESequenceInputStream sis(&bis1, &bis2);
+	byte c[1];
+	while (sis.read(c, 1) > 0) {
+		LOG("%d", c[0]);
+	}
+
+	LOG("====");
+
+	EVector<EInputStream*> vector(false);
+	vector.addElement(&bis1);
+	vector.addElement(&bis2);
+
+	sp<EEnumeration<EInputStream*> > e = vector.elements();
+	ESequenceInputStream sis2(e.get());
+	byte x[1];
+	while (sis2.read(x, 1) > 0) {
+		LOG("%d", x[0]);
+	}
+}
+
 static void test_pattern() {
 	const char* orig = "From:regular.expressions@example.com\r\n"\
             "From:exddd@43434.com\r\n"\
@@ -3492,7 +3793,7 @@ public:
 							m_end->set(ESystem::nanoTime());
 							LOG("Test Name: %s Time: %ld",
 									m_test->getName(),
-									(m_end->longValue() - m_start->longValue())
+									(m_end->llongValue() - m_start->llongValue())
 											/ 1000);
 						}
 						break;
@@ -3630,12 +3931,11 @@ static void test_collections() {
 		l->add(200);
 		l->add(300);
 
-		EIterator<int> *iter = l->iterator();
+		sp<EIterator<int> > iter = l->iterator();
 		while (iter->hasNext()) {
 			int n = iter->next();
 			printf("n=%d\n", n);
 		}
-		delete iter;
 
 		delete l;
 	}
@@ -3649,12 +3949,11 @@ static void test_collections() {
 		l->add(200);
 		l->add(300);
 
-		EIterator<int> *iter = l->iterator();
+		sp<EIterator<int> > iter = l->iterator();
 		while (iter->hasNext()) {
 			int n = iter->next();
 			printf("n=%d\n", n);
 		}
-		delete iter;
 
 		delete l;
 	}
@@ -3669,22 +3968,20 @@ static void test_collections() {
 		m->put(new EInteger(3), new EString("#3"));
 
 		ESet<EMapEntry<EInteger*,EString*>*>* me = m->entrySet();
-		EIterator<EMapEntry<EInteger*,EString*>*> *iter = me->iterator();
+		sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter = me->iterator();
 		while (iter->hasNext()) {
 			EMapEntry<EInteger*,EString*>*mi = iter->next();
 			printf("1 n=%d, s=%s\n", mi->getKey()->intValue(), mi->getValue()->c_str());
 		}
-		delete iter;
 
 		//test unmodifiable wrappers
 		ECollections::UnmodifiableMap<EInteger*,EString*> um(&hm);
 		ESet<EMapEntry<EInteger*,EString*>*>* me2 = um.entrySet();
-		EIterator<EMapEntry<EInteger*,EString*>*> *iter2 = me2->iterator();
+		sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter2 = me2->iterator();
 		while (iter2->hasNext()) {
 			EMapEntry<EInteger*,EString*>*mi = iter2->next();
 			printf("2 n=%d, s=%s\n", mi->getKey()->intValue(), mi->getValue()->c_str());
 		}
-		delete iter2;
 
 		delete m;
 	}
@@ -4095,7 +4392,7 @@ private:
 			arr = arrayList;
 			arr->refCount++;
 			arrayListFree->refCount++;
-		}
+		}}
 		return arr;
 	}
 
@@ -4109,7 +4406,7 @@ private:
 			if ((arrayListFree->refCount) == 0) {
 				arrayListFree->clear();
 			}
-		}
+		}}
 	}
 
 public:
@@ -4158,7 +4455,7 @@ public:
 			if ((arrayListFree->refCount) == 0) {
 				arrayListFree->clear();
 			}
-		}
+		}}
 		return true;
 	}
 
@@ -4184,7 +4481,7 @@ public:
 			if ((arrayListFree->refCount) == 0) {
 				arrayListFree->clear();
 			}
-		}
+		}}
 	}
 
 	void set(int index, EString* s) {
@@ -4221,7 +4518,7 @@ public:
 			if ((arrayListFree->refCount) == 0) {
 				arrayListFree->clear();
 			}
-		}
+		}}
 	}
 };
 
@@ -5831,7 +6128,7 @@ static void test_lock() {
 
 					gLockTestCount++;
 
-					}
+					}}
 					llong n = gLockTestCount1.incrementAndGet();
 					if (n % 99999 == 0) {
 						printf("Thread1_%s....%d.\n", getName(), n);
@@ -5867,7 +6164,7 @@ static void test_lock() {
 					SYNCBLOCK(lock) {
 					c->addcount2(); // poll
 					gLockTestCount++;
-					}
+					}}
 					llong n = gLockTestCount1.incrementAndGet();
 					if (n % 99999 == 0) {
 						printf("Thread2_%s....%d.\n", getName(), n);
@@ -5958,7 +6255,7 @@ static void test_lock() {
 			arr.getAt(i)->join();
 		}
 
-		ES_ASSERT(gLockTestCount == gLockTestCount1.longValue());
+		ES_ASSERT(gLockTestCount == gLockTestCount1.llongValue());
 
 		delete c;
 	} catch (EException& e) {
@@ -6145,28 +6442,25 @@ static void test_identityHashMap() {
 
 	ESet<EString*> *kset = ihm->keySet();
 	LOG("set size=%d", kset->size());
-	EIterator<EString*> *iterK = kset->iterator();
+	sp<EIterator<EString*> > iterK = kset->iterator();
 	while(iterK->hasNext()) {
 		LOG("key=%s", iterK->next()->c_str());
 	}
-	delete iterK;
 
 	ECollection<EString*> *vset = ihm->values();
-	EIterator<EString*> *iterV = vset->iterator();
+	sp<EIterator<EString*> > iterV = vset->iterator();
 	while(iterV->hasNext()) {
 		LOG("val=%s", iterV->next()->c_str());
 	}
-	delete iterV;
 
 	ESet<EMapEntry<EString*, EString*>*> *eset = ihm->entrySet();
 	LOG("set size=%d", eset->size());
-	EIterator<EMapEntry<EString*, EString*>*> *iterE = eset->iterator();
+	sp<EIterator<EMapEntry<EString*, EString*>*> > iterE = eset->iterator();
 	while(iterE->hasNext()) {
 		EMapEntry<EString*, EString*>* e = iterE->next();
 		LOG("key=%s, val=%s", e->getKey()->c_str(), e->getValue()->c_str());
 	}
 	LOG("iterE::hashCode=%d", iterE->hashCode());
-	delete iterE;
 
 	delete ihm;
 }
@@ -6335,13 +6629,13 @@ static void test_threadlocal4() {
 			//2)
 			SYNCBLOCK(lock) {
 //				printf("x\n");
-			}
+			}}
 
 			for (int i=0; i<10000; i++) {
 				EReentrantLock llock;
 				SYNCBLOCK(&llock) {
 //					printf("y\n");
-				}
+				}}
 			}
 			} while (i++ < 1000);
 //			LOG("success!\n");
@@ -6419,12 +6713,11 @@ static void test_vector() {
 	vector->addElement(string1);
 	vector->addElement(string2);
 	vector->addElement(string3);
-	EEnumeration<EString*>* e = vector->elements();
-	for (; e && e->hasMoreElements();) {
+	sp<EEnumeration<EString*> > e = vector->elements();
+	for (; e != null && e->hasMoreElements();) {
 		EString *string = (EString*)e->nextElement();
 		eso_log("next element, string=[%s]\n", string->c_str());
 	}
-	delete e;
 	int n = vector->lastIndexOf(string2);
 	eso_log("n=%d\n", n);
 	int m = vector->lastIndexOf(string2, 1);
@@ -6437,11 +6730,10 @@ static void test_vector() {
 		EVector<EString*> vcopy(*vector);
 
 		e = vector->elements();
-		for (; e && e->hasMoreElements();) {
+		for (; e != null && e->hasMoreElements();) {
 			EString *string = (EString*)e->nextElement();
 			LOG("next element, string_=[%s]", string->c_str());
 		}
-		delete e;
 
 		vcopy.setAutoFree(false);
 		vector->setAutoFree(true);
@@ -6467,12 +6759,11 @@ static void test_vector2() {
 			vector->addElement(string1);
 			vector->addElement(string2);
 			vector->addElement(string3);
-			EEnumeration<EString*>* e = vector->elements();
-			for (e; e->hasMoreElements();) {
+			sp<EEnumeration<EString*> > e = vector->elements();
+			for (; e != null && e->hasMoreElements();) {
 				EString *string = (EString*)e->nextElement();
 				eso_log("next element, string=[%s]\n", string->c_str());
 			}
-			delete e;
 			int n = vector->lastIndexOf(string2);
 			eso_log("n=%d\n", n);
 			int m = vector->lastIndexOf(string2, 1);
@@ -6671,7 +6962,7 @@ static void test_semaphore() {
 			SEMAPHORE_SYNCBLOCK(semaphore) {
 				LOG("Hello %s", this->getName());
 				EThread::sleep(2000);
-			}
+			}}
 			LOG("Goodbye %s", this->getName());
 
 		}
@@ -6946,19 +7237,18 @@ static void test_priorityQueue() {
 	{
 		EPriorityQueue<EInteger*> pq_(*pq);
 
-		EIterator<EInteger*>* iter = pq->iterator();
+		sp<EIterator<EInteger*> > iter = pq->iterator();
 		while (iter->hasNext()) {
 			EInteger* i = iter->next();
 //			LOG("i0_=%d", i->intValue());
 		}
-		delete iter;
 
 		pq_.setAutoFree(false);
 	}
 	pq->setAutoFree(true);
 
 	int n = 0;
-	EIterator<EInteger*>* iter = pq->iterator();
+	sp<EIterator<EInteger*> > iter = pq->iterator();
 	while (iter->hasNext()) {
 		EInteger* i = iter->next();
 //		LOG("i0=%d", i->intValue());
@@ -6967,7 +7257,6 @@ static void test_priorityQueue() {
 		}
 		n++;
 	}
-	delete iter;
 
 	LOG("================= 0");
 
@@ -6976,7 +7265,6 @@ static void test_priorityQueue() {
 		EInteger* i = iter->next();
 //		LOG("i1=%d", i->intValue());
 	}
-	delete iter;
 
     LOG("================= 1");
     
@@ -7109,8 +7397,7 @@ static void test_threadPoolExecutor()
 //		executor->execute(new XXX());
 //	}
 	executor->shutdown();
-
-//	executor->awaitTermination();
+	executor->awaitTermination();
 
 //	EThread::sleep(500);
 //	printf("thread=%d, sleep wakeup...\n", EThread::currentThread()->getId());
@@ -7389,6 +7676,7 @@ static void test_executors()
 		executorService->execute(new Worker(i));
 	}
 	executorService->shutdown();
+	executorService->awaitTermination();
 
 	delete executorService;
 
@@ -7404,6 +7692,7 @@ static void test_executors()
 		executorService->execute(new Worker(i));
 	}
 	executorService->shutdown();
+	executorService->awaitTermination();
 
 	delete executorService;
 
@@ -7419,6 +7708,7 @@ static void test_executors()
 		executorService->execute(new Worker(i));
 	}
 	executorService->shutdown();
+	executorService->awaitTermination();
 
 	delete executorService;
 
@@ -7434,6 +7724,7 @@ static void test_executors()
 		executorService->execute(new Worker(i));
 	}
 	executorService->shutdown();
+	executorService->awaitTermination();
 
 	delete executorService;
 
@@ -7720,6 +8011,264 @@ static void test_uri() {
 	LOG("ascii string=%s", uri3->toASCIIString().c_str());
 }
 
+static void test_networkInferface(void) {
+	sp<EEnumeration<ENetworkInterface*> > e = ENetworkInterface::getNetworkInterfaces();
+	for (; e != null && e->hasMoreElements();) {
+		ENetworkInterface* ni = e->nextElement();
+		LOG("\r\nni_=%s", ni->toString().c_str());
+
+		LOG("isLoopback=%d", ni->isLoopback());
+		LOG("isPointToPoint=%d", ni->isPointToPoint());
+		LOG("isUp=%d", ni->isUp());
+		LOG("isVirtual=%d", ni->isVirtual());
+		LOG("supportsMulticast=%d", ni->supportsMulticast());
+		LOG("index=%d", ni->getIndex());
+		LOG("mtu=%d", ni->getMTU());
+
+		sp<EList<EInterfaceAddress*> >ifas = ni->getInterfaceAddresses();
+		sp<EIterator<EInterfaceAddress*> > iter = ifas->iterator();
+		while (iter->hasNext()) {
+			EInterfaceAddress* ifa = iter->next();
+			EInetAddress* ia = ifa->getAddress();
+			if (ia) {
+				LOG("ip=%s", ia->toString().c_str());
+			}
+		}
+
+		sp<EList<EInterfaceAddress*> > ifs =
+				ni->getInterfaceAddresses();
+		if (ifs != null) {
+			sp<EIterator<EInterfaceAddress*> > iter = ifs->iterator();
+			while (iter->hasNext()) {
+				EInterfaceAddress* ia = iter->next();
+				LOG("ia: %s", ia->toString().c_str());
+			}
+		}
+
+		llong mac = ni->getHardwareAddress();
+		ubyte* bmac = MAC6_LLONG2ARR(mac);
+		for (int i = 0; i < MAC6_LEN; i++) {
+			LOG("MAC[%d]=%x", i, bmac[i]);
+		}
+	}
+
+	sp<ENetworkInterface> ni = ENetworkInterface::getByIndex(4);
+	if (ni != null) LOG("\r\nni=%s", ni->toString().c_str());
+
+	//	EInetAddress addr = EInetAddress::getByName("127.0.0.1");
+	EInetAddress addr = EInetAddress::getByName("localhost");
+	ni = ENetworkInterface::getByInetAddress(&addr);
+	LOG("\r\nni=%s", ni->toString().c_str());
+}
+
+static void test_datagramSocket(void) {
+	class Server: public EThread {
+	public:
+		virtual void run() {
+			while (1) {
+			try {
+				EDatagramSocket socket(9001);
+				socket.setReuseAddress(true);
+				EA<byte> buf(1024);
+				EDatagramPacket packet(buf);
+
+				//sets
+				socket.setBroadcast(true);
+
+				//recv
+				socket.receive(&packet);
+				LOG("ip=%s", packet.getAddress()->toString().c_str());
+				LOG("port=%d", packet.getPort());
+				EA<byte>* data = packet.getData();
+				int offset = packet.getOffset();
+				int length = packet.getLength();
+				LOG("data=%*s", length, (char*)data->address() + offset);
+
+				//echo
+				socket.send(&packet);
+
+				//close
+				socket.close();
+			} catch (ESocketException& se) {
+				se.printStackTrace();
+			} catch (EIOException& ie) {
+				ie.printStackTrace();
+			}
+			}
+		}
+	};
+
+	class Client: public EThread {
+	public:
+		virtual void run() {
+			while (1) {
+			try {
+				EDatagramSocket socket(9002);
+				EA<byte> buf(1024);
+				memcpy(buf.address(), "1234567890", 10);
+				EInetAddress ia = EInetAddress::getByName("127.0.0.1");
+				EDatagramPacket packet(buf, 10, &ia, 9001);
+
+				//connect
+				socket.connect(&ia, 9001);
+				sp<EInetSocketAddress> isa = socket.getRemoteSocketAddress();
+				LOG("ip=%s, port=%d", isa->getHostName(), isa->getPort());
+
+				//send
+				socket.send(&packet);
+
+				if (0) {
+				//recv
+				socket.receive(&packet);
+				LOG("ip=%s", packet.getAddress()->toString().c_str());
+				LOG("port=%d", packet.getPort());
+				EA<byte>* data = packet.getData();
+				LOG("data=%s", (char*)data->address());
+				}
+
+				//disconnect
+				socket.disconnect();
+
+				//close
+				socket.close();
+			} catch (ESocketException& se) {
+				se.printStackTrace();
+			} catch (EIOException& ie) {
+				ie.printStackTrace();
+			}
+			}
+		}
+	};
+
+	Server server;
+	Client client;
+
+	server.start();
+
+	EThread::sleep(500);
+
+	client.start();
+
+	server.join();
+	client.join();
+}
+
+static void test_multicastSocket(void) {
+	class Receiver: public EThread {
+	public:
+		virtual void run() {
+			try {
+				EMulticastSocket socket(9000);
+				EInetAddress ia = EInetAddress::getByName("230.0.0.1");
+
+				socket.joinGroup(&ia);
+				socket.setLoopbackMode(false);
+
+				EA<byte> buf(1024);
+				EDatagramPacket packet(buf);
+
+				while (1) {
+					//recv
+					socket.receive(&packet);
+					LOG("ip=%s", packet.getAddress()->toString().c_str());
+					LOG("port=%d", packet.getPort());
+					EA<byte>* data = packet.getData();
+					int offset = packet.getOffset();
+					int length = packet.getLength();
+					LOG("data=%*s", length, (char*)data->address() + offset);
+				}
+
+				//close
+				socket.close();
+			} catch (ESocketException& se) {
+				se.printStackTrace();
+			} catch (EIOException& ie) {
+				ie.printStackTrace();
+			}
+		}
+	};
+
+	class Sender: public EThread {
+	public:
+		virtual void run() {
+			try {
+				EMulticastSocket socket(9000);
+				EInetAddress ia = EInetAddress::getByName("230.0.0.1");
+
+				socket.joinGroup(&ia);
+				socket.setLoopbackMode(false);
+
+				EA<byte> buf(1024);
+				memcpy(buf.address(), "1234567890", 10);
+				EDatagramPacket packet(buf, 10, &ia, 9000);
+
+				while (1) {
+					//send
+					socket.send(&packet);
+
+					EThread::sleep(1); //?
+				}
+
+				//close
+				socket.close();
+			} catch (ESocketException& se) {
+				se.printStackTrace();
+			} catch (EIOException& ie) {
+				ie.printStackTrace();
+			}
+		}
+	};
+
+	Receiver receiver;
+	Sender sender;
+
+//	receiver.start();
+
+	EThread::sleep(500);
+
+	sender.start();
+
+	receiver.join();
+	sender.join();
+}
+
+static void* execute_c_thread(es_thread_t* t) {
+	sp<EThread> cxxthread = EThread::c_init();
+
+	EThread* thread = EThread::currentThread();
+	LOG("current is %s thread, name: %s", thread->isMainThread() ? "main" : "sub", thread->getName());
+	LOG("current is %s thread, name: %s", thread->isCThread() ? "c" : "c++", thread->getName());
+
+	for (int i=0; i<100; i++) {
+		test_executors();
+	}
+
+	return NULL;
+}
+
+static void test_c_thread() {
+	EThread* thread = EThread::currentThread();
+	LOG("current is %s thread, name: %s", thread->isMainThread() ? "main" : "sub", thread->getName());
+	LOG("current is %s thread, name: %s", thread->isCThread() ? "c" : "c++", thread->getName());
+
+	int size = 10;
+	es_array_t* arr = eso_ptrarray_make(size);
+
+	for (int i=0; i<size; i++) {
+		es_thread_t* thread = eso_thread_create(NULL, execute_c_thread, NULL);
+		eso_ptrarray_push(arr, thread);
+	}
+
+	for (int i=0; i<size; i++) {
+		es_thread_t* thread = (es_thread_t*)eso_ptrarray_get(arr, i);
+
+		eso_thread_join(NULL, thread);
+		eso_thread_destroy(&thread);
+	}
+
+	eso_ptrarray_free(&arr);
+}
+
 static void test_test(int argc, const char** argv) {
 //	test_cmpxchg();
 //	test_interface();
@@ -7790,7 +8339,11 @@ static void test_test(int argc, const char** argv) {
 //	test_atomic();
 //	test_atomic2();
 //	test_collections();
-	test_instanceof();
+//	test_pattern();
+//	test_atomic();
+//	test_atomic2();
+//	test_collections();
+//	test_instanceof();
 //	test_NEWRC();
 //	test_sp();
 //	test_ea();
@@ -7824,6 +8377,10 @@ static void test_test(int argc, const char** argv) {
 //	test_file_read_write(argc > 1 ? argv[1] : "/tmp/f.out");
 //	test_buffered_stream();
 //	test_synchronousQueue();
+	test_executors();
+//	test_callable_and_future();
+//	test_threadLocalRandom();
+//	test_uri();
 //	test_executors();
 //	test_callable_and_future();
 //	test_threadLocalRandom();
@@ -7846,6 +8403,8 @@ MAIN_IMPL(testefc) {
 		boolean loop = EBoolean::parseBoolean(ESystem::getProgramArgument("loop"));
 		do {
 			test_test(argc, argv);
+//		} while (++i < 5);
+
 //		} while (++i < 5);
 		} while (1);
 	}

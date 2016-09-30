@@ -152,7 +152,7 @@ public:
 	 * @return an Iterator over the elements in this set
 	 * @see ConcurrentModificationException
 	 */
-	EIterator<E>* iterator(int index=0) {
+	sp<EIterator<E> > iterator(int index=0) {
 		return map_->keySet()->iterator();
 	}
 

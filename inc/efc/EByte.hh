@@ -2,14 +2,15 @@
  * EByte.hh
  *
  *  Created on: 2013-3-21
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EBYTE_HH_
 #define EBYTE_HH_
 
-#include "EObject.hh"
+#include "ENumber.hh"
 #include "EString.hh"
+#include "EComparable.hh"
 #include "ENumberFormatException.hh"
 
 namespace efc {
@@ -24,7 +25,7 @@ namespace efc {
  */
 #define BYTE_MAX_RADIX   36
 
-class EByte : public EObject {
+class EByte : public ENumber, virtual public EComparable<EByte*> {
 public:
 	/**
 	 * The constant value of this field is the smallest value of type
@@ -55,13 +56,6 @@ public:
 	}
 
 	EByte(byte value);
-
-	/**
-	 * Returns the value of this Character object.
-	 * @return  the primitive <code>byte</code> value represented by
-	 *          this object.
-	 */
-	byte byteValue();
 
 	/**
 	 * Compares this object against the specified object.
@@ -98,6 +92,22 @@ public:
      */
     static byte parseByte(const char *s, int radix=10) THROWS(ENumberFormatException);
 
+    /**
+	 * Compares two {@code byte} values numerically.
+	 * The value returned is identical to what would be returned by:
+	 * <pre>
+	 *    Byte.valueOf(x).compareTo(Byte.valueOf(y))
+	 * </pre>
+	 *
+	 * @param  x the first {@code byte} to compare
+	 * @param  y the second {@code byte} to compare
+	 * @return the value {@code 0} if {@code x == y};
+	 *         a value less than {@code 0} if {@code x < y}; and
+	 *         a value greater than {@code 0} if {@code x > y}
+	 * @since 1.7
+	 */
+	static int compare(byte x, byte y);
+
 	/**
 	 * Returns a hash code for this <code>Byte</code>.
 	 */
@@ -116,11 +126,33 @@ public:
 	boolean equals(EByte *obj);
 	virtual boolean equals(EObject* obj);
 
-private:
+	/**
+	 * Compares two {@code Byte} objects numerically.
+	 *
+	 * @param   anotherByte   the {@code Byte} to be compared.
+	 * @return  the value {@code 0} if this {@code Byte} is
+	 *          equal to the argument {@code Byte}; a value less than
+	 *          {@code 0} if this {@code Byte} is numerically less
+	 *          than the argument {@code Byte}; and a value greater than
+	 *           {@code 0} if this {@code Byte} is numerically
+	 *           greater than the argument {@code Byte} (signed
+	 *           comparison).
+	 * @since   1.2
+	 */
+	virtual int compareTo(EByte* anotherByte);
+
+	virtual byte byteValue();
+	virtual short shortValue();
+	virtual int intValue();
+	virtual llong llongValue();
+	virtual float floatValue();
+	virtual double doubleValue();
+
+public:
 	/**
 	 * The value of the Character.
 	 */
-	byte m_value;
+	byte value;
 };
 
 } /* namespace efc */

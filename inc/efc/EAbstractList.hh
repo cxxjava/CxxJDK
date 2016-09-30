@@ -359,7 +359,7 @@ public:
 	 *
 	 * @see #modCount
 	 */
-	virtual EIterator<E>* iterator(int index=0) {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		return new ListIterator(this, index);
 	}
 
@@ -385,7 +385,7 @@ public:
 	 *
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	EListIterator<E>* listIterator(int index = 0) {
+	sp<EListIterator<E> > listIterator(int index = 0) {
 		if (index < 0 || index > size()) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
 					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());
@@ -693,7 +693,7 @@ public:
 	 *
 	 * @see #modCount
 	 */
-	virtual EIterator<int>* iterator(int index=0) {
+	virtual sp<EIterator<int> > iterator(int index=0) {
 		return new ListIterator(this, index);
 	}
 
@@ -719,7 +719,7 @@ public:
 	 *
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	EListIterator<int>* listIterator(int index = 0) {
+	sp<EListIterator<int> > listIterator(int index = 0) {
 		if (index < 0 || index > size()) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
 					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());
@@ -1027,7 +1027,7 @@ public:
 	 *
 	 * @see #modCount
 	 */
-	virtual EIterator<llong>* iterator(int index=0) {
+	virtual sp<EIterator<llong> > iterator(int index=0) {
 		return new ListIterator(this, index);
 	}
 
@@ -1053,7 +1053,7 @@ public:
 	 *
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	EListIterator<llong>* listIterator(int index = 0) {
+	sp<EListIterator<llong> > listIterator(int index = 0) {
 		if (index < 0 || index > size()) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
 					EString::formatOf("Index: %d, Size: %d", index, size()).c_str());

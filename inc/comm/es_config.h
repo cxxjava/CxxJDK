@@ -20,6 +20,8 @@
 
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) //bsd
 
+#define __bsd__
+
 #define HAVE_KQUEUE  //bsd kqueue
 
 #else //other.

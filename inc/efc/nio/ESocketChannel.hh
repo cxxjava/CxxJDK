@@ -30,8 +30,88 @@
 namespace efc {
 namespace nio {
 
+/**
+ * A selectable channel for stream-oriented connecting sockets.
+ *
+ * <p> A socket channel is created by invoking one of the {@link #open open}
+ * methods of this class.  It is not possible to create a channel for an arbitrary,
+ * pre-existing socket. A newly-created socket channel is open but not yet
+ * connected.  An attempt to invoke an I/O operation upon an unconnected
+ * channel will cause a {@link NotYetConnectedException} to be thrown.  A
+ * socket channel can be connected by invoking its {@link #connect connect}
+ * method; once connected, a socket channel remains connected until it is
+ * closed.  Whether or not a socket channel is connected may be determined by
+ * invoking its {@link #isConnected isConnected} method.
+ *
+ * <p> Socket channels support <i>non-blocking connection:</i>&nbsp;A socket
+ * channel may be created and the process of establishing the link to the
+ * remote socket may be initiated via the {@link #connect connect} method for
+ * later completion by the {@link #finishConnect finishConnect} method.
+ * Whether or not a connection operation is in progress may be determined by
+ * invoking the {@link #isConnectionPending isConnectionPending} method.
+ *
+ * <p> Socket channels support <i>asynchronous shutdown,</i> which is similar
+ * to the asynchronous close operation specified in the {@link Channel} class.
+ * If the input side of a socket is shut down by one thread while another
+ * thread is blocked in a read operation on the socket's channel, then the read
+ * operation in the blocked thread will complete without reading any bytes and
+ * will return <tt>-1</tt>.  If the output side of a socket is shut down by one
+ * thread while another thread is blocked in a write operation on the socket's
+ * channel, then the blocked thread will receive an {@link
+ * AsynchronousCloseException}.
+ *
+ * <p> Socket options are configured using the {@link #setOption(SocketOption,Object)
+ * setOption} method. Socket channels support the following options:
+ * <blockquote>
+ * <table border summary="Socket options">
+ *   <tr>
+ *     <th>Option Name</th>
+ *     <th>Description</th>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#SO_SNDBUF SO_SNDBUF} </td>
+ *     <td> The size of the socket send buffer </td>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#SO_RCVBUF SO_RCVBUF} </td>
+ *     <td> The size of the socket receive buffer </td>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#SO_KEEPALIVE SO_KEEPALIVE} </td>
+ *     <td> Keep connection alive </td>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#SO_REUSEADDR SO_REUSEADDR} </td>
+ *     <td> Re-use address </td>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#SO_LINGER SO_LINGER} </td>
+ *     <td> Linger on close if data is present (when configured in blocking mode
+ *          only) </td>
+ *   </tr>
+ *   <tr>
+ *     <td> {@link java.net.StandardSocketOptions#TCP_NODELAY TCP_NODELAY} </td>
+ *     <td> Disable the Nagle algorithm </td>
+ *   </tr>
+ * </table>
+ * </blockquote>
+ * Additional (implementation specific) options may also be supported.
+ *
+ * <p> Socket channels are safe for use by multiple concurrent threads.  They
+ * support concurrent reading and writing, though at most one thread may be
+ * reading and at most one thread may be writing at any given time.  The {@link
+ * #connect connect} and {@link #finishConnect finishConnect} methods are
+ * mutually synchronized against each other, and an attempt to initiate a read
+ * or write operation while an invocation of one of these methods is in
+ * progress will block until that invocation is complete.  </p>
+ *
+ * @author Mark Reinhold
+ * @author JSR-51 Expert Group
+ * @since 1.4
+ */
+
 class ESocketAdaptor;
-class ESocketChannel: public ESelectableChannel, virtual public EByteChannel {
+class ESocketChannel: public ESelectableChannel, virtual public ESocketOptions, virtual public EByteChannel {
 public:
 	static const int SHUT_RD_ = 0;
 	static const int SHUT_WR_ = 1;
@@ -89,8 +169,8 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	static ESocketChannel* open(EInetSocketAddress* remote)
-			THROWS(EIOException);
+	static ESocketChannel* open(EInetSocketAddress* remote) THROWS(EIOException);
+	static ESocketChannel* open(const char* hostname, int port) THROWS(EIOException);
 
 	/**
 	 * Returns an operation set identifying this channel's supported
@@ -103,7 +183,7 @@ public:
 	 *
 	 * @return  The valid-operation set
 	 */
-	int validOps();
+	virtual int validOps();
 
 	// -- Socket-specific operations --
 
@@ -121,6 +201,7 @@ public:
 	 *
 	 */
 	void bind(EInetSocketAddress* local) THROWS(EIOException);
+	void bind(const char* hostname, int port) THROWS(EIOException);
 
 	/**
 	 * Tells whether or not this channel's network socket is connected.  </p>
@@ -207,7 +288,8 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	boolean connect(EInetSocketAddress* remote) THROWS(EIOException);
+	virtual boolean connect(EInetSocketAddress* remote) THROWS(EIOException);
+	virtual boolean connect(const char* hostname, int port) THROWS(EIOException);
 
 	/**
 	 * Finishes the process of connecting a socket channel.
@@ -266,37 +348,37 @@ public:
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	int read(EIOByteBuffer* dst) THROWS(EIOException);
+	virtual int read(EIOByteBuffer* dst) THROWS(EIOException);
 
 	/**
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	long read(EA<EIOByteBuffer*>* dsts, int offset, int length) THROWS(EIOException);
+	virtual long read(EA<EIOByteBuffer*>* dsts, int offset, int length) THROWS(EIOException);
 
 	/**
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	long read(EA<EIOByteBuffer*>* dsts) THROWS(EIOException);
+	virtual long read(EA<EIOByteBuffer*>* dsts) THROWS(EIOException);
 
 	/**
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	int write(EIOByteBuffer* src) THROWS(EIOException);
+	virtual int write(EIOByteBuffer* src) THROWS(EIOException);
 
 	/**
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	long write(EA<EIOByteBuffer*>* srcs, int offset, int length) THROWS(EIOException);
+	virtual long write(EA<EIOByteBuffer*>* srcs, int offset, int length) THROWS(EIOException);
 
 	/**
 	 * @throws  NotYetConnectedException
 	 *          If this channel is not yet connected
 	 */
-	long write(EA<EIOByteBuffer*>* srcs) THROWS(EIOException);
+	virtual long write(EA<EIOByteBuffer*>* srcs) THROWS(EIOException);
 
 	/**
 	 *
@@ -311,20 +393,28 @@ public:
 	boolean isInputOpen();
 	boolean isOutputOpen();
 
-	int getFDVal();
+	virtual int getFDVal();
 
-	EStringBase toString();
+	virtual EStringBase toString();
+
+	/*
+	 * {@inheritDoc}
+	 */
+	virtual void setOption(int optID, const void* optval, int optlen) THROWS(ESocketException);
+	virtual void getOption(int optID, void* optval, int* optlen) THROWS(ESocketException);
 
 protected:
-	void implConfigureBlocking(boolean block) THROWS(EIOException);
-	void implCloseSelectableChannel() THROWS(EIOException);
+	virtual void implConfigureBlocking(boolean block) THROWS(EIOException);
+	virtual void implCloseSelectableChannel() THROWS(EIOException);
 
-	boolean translateAndUpdateReadyOps(int ops, ESelectionKey* sk);
-	boolean translateAndSetReadyOps(int ops, ESelectionKey* sk);
+	virtual boolean translateAndUpdateReadyOps(int ops, ESelectionKey* sk);
+	virtual boolean translateAndSetReadyOps(int ops, ESelectionKey* sk);
 
-	void translateAndSetInterestOps(int ops, ESelectionKey* sk);
+	virtual void translateAndSetInterestOps(int ops, ESelectionKey* sk);
 
-	void kill() THROWS(EIOException);
+	virtual void kill() THROWS(EIOException);
+
+	int sendOutOfBandData(byte b) THROWS(EIOException);
 
 private:
 	friend class EServerSocketChannel;
@@ -351,7 +441,7 @@ private:
 	EInetSocketAddress* _localAddress;// = null;
 	EInetSocketAddress* _remoteAddress;// = null;
 
-	 // IDs of native threads doing reads and writes, for signalling
+	// IDs of native threads doing reads and writes, for signalling
 	volatile es_os_thread_t _readerThread;	// = 0;
 	volatile es_os_thread_t _writerThread;	// = 0;
 

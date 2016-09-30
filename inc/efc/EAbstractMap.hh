@@ -353,7 +353,7 @@ protected:
 		template<typename _KI>
 		class KSListIterator: public EIterator<_KI> {
 		private:
-			EIterator<EMapEntry<K,V>*> *i;
+			sp<EIterator<EMapEntry<K,V>*> > i;
 
 		public:
 			KSListIterator(EAbstractMap<K,V> *map) {
@@ -387,7 +387,7 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_K>* iterator(int index=0) {
+		sp<EIterator<_K> > iterator(int index=0) {
 			return new KSListIterator<_K>(_map);
 		}
 
@@ -406,7 +406,7 @@ protected:
 		template<typename _VI>
 		class VCListIterator: public EIterator<_VI> {
 		private:
-			EIterator<EMapEntry<K,V>*> *i;
+			sp<EIterator<EMapEntry<K,V>*> > i;
 
 		public:
 			VCListIterator(EAbstractMap<K,V> *map) {
@@ -440,7 +440,7 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_V>* iterator(int index=0) {
+		sp<EIterator<_V> > iterator(int index=0) {
 			return new VCListIterator<_V>(_map);
 		}
 
@@ -496,16 +496,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsValue(V value) {
-		EIterator<EMapEntry<K, V>*> *i =
+		sp<EIterator<EMapEntry<K, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
 			if (value->equals(e->getValue())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -523,16 +521,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsKey(K key) {
-		EIterator<EMapEntry<K, V>*> *i =
+		sp<EIterator<EMapEntry<K, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
 			if (key->equals(e->getKey())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -550,16 +546,14 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V get(K key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<K, V>*> *i =
+		sp<EIterator<EMapEntry<K, V>*> > i =
 						entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
 			if (key->equals(e->getKey())) {
-				delete i;
 				return e->getValue();
 			}
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -602,7 +596,7 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V remove(K key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<K, V>*> *i =
+		sp<EIterator<EMapEntry<K, V>*> > i =
 								entrySet()->iterator();
 		EMapEntry<K, V> *correctEntry = null;
 		while (correctEntry == null && i->hasNext()) {
@@ -615,10 +609,8 @@ public:
 		if (correctEntry != null) {
 			oldValue = correctEntry->getValue();
 			i->remove();
-			delete i;
 			return oldValue;
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -702,10 +694,9 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		EIterator<EMapEntry<K,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		while (i->hasNext())
 			h += i->next()->hashCode();
-		delete i;
 		return h;
 	}
 
@@ -722,9 +713,8 @@ public:
 	 * @return a string representation of this map
 	 */
 	virtual EStringBase toString() {
-		EIterator<EMapEntry<K,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
-			delete i;
 			return "{}";
 		}
 
@@ -738,7 +728,6 @@ public:
 			sb.append('=');
 			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
 			if (! i->hasNext()) {
-				delete i;
 				return sb.append('}');
 			}
 			sb.append(',').append(' ');
@@ -1041,7 +1030,7 @@ protected:
 		template<typename _KI>
 		class KSListIterator: public EIterator<_KI> {
 		private:
-			EIterator<EMapEntry<int,V>*> *i;
+			sp<EIterator<EMapEntry<int,V>*> > i;
 
 		public:
 			KSListIterator(EAbstractMap<int,V> *map) {
@@ -1075,7 +1064,7 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_K>* iterator(int index=0) {
+		sp<EIterator<_K> > iterator(int index=0) {
 			return new KSListIterator<_K>(_map);
 		}
 
@@ -1094,7 +1083,7 @@ protected:
 			template<typename _VI>
 			class VCListIterator: public EIterator<_VI> {
 			private:
-				EIterator<EMapEntry<int,V>*> *i;
+				sp<EIterator<EMapEntry<int,V>*> > i;
 
 			public:
 				VCListIterator(EAbstractMap<int,V> *map) {
@@ -1128,7 +1117,7 @@ protected:
 				_map = map;
 			}
 
-			EIterator<_V>* iterator(int index=0) {
+			sp<EIterator<_V> > iterator(int index=0) {
 				return new VCListIterator<_V>(_map);
 			}
 
@@ -1184,16 +1173,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsValue(V value) {
-		EIterator<EMapEntry<int, V>*> *i =
+		sp<EIterator<EMapEntry<int, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<int, V> *e = i->next();
 			if (value->equals(e->getValue())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -1211,16 +1198,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsKey(int key) {
-		EIterator<EMapEntry<int, V>*> *i =
+		sp<EIterator<EMapEntry<int, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<int, V> *e = i->next();
 			if (key == (e->getKey())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -1238,16 +1223,14 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V get(int key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<int, V>*> *i =
+		sp<EIterator<EMapEntry<int, V>*> > i =
 						entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<int, V> *e = i->next();
 			if (key == (e->getKey())) {
-				delete i;
 				return e->getValue();
 			}
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -1290,7 +1273,7 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V remove(int key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<int, V>*> *i =
+		sp<EIterator<EMapEntry<int, V>*> > i =
 								entrySet()->iterator();
 		EMapEntry<int, V> *correctEntry = null;
 		while (correctEntry == null && i->hasNext()) {
@@ -1303,10 +1286,8 @@ public:
 		if (correctEntry != null) {
 			oldValue = correctEntry->getValue();
 			i->remove();
-			delete i;
 			return oldValue;
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -1390,10 +1371,9 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		EIterator<EMapEntry<int,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<int,V>*> > i = entrySet()->iterator();
 		while (i->hasNext())
 			h += i->next()->hashCode();
-		delete i;
 		return h;
 	}
 
@@ -1410,9 +1390,8 @@ public:
 	 * @return a string representation of this map
 	 */
 	virtual EStringBase toString() {
-		EIterator<EMapEntry<int,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<int,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
-			delete i;
 			return "{}";
 		}
 
@@ -1426,7 +1405,6 @@ public:
 			sb.append('=');
 			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
 			if (! i->hasNext()) {
-				delete i;
 				return sb.append('}');
 			}
 			sb.append(',').append(' ');
@@ -1727,7 +1705,7 @@ protected:
 		template<typename _KI>
 		class KSListIterator: public EIterator<_KI> {
 		private:
-			EIterator<EMapEntry<llong,V>*> *i;
+			sp<EIterator<EMapEntry<llong,V>*> > i;
 
 		public:
 			KSListIterator(EAbstractMap<llong,V> *map) {
@@ -1761,7 +1739,7 @@ protected:
 			_map = map;
 		}
 
-		EIterator<_K>* iterator(int index=0) {
+		sp<EIterator<_K> > iterator(int index=0) {
 			return new KSListIterator<_K>(_map);
 		}
 
@@ -1780,7 +1758,7 @@ protected:
 			template<typename _VI>
 			class VCListIterator: public EIterator<_VI> {
 			private:
-				EIterator<EMapEntry<llong,V>*> *i;
+				sp<EIterator<EMapEntry<llong,V>*> > i;
 
 			public:
 				VCListIterator(EAbstractMap<llong,V> *map) {
@@ -1814,7 +1792,7 @@ protected:
 				_map = map;
 			}
 
-			EIterator<_V>* iterator(int index=0) {
+			sp<EIterator<_V> > iterator(int index=0) {
 				return new VCListIterator<_V>(_map);
 			}
 
@@ -1870,16 +1848,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsValue(V value) {
-		EIterator<EMapEntry<llong, V>*> *i =
+		sp<EIterator<EMapEntry<llong, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<llong, V> *e = i->next();
 			if (value->equals(e->getValue())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -1897,16 +1873,14 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean containsKey(llong key) {
-		EIterator<EMapEntry<llong, V>*> *i =
+		sp<EIterator<EMapEntry<llong, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<llong, V> *e = i->next();
 			if (key == (e->getKey())) {
-				delete i;
 				return true;
 			}
 		}
-		delete i;
 		return false;
 	}
 
@@ -1924,16 +1898,14 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V get(llong key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<llong, V>*> *i =
+		sp<EIterator<EMapEntry<llong, V>*> > i =
 						entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<llong, V> *e = i->next();
 			if (key == (e->getKey())) {
-				delete i;
 				return e->getValue();
 			}
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -1976,7 +1948,7 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual V remove(llong key) THROWS(ENoSuchElementException) {
-		EIterator<EMapEntry<llong, V>*> *i =
+		sp<EIterator<EMapEntry<llong, V>*> > i =
 								entrySet()->iterator();
 		EMapEntry<llong, V> *correctEntry = null;
 		while (correctEntry == null && i->hasNext()) {
@@ -1989,10 +1961,8 @@ public:
 		if (correctEntry != null) {
 			oldValue = correctEntry->getValue();
 			i->remove();
-			delete i;
 			return oldValue;
 		}
-		delete i;
 		throw ENOSUCHELEMENTEXCEPTION;
 	}
 
@@ -2076,10 +2046,9 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		EIterator<EMapEntry<llong,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<llong,V>*> > i = entrySet()->iterator();
 		while (i->hasNext())
 			h += i->next()->hashCode();
-		delete i;
 		return h;
 	}
 
@@ -2096,9 +2065,8 @@ public:
 	 * @return a string representation of this map
 	 */
 	virtual EStringBase toString() {
-		EIterator<EMapEntry<llong,V>*>* i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<llong,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
-			delete i;
 			return "{}";
 		}
 
@@ -2112,7 +2080,6 @@ public:
 			sb.append('=');
 			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
 			if (! i->hasNext()) {
-				delete i;
 				return sb.append('}');
 			}
 			sb.append(',').append(' ');

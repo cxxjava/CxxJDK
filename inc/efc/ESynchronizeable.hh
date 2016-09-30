@@ -1,7 +1,6 @@
 #ifndef __ESynchronizeable_H__
 #define __ESynchronizeable_H__
 
-#include "EObject.hh"
 #include "ESentry.hh"
 #include "EReentrantLock.hh"
 #include "EInterruptedException.hh"
@@ -10,15 +9,10 @@
 namespace efc {
 
 #ifdef HAVE_THREADS
-# define SYNCHRONIZED(obj) \
-		for(ESentry __synchronizer__((obj)->getLock()); __synchronizer__.begin(); __synchronizer__.end())
-
-# define SYNCBLOCK(lock) \
-		for (ESentry __synchronizer__(lock); __synchronizer__.begin(); __synchronizer__.end())
-
+# define SYNCHRONIZED(obj) { \
+	ESentry __synchronizer__((obj)->getLock());
 #else
 # define SYNCHRONIZED(obj)
-# define SYNCBLOCK(obj)
 #endif
 
 /**

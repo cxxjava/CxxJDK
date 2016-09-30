@@ -45,7 +45,7 @@ public:
 	 *
 	 * @return  A a String representation of this EventObject.
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 protected:
 	/**

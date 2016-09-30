@@ -100,7 +100,7 @@ public:
 	 * @throws NullPointerException if threadFactory is null
 	 * @throws IllegalArgumentException if {@code nThreads <= 0}
 	 */
-	static EExecutorService* newFixedThreadPool(int nThreads, EThreadFactory* threadFactory);
+	static EExecutorService* newFixedThreadPool(int nThreads, sp<EThreadFactory> threadFactory);
 
 	/**
 	 * Creates an Executor that uses a single worker thread operating
@@ -131,7 +131,7 @@ public:
 	 * @return the newly created single-threaded Executor
 	 * @throws NullPointerException if threadFactory is null
 	 */
-	static EExecutorService* newSingleThreadExecutor(EThreadFactory* threadFactory);
+	static EExecutorService* newSingleThreadExecutor(sp<EThreadFactory> threadFactory);
 
 	/**
 	 * Creates a thread pool that creates new threads as needed, but
@@ -160,7 +160,7 @@ public:
 	 * @return the newly created thread pool
 	 * @throws NullPointerException if threadFactory is null
 	 */
-	static EExecutorService* newCachedThreadPool(EThreadFactory* threadFactory);
+	static EExecutorService* newCachedThreadPool(sp<EThreadFactory> threadFactory);
 
 //	    /**
 //	     * Creates a single-threaded executor that can schedule commands
@@ -278,7 +278,7 @@ public:
 	 * of the thread created by this factory.
 	 * @return a thread factory
 	 */
-	static EThreadFactory* defaultThreadFactory();
+	static sp<EThreadFactory> defaultThreadFactory();
 
 	/**
 	 * Returns a thread factory used to create new threads that
@@ -312,7 +312,7 @@ public:
 	 * context does not have permission to both get and set context
 	 * class loader.
 	 */
-	static EThreadFactory* privilegedThreadFactory();
+	static sp<EThreadFactory> privilegedThreadFactory();
 
 	/**
 	 * Returns a {@link Callable} object that, when

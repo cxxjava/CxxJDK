@@ -2,7 +2,7 @@
  * ELinkedList.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ELINKEDLIST_HH_
@@ -607,7 +607,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EIterator<E>* iterator(int index = 0) {
+	virtual sp<EIterator<E> > iterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
@@ -632,11 +632,11 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EListIterator<E>* listIterator(int index = 0) {
+	virtual sp<EListIterator<E> > listIterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
-	virtual EIterator<E>* descendingIterator() {
+	virtual sp<EIterator<E> > descendingIterator() {
 		return null;
 	}
 
@@ -1335,7 +1335,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EIterator<int>* iterator(int index = 0) {
+	virtual sp<EIterator<int> > iterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
@@ -1360,11 +1360,11 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EListIterator<int>* listIterator(int index = 0) {
+	virtual sp<EListIterator<int> > listIterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
-	virtual EIterator<int>* descendingIterator() {
+	virtual sp<EIterator<int> > descendingIterator() {
 		return null;
 	}
 
@@ -2055,7 +2055,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EIterator<llong>* iterator(int index = 0) {
+	virtual sp<EIterator<llong> > iterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
@@ -2080,11 +2080,11 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual EListIterator<llong>* listIterator(int index = 0) {
+	virtual sp<EListIterator<llong> > listIterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
-	virtual EIterator<llong>* descendingIterator() {
+	virtual sp<EIterator<llong> > descendingIterator() {
 		return null;
 	}
 

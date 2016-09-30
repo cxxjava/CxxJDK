@@ -8,7 +8,7 @@
 #ifndef EATOMIC_INTEGER_HH_
 #define EATOMIC_INTEGER_HH_
 
-#include "EBase.hh"
+#include "ENumber.hh"
 #include "EString.hh"
 
 namespace efc {
@@ -26,7 +26,7 @@ namespace efc {
  * @since 1.5
  */
 
-class EAtomicInteger: public EObject {
+class EAtomicInteger: public ENumber {
 public:
 	/**
 	 * Creates a new AtomicInteger with the given initial value.
@@ -143,15 +143,12 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value.
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
-	int intValue();
-
-	llong longValue();
-
-	float floatValue();
-
-	double doubleValue();
+	virtual int intValue();
+	virtual llong llongValue();
+	virtual float floatValue();
+	virtual double doubleValue();
 
 private:
 	volatile int value ES_ALIGN;

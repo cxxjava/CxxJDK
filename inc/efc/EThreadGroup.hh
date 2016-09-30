@@ -11,6 +11,7 @@
 #include "EA.hh"
 #include "EThread.hh"
 #include "ESharedArr.hh"
+#include "ESynchronizeable.hh"
 
 namespace efc {
 

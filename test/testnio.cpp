@@ -104,13 +104,12 @@ static void test_nioserver() {
 		if(readyChannels == 0) continue;
 //		LOG("readyChannels=%d", readyChannels);
 		ESet < ESelectionKey* >* selectionKeys = selector->selectedKeys();
-		EIterator < ESelectionKey* >* iterator = selectionKeys->iterator();
+		sp<EIterator < ESelectionKey* > > iterator = selectionKeys->iterator();
 		while (iterator->hasNext()) {
 			ESelectionKey* selectionKey = iterator->next();
 			handleKey(selector, selectionKey);
 			iterator->remove();
 		}
-		delete iterator;
 
 		ccc++;
 	}
@@ -161,7 +160,7 @@ static void test_nioclient() {
 	socketChannel->connect(&SERVER_ADDRESS);
 
 	ESet<ESelectionKey*>* selectionKeys;
-	EIterator<ESelectionKey*>* iterator;
+	sp<EIterator<ESelectionKey*> > iterator;
 	ESelectionKey* selectionKey;
 	ESocketChannel* client;
 	int count = 0;
@@ -227,7 +226,6 @@ static void test_nioclient() {
 				selectionKey->interestOps(ESelectionKey::OP_READ);
 			}
 		}
-		delete iterator;
 		selectionKeys->clear();
 	} while (nn < 1);
 }
@@ -362,6 +360,75 @@ static void test_filechannel() {
 	eso_fclose(pfile);
 }
 
+static void sendFile(EDatagramChannel* ch, EInetSocketAddress* remote) {
+	EFileChannel* fc = EFileChannel::open("xxx.txt", true, false, false);
+
+	// if not connect then read or write, channel will throw NotYetConnectedException.
+	ch->connect(remote);
+
+	fc->transferTo(0, fc->size(), ch);
+
+	delete fc;
+}
+
+static void test_nioudpserver() {
+	EDatagramChannel* channel;
+	ESelector* selector;
+	EInetSocketAddress isa(9001);
+
+	try {
+		channel = EDatagramChannel::open();
+		selector = ESelector::open();
+
+		channel->configureBlocking(false);
+		channel->socket()->setReuseAddress(true);
+		channel->socket()->bind(&isa);
+		channel->register_(selector, ESelectionKey::OP_READ);
+	} catch (EException& e) {
+		e.printStackTrace();
+	}
+
+	int timeout = 3000;
+	EIOByteBuffer* buf = EIOByteBuffer::allocate(65536);
+	while (true) {
+		try {
+			int n = selector->select(timeout);
+			if (n > 0) {
+				sp<EIterator<ESelectionKey*> > iter = selector->selectedKeys()->iterator();
+				while (iter->hasNext()) {
+					ESelectionKey* key = iter->next();
+					iter->remove();
+
+					EDatagramChannel* ch = dynamic_cast<EDatagramChannel*>(key->channel());
+
+					if (key->isReadable()) {
+						buf->clear();
+
+						sp<EInetSocketAddress> raddr = ch->receive(buf);
+						LOG("addr=%d, port=%d, buf=%s", raddr->getAddress()->getAddress(), raddr->getPort(), (char*)buf->address());
+
+						if (0) {
+							buf->flip();
+							ch->send(buf, raddr.get());
+						} else {
+							sendFile(ch, raddr.get());
+						}
+					}
+				}
+			}
+		} catch (EException& e) {
+			e.printStackTrace();
+		}
+	}
+
+	channel->close();
+	selector->close();
+
+	delete buf;
+	delete channel;
+	delete selector;
+}
+
 MAIN_IMPL(testnio) {
 	ESystem::init(argc, argv);
 
@@ -369,10 +436,12 @@ MAIN_IMPL(testnio) {
 		do {
 
 //		test_bytebuffer();
-		test_nioserver();
 //		test_nioclient();
 //		test_nioserversocket();
 //		test_filechannel();
+
+		test_nioudpserver();
+//		test_nioudpclient();
 
 		} while (1);
 	}

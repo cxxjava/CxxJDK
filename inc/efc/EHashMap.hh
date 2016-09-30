@@ -180,7 +180,7 @@ public:
 			return false;
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			return (key == null ? 0 : key->hashCode())
 					^ (value == null ? 0 : value->hashCode());
 		}
@@ -317,7 +317,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<EMapEntry<K,V>*>* iterator(int index=0) {
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
 			return new EntryIterator<EMapEntry<K,V>*>(_map);
 		}
 		boolean contains(EMapEntry<K,V> *e) {
@@ -344,7 +344,7 @@ private:
 		}
 		~Values() {
 		}
-		EIterator<V>* iterator(int index = 0) {
+		sp<EIterator<V> > iterator(int index = 0) {
 			return new ValueIterator(_map);
 		}
 		int size() {
@@ -365,7 +365,7 @@ private:
 		Keys(EHashMap<K, V> *map) {
 			_map = map;
 		}
-		EIterator<K>* iterator(int index = 0) {
+		sp<EIterator<K> > iterator(int index = 0) {
 			return new KeyIterator(_map);
 		}
 		int size() {
@@ -1102,7 +1102,7 @@ public:
 			return false;
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			return key ^ (value == null ? 0 : value->hashCode());
 		}
 
@@ -1238,7 +1238,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<EMapEntry<int,V>*>* iterator(int index=0) {
+		sp<EIterator<EMapEntry<int,V>*> > iterator(int index=0) {
 			return new EntryIterator<EMapEntry<int,V>*>(_map);
 		}
 		boolean contains(EMapEntry<int,V> *e) {
@@ -1265,7 +1265,7 @@ private:
 		}
 		~Values() {
 		}
-		EIterator<V>* iterator(int index = 0) {
+		sp<EIterator<V> > iterator(int index = 0) {
 			return new ValueIterator(_map);
 		}
 		int size() {
@@ -1286,7 +1286,7 @@ private:
 		Keys(EHashMap<int, V> *map) {
 			_map = map;
 		}
-		EIterator<int>* iterator(int index = 0) {
+		sp<EIterator<int> > iterator(int index = 0) {
 			return new KeyIterator(_map);
 		}
 		int size() {
@@ -1976,7 +1976,7 @@ public:
 			return false;
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			return key ^ (value == null ? 0 : value->hashCode());
 		}
 
@@ -2112,7 +2112,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<EMapEntry<llong,V>*>* iterator(int index=0) {
+		sp<EIterator<EMapEntry<llong,V>*> > iterator(int index=0) {
 			return new EntryIterator<EMapEntry<llong,V>*>(_map);
 		}
 		boolean contains(EMapEntry<llong,V> *e) {
@@ -2139,7 +2139,7 @@ private:
 		}
 		~Values() {
 		}
-		EIterator<V>* iterator(int index = 0) {
+		sp<EIterator<V> > iterator(int index = 0) {
 			return new ValueIterator(_map);
 		}
 		int size() {
@@ -2160,7 +2160,7 @@ private:
 		Keys(EHashMap<llong, V> *map) {
 			_map = map;
 		}
-		EIterator<llong>* iterator(int index = 0) {
+		sp<EIterator<llong> > iterator(int index = 0) {
 			return new KeyIterator(_map);
 		}
 		int size() {

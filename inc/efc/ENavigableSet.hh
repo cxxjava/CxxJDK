@@ -135,7 +135,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      *
      * @return an iterator over the elements in this set, in ascending order
      */
-	virtual EIterator<E>* iterator(int index=0) = 0;
+	virtual sp<EIterator<E> > iterator(int index=0) = 0;
 
     /**
      * Returns a reverse order view of the elements contained in this set.
@@ -160,7 +160,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      *
      * @return an iterator over the elements in this set, in descending order
      */
-	virtual EIterator<E>* descendingIterator() = 0;
+	virtual sp<EIterator<E> > descendingIterator() = 0;
 
     /**
      * Returns a view of the portion of this set whose elements range from

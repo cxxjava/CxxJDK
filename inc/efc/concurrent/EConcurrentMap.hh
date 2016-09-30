@@ -495,7 +495,7 @@ public:
 		return eq(key.get(), o->getKey().get()) && eq(value.get(), o->getValue().get());
 	}
 
-	int hashCode() {
+	virtual int hashCode() {
 		return (key   == null ? 0 : key->hashCode()) ^
 				(value == null ? 0 : value->hashCode());
 	}

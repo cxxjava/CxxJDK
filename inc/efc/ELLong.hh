@@ -2,13 +2,13 @@
  * ELLong.hh
  *
  *  Created on: 2013-3-21
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ELLONG_HH_
 #define ELLONG_HH_
 
-#include "EObject.hh"
+#include "ENumber.hh"
 #include "EString.hh"
 #include "ENumberFormatException.hh"
 
@@ -58,18 +58,18 @@ namespace efc {
  * @since   JDK1.0, CLDC 1.0
  */
 
-class ELLong : virtual public EComparable<ELLong*>
+class ELLong : public ENumber, virtual public EComparable<ELLong*>
 {
 public:
 	/**
 	 * The smallest value of type <code>long</code>.
 	 */
-	static const llong MIN_VALUE;// = LLONG(0x8000000000000000);
+	static const llong MIN_VALUE = LLONG(0x8000000000000000);
 
 	/**
 	 * The largest value of type <code>long</code>.
 	 */
-	static const llong MAX_VALUE;// = LLONG(0x7fffffffffffffff);
+	static const llong MAX_VALUE = LLONG(0x7fffffffffffffff);
 
 public:
 	virtual ~ELLong(){}
@@ -77,11 +77,25 @@ public:
 	ELLong(llong value);
 
 	/**
+	 * Returns the value of this {@code Long} as an {@code int} after
+	 * a narrowing primitive conversion.
+	 * @jls 5.1.3 Narrowing Primitive Conversions
+	 */
+	virtual int intValue();
+
+	/**
 	 * Returns the value of this Long as a long value.
 	 *
 	 * @return  the <code>long</code> value represented by this object.
 	 */
-	llong llongValue();
+	virtual llong llongValue();
+
+	/**
+	 * Returns the value of this {@code Long} as a {@code float} after
+	 * a widening primitive conversion.
+	 * @jls 5.1.2 Widening Primitive Conversions
+	 */
+	virtual float floatValue();
 
 	/**
 	 * Returns the value of this Long as a double.
@@ -91,7 +105,7 @@ public:
 	 *          the conversion is returned.
 	 * @since   CLDC 1.1
 	 */
-	double doubleValue();
+	virtual double doubleValue();
 
 	/**
 	 * Creates a string representation of the first argument in the
@@ -219,9 +233,32 @@ public:
     static EString toBinaryString(llong i);
     
     /**
-     * Convert the integer to an unsigned number.
-     */
-    static EString toUnsignedString(llong i, int shift);
+	 * Returns a string representation of the first argument as an
+	 * unsigned integer value in the radix specified by the second
+	 * argument.
+	 *
+	 * <p>If the radix is smaller than {@code Character.MIN_RADIX}
+	 * or larger than {@code Character.MAX_RADIX}, then the radix
+	 * {@code 10} is used instead.
+	 *
+	 * <p>Note that since the first argument is treated as an unsigned
+	 * value, no leading sign character is printed.
+	 *
+	 * <p>If the magnitude is zero, it is represented by a single zero
+	 * character {@code '0'} ({@code '\u005Cu0030'}); otherwise,
+	 * the first character of the representation of the magnitude will
+	 * not be the zero character.
+	 *
+	 * <p>The behavior of radixes and the characters used as digits
+	 * are the same as {@link #toString(long, int) toString}.
+	 *
+	 * @param   i       an integer to be converted to an unsigned string.
+	 * @param   radix   the radix to use in the string representation.
+	 * @return  an unsigned string representation of the argument in the specified radix.
+	 * @see     #toString(long, int)
+	 * @since 1.8
+	 */
+    static EString toUnsignedString(llong i, int radix=10);
     
 	/**
 	 * Parses the string argument as a signed <code>long</code> in the
@@ -280,15 +317,253 @@ public:
 	static ELLong valueOf(const char* s, int radix=10);
 
 	/**
-	 * Compares this object to the specified object.  The result is
-	 * <code>true</code> if and only if the argument is not
-	 * <code>null</code> and is a <code>Long</code> object that
-	 * contains the same <code>long</code> value as this object.
+	 * Decodes a {@code String} into a {@code Long}.
+	 * Accepts decimal, hexadecimal, and octal numbers given by the
+	 * following grammar:
 	 *
-	 * @param   obj   the object to compare with.
-	 * @return  <code>true</code> if the objects are the same;
-	 *          <code>false</code> otherwise.
+	 * <blockquote>
+	 * <dl>
+	 * <dt><i>DecodableString:</i>
+	 * <dd><i>Sign<sub>opt</sub> DecimalNumeral</i>
+	 * <dd><i>Sign<sub>opt</sub></i> {@code 0x} <i>HexDigits</i>
+	 * <dd><i>Sign<sub>opt</sub></i> {@code 0X} <i>HexDigits</i>
+	 * <dd><i>Sign<sub>opt</sub></i> {@code #} <i>HexDigits</i>
+	 * <dd><i>Sign<sub>opt</sub></i> {@code 0} <i>OctalDigits</i>
+	 *
+	 * <dt><i>Sign:</i>
+	 * <dd>{@code -}
+	 * <dd>{@code +}
+	 * </dl>
+	 * </blockquote>
+	 *
+	 * <i>DecimalNumeral</i>, <i>HexDigits</i>, and <i>OctalDigits</i>
+	 * are as defined in section 3.10.1 of
+	 * <cite>The Java&trade; Language Specification</cite>,
+	 * except that underscores are not accepted between digits.
+	 *
+	 * <p>The sequence of characters following an optional
+	 * sign and/or radix specifier ("{@code 0x}", "{@code 0X}",
+	 * "{@code #}", or leading zero) is parsed as by the {@code
+	 * Long.parseLong} method with the indicated radix (10, 16, or 8).
+	 * This sequence of characters must represent a positive value or
+	 * a {@link NumberFormatException} will be thrown.  The result is
+	 * negated if first character of the specified {@code String} is
+	 * the minus sign.  No whitespace characters are permitted in the
+	 * {@code String}.
+	 *
+	 * @param     nm the {@code String} to decode.
+	 * @return    a {@code Long} object holding the {@code long}
+	 *            value represented by {@code nm}
+	 * @throws    NumberFormatException  if the {@code String} does not
+	 *            contain a parsable {@code long}.
+	 * @see java.lang.Long#parseLong(String, int)
+	 * @since 1.2
 	 */
+	static ELLong decode(const char* nm) THROWS(ENumberFormatException);
+
+	/**
+	 * Compares two {@code long} values numerically.
+	 * The value returned is identical to what would be returned by:
+	 * <pre>
+	 *    Long.valueOf(x).compareTo(Long.valueOf(y))
+	 * </pre>
+	 *
+	 * @param  x the first {@code long} to compare
+	 * @param  y the second {@code long} to compare
+	 * @return the value {@code 0} if {@code x == y};
+	 *         a value less than {@code 0} if {@code x < y}; and
+	 *         a value greater than {@code 0} if {@code x > y}
+	 * @since 1.7
+	 */
+	static int compare(llong x, llong y);
+
+	/**
+	 * Compares two {@code long} values numerically treating the values
+	 * as unsigned.
+	 *
+	 * @param  x the first {@code long} to compare
+	 * @param  y the second {@code long} to compare
+	 * @return the value {@code 0} if {@code x == y}; a value less
+	 *         than {@code 0} if {@code x < y} as unsigned values; and
+	 *         a value greater than {@code 0} if {@code x > y} as
+	 *         unsigned values
+	 * @since 1.8
+	 */
+	static int compareUnsigned(llong x, llong y);
+
+	/**
+	 * Returns the unsigned quotient of dividing the first argument by
+	 * the second where each argument and the result is interpreted as
+	 * an unsigned value.
+	 *
+	 * <p>Note that in two's complement arithmetic, the three other
+	 * basic arithmetic operations of add, subtract, and multiply are
+	 * bit-wise identical if the two operands are regarded as both
+	 * being signed or both being unsigned.  Therefore separate {@code
+	 * addUnsigned}, etc. methods are not provided.
+	 *
+	 * @param dividend the value to be divided
+	 * @param divisor the value doing the dividing
+	 * @return the unsigned quotient of the first argument divided by
+	 * the second argument
+	 * @see #remainderUnsigned
+	 * @since 1.8
+	 */
+	static llong divideUnsigned(llong dividend, llong divisor);
+
+	/**
+	 * Returns the unsigned remainder from dividing the first argument
+	 * by the second where each argument and the result is interpreted
+	 * as an unsigned value.
+	 *
+	 * @param dividend the value to be divided
+	 * @param divisor the value doing the dividing
+	 * @return the unsigned remainder of the first argument divided by
+	 * the second argument
+	 * @see #divideUnsigned
+	 * @since 1.8
+	 */
+	static llong remainderUnsigned(llong dividend, llong divisor);
+
+	/**
+	 * Returns the number of zero bits preceding the highest-order
+	 * ("leftmost") one-bit in the two's complement binary representation
+	 * of the specified {@code long} value.  Returns 64 if the
+	 * specified value has no one-bits in its two's complement representation,
+	 * in other words if it is equal to zero.
+	 *
+	 * <p>Note that this method is closely related to the logarithm base 2.
+	 * For all positive {@code long} values x:
+	 * <ul>
+	 * <li>floor(log<sub>2</sub>(x)) = {@code 63 - numberOfLeadingZeros(x)}
+	 * <li>ceil(log<sub>2</sub>(x)) = {@code 64 - numberOfLeadingZeros(x - 1)}
+	 * </ul>
+	 *
+	 * @param i the value whose number of leading zeros is to be computed
+	 * @return the number of zero bits preceding the highest-order
+	 *     ("leftmost") one-bit in the two's complement binary representation
+	 *     of the specified {@code long} value, or 64 if the value
+	 *     is equal to zero.
+	 * @since 1.5
+	 */
+	static int numberOfLeadingZeros(llong i);
+
+	/**
+	 * Returns the number of zero bits following the lowest-order ("rightmost")
+	 * one-bit in the two's complement binary representation of the specified
+	 * {@code long} value.  Returns 64 if the specified value has no
+	 * one-bits in its two's complement representation, in other words if it is
+	 * equal to zero.
+	 *
+	 * @param i the value whose number of trailing zeros is to be computed
+	 * @return the number of zero bits following the lowest-order ("rightmost")
+	 *     one-bit in the two's complement binary representation of the
+	 *     specified {@code long} value, or 64 if the value is equal
+	 *     to zero.
+	 * @since 1.5
+	 */
+	static int numberOfTrailingZeros(llong i);
+
+	/**
+	 * Returns the number of one-bits in the two's complement binary
+	 * representation of the specified {@code long} value.  This function is
+	 * sometimes referred to as the <i>population count</i>.
+	 *
+	 * @param i the value whose bits are to be counted
+	 * @return the number of one-bits in the two's complement binary
+	 *     representation of the specified {@code long} value.
+	 * @since 1.5
+	 */
+	static int bitCount(llong i);
+
+	/**
+	 * Returns the value obtained by rotating the two's complement binary
+	 * representation of the specified {@code long} value left by the
+	 * specified number of bits.  (Bits shifted out of the left hand, or
+	 * high-order, side reenter on the right, or low-order.)
+	 *
+	 * <p>Note that left rotation with a negative distance is equivalent to
+	 * right rotation: {@code rotateLeft(val, -distance) == rotateRight(val,
+	 * distance)}.  Note also that rotation by any multiple of 64 is a
+	 * no-op, so all but the last six bits of the rotation distance can be
+	 * ignored, even if the distance is negative: {@code rotateLeft(val,
+	 * distance) == rotateLeft(val, distance & 0x3F)}.
+	 *
+	 * @param i the value whose bits are to be rotated left
+	 * @param distance the number of bit positions to rotate left
+	 * @return the value obtained by rotating the two's complement binary
+	 *     representation of the specified {@code long} value left by the
+	 *     specified number of bits.
+	 * @since 1.5
+	 */
+	static llong rotateLeft(llong i, int distance);
+
+	/**
+	 * Returns the value obtained by rotating the two's complement binary
+	 * representation of the specified {@code long} value right by the
+	 * specified number of bits.  (Bits shifted out of the right hand, or
+	 * low-order, side reenter on the left, or high-order.)
+	 *
+	 * <p>Note that right rotation with a negative distance is equivalent to
+	 * left rotation: {@code rotateRight(val, -distance) == rotateLeft(val,
+	 * distance)}.  Note also that rotation by any multiple of 64 is a
+	 * no-op, so all but the last six bits of the rotation distance can be
+	 * ignored, even if the distance is negative: {@code rotateRight(val,
+	 * distance) == rotateRight(val, distance & 0x3F)}.
+	 *
+	 * @param i the value whose bits are to be rotated right
+	 * @param distance the number of bit positions to rotate right
+	 * @return the value obtained by rotating the two's complement binary
+	 *     representation of the specified {@code long} value right by the
+	 *     specified number of bits.
+	 * @since 1.5
+	 */
+	static llong rotateRight(llong i, int distance);
+
+	/**
+	 * Returns the value obtained by reversing the order of the bits in the
+	 * two's complement binary representation of the specified {@code long}
+	 * value.
+	 *
+	 * @param i the value to be reversed
+	 * @return the value obtained by reversing order of the bits in the
+	 *     specified {@code long} value.
+	 * @since 1.5
+	 */
+	static llong reverse(llong i);
+
+	/**
+	 * Returns the signum function of the specified {@code long} value.  (The
+	 * return value is -1 if the specified value is negative; 0 if the
+	 * specified value is zero; and 1 if the specified value is positive.)
+	 *
+	 * @param i the value whose signum is to be computed
+	 * @return the signum function of the specified {@code long} value.
+	 * @since 1.5
+	 */
+	static int signum(llong i);
+
+	/**
+	 * Returns the value obtained by reversing the order of the bytes in the
+	 * two's complement representation of the specified {@code long} value.
+	 *
+	 * @param i the value whose bytes are to be reversed
+	 * @return the value obtained by reversing the bytes in the specified
+	 *     {@code long} value.
+	 * @since 1.5
+	 */
+	static llong reverseBytes(llong i);
+
+	/**
+	* Compares this object to the specified object.  The result is
+	* <code>true</code> if and only if the argument is not
+	* <code>null</code> and is a <code>Long</code> object that
+	* contains the same <code>long</code> value as this object.
+	*
+	* @param   obj   the object to compare with.
+	* @return  <code>true</code> if the objects are the same;
+	*          <code>false</code> otherwise.
+	*/
 	boolean equals(ELLong *obj);
 	virtual boolean equals(EObject* obj);
 
@@ -366,6 +641,14 @@ public:
 	 * @since 1.5
 	 */
 	static llong lowestOneBit(llong i);
+
+protected:
+	/**
+	 * Format a long (treated as unsigned) into a String.
+	 * @param val the value to format
+	 * @param shift the log2 of the base to format in (4 for hex, 3 for octal, 1 for binary)
+	 */
+	static EString toUnsignedString0(llong i, int shift);
 };
 
 } /* namespace efc */

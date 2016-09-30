@@ -107,7 +107,7 @@ interface ESet : virtual public ECollection<E>
      *
      * @return an iterator over the elements in this set
      */
-    virtual EIterator<E>* iterator(int index=0) = 0;
+    virtual sp<EIterator<E> > iterator(int index=0) = 0;
 
 
     // Modification Operations

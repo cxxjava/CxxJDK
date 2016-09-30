@@ -183,12 +183,11 @@ public:
 		if (c == this)
 			throw EIllegalArgumentException(__FILE__, __LINE__);
 		boolean modified = false;
-		EIterator<E>* e = c->iterator();
+		sp<EIterator<E> > e = c->iterator();
 		while (e->hasNext()) {
 			if (add(e->next()))
 				modified = true;
 		}
-		delete e;
 		return modified;
 	}
 

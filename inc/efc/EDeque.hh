@@ -2,7 +2,7 @@
  * EDeque.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EDEQUE_HH_
@@ -540,7 +540,7 @@ interface EDeque : virtual public EQueue<E>
      *
      * @return an iterator over the elements in this deque in proper sequence
      */
-    virtual EIterator<E>* iterator(int index=0) = 0;
+    virtual sp<EIterator<E> > iterator(int index=0) = 0;
 
     /**
      * Returns an iterator over the elements in this deque in reverse
@@ -550,7 +550,7 @@ interface EDeque : virtual public EQueue<E>
      * @return an iterator over the elements in this deque in reverse
      * sequence
      */
-    virtual EIterator<E>* descendingIterator() = 0;
+    virtual sp<EIterator<E> > descendingIterator() = 0;
 
 };
 

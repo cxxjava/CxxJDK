@@ -8,10 +8,8 @@
 #ifndef ESHARED_PTR_HH_
 #define ESHARED_PTR_HH_
 
-#include "EAtomicCounter.hh"
 #include "ELockPool.hh"
-#include "ESynchronizeable.hh"
-#include "ENullPointerException.hh"
+#include "ESentry.hh"
 
 /**
  *
@@ -34,7 +32,7 @@ inline T* GETRC(T* volatile& p0)
 		int* refs = (int*)((char*)p + sizeof(T));
 		(*refs)++;
 		return p;
-	}
+    }}
 }
 
 //placement delete class with reference count
@@ -50,7 +48,7 @@ inline void DELRC(T* volatile& p0)
 		}
 		int* refs = (int*)((char*)p + sizeof(T));
 		n = (*refs)--;
-	}
+    }}
 	if (n == 0) {
 		p->~T();
 		eso_free(p);
@@ -1387,7 +1385,7 @@ template<class T> sp<T> atomic_load( sp<T> const * p )
 {
 	SCOPED_SLOCK0(p) {
     return *p;
-	}
+	}}
 }
 
 template<class T> inline sp<T> atomic_load_explicit( sp<T> const * p, memory_order /*mo*/ )
@@ -1399,7 +1397,7 @@ template<class T> void atomic_store( sp<T> * p, sp<T> r )
 {
 	SCOPED_SLOCK0(p) {
     p->swap( r );
-	}
+	}}
 }
 
 template<class T> void atomic_store( sp<T> * p, detail::sp_nullptr_t )
@@ -1407,7 +1405,7 @@ template<class T> void atomic_store( sp<T> * p, detail::sp_nullptr_t )
 	SCOPED_SLOCK0(p) {
 	sp<T> r;
     p->swap( r );
-	}
+	}}
 }
 
 template<class T> inline void atomic_store_explicit( sp<T> * p, sp<T> r, memory_order /*mo*/ )

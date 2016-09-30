@@ -895,7 +895,7 @@ private:
 				   e->getValue() == getValue();
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			if (IdentityHashMapIterator<EMapEntry<K,V>*>::lastReturnedIndex < 0)
 				return IdentityHashMapIterator<EMapEntry<K,V>*>::hashCode();
 
@@ -911,7 +911,7 @@ private:
 		KeySet(EIdentityHashMap<K,V> *map) {
 			_map = map;
 		}
-		EIterator<K>* iterator(int index = 0) {
+		sp<EIterator<K> > iterator(int index = 0) {
 			return new KeyIterator(_map);
 		}
 		int size() {
@@ -938,7 +938,7 @@ private:
 		Values(EIdentityHashMap<K,V> *map) {
 			_map = map;
 		}
-		EIterator<V>* iterator(int index = 0) {
+		sp<EIterator<V> > iterator(int index = 0) {
 			return new ValueIterator(_map);
 		}
 		int size() {
@@ -961,7 +961,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<EMapEntry<K,V>*>* iterator(int index=0) {
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
 			return new EntryIterator(_map);
 		}
 		boolean contains(EMapEntry<K,V> *e) {

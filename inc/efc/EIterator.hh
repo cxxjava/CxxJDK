@@ -2,13 +2,15 @@
  * EIterator.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EITERATOR_HH_
 #define EITERATOR_HH_
 
-#include "EObject.hh"
+#include "ESharedPtr.hh"
+#include "ENoSuchElementException.hh"
+#include "EIllegalStateException.hh"
 
 namespace efc {
 
@@ -73,6 +75,16 @@ interface EIterator : virtual public EObject
 	 */
 	virtual void remove() = 0;
 	virtual E moveOut() = 0;
+};
+
+template<typename E>
+class EEmptyIterator: public EIterator<E> {
+public:
+	virtual ~EEmptyIterator() {}
+	virtual boolean hasNext() { return false; }
+	virtual E next() { throw ENoSuchElementException(__FILE__, __LINE__); }
+	virtual void remove() { throw EIllegalStateException(__FILE__, __LINE__); }
+	virtual E moveOut() { throw EIllegalStateException(__FILE__, __LINE__); }
 };
 
 } /* namespace efc */

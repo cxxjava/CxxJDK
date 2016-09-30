@@ -1,9 +1,21 @@
+/*
+ * ESentry.hh
+ *
+ *  Created on: 2015-9-18
+ *      Author: cxxjava@163.com
+ */
+
 #ifndef __ESentry_H__
 #define __ESentry_H__
 
 #include "ELock.hh"
 
 namespace efc {
+
+#ifdef HAVE_THREADS
+# define SYNCBLOCK(lock) { \
+	ESentry __synchronizer__(lock);
+#endif
 
 /**
  * @brief A simple wrapper for \c EReentrantLock objects.
@@ -31,11 +43,8 @@ class ESentry {
 public:
 	~ESentry();
 	ESentry(ELock* lock);
-	boolean begin();
-	void end();
 private:
 	ELock* _lock;
-	boolean _only;
 };
 
 } /* namespace efc */

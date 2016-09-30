@@ -277,7 +277,7 @@ public:
 			DELRC(elements);
 
 			return oldValue;
-		}
+        }}
 	}
 
 	/**
@@ -302,7 +302,7 @@ public:
 			DELRC(elements);
 
 			return true;
- 		}
+        }}
     }
 
 	/**
@@ -345,7 +345,7 @@ public:
 			setArray(newElements);
 
 			DELRC(elements);
-        }
+        }}
     }
 
     /**
@@ -387,7 +387,7 @@ public:
 			}
 
             return oldValue;
-        }
+        }}
     }
 
     /**
@@ -440,7 +440,7 @@ public:
             DELRC(elements);
 
             return result;
-        }
+        }}
     }
 
     /**
@@ -477,7 +477,7 @@ public:
             DELRC(elements);
 
             return true;
-        }
+        }}
     }
 
     /**
@@ -488,7 +488,7 @@ public:
     	SYNCBLOCK(&lock_) {
     		ea<E>* elements = NEWRC(ea<E>)(0);
     		setArray(elements);
-        }
+        }}
     }
 
     /**

@@ -330,7 +330,7 @@ public:
 				node = waitingConsumers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingProducers->enq(o);
-			}
+            }}
 
 			if (mustWait) {
 				node->waitForTake();
@@ -375,7 +375,7 @@ public:
 				node = waitingConsumers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingProducers->enq(o);
-			}
+            }}
 
 			if (mustWait) {
 				return node->waitForTake(nanos);
@@ -412,7 +412,7 @@ public:
 			sp<Node> node;
 			SYNCBLOCK(qlock) {
 				node = waitingConsumers->deq();
-			}
+            }}
 			if (node == null)
 				return false;
 
@@ -439,7 +439,7 @@ public:
 				node = waitingProducers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingConsumers->enq(null);
-			}
+            }}
 
 			if (mustWait) {
 				return node->waitForPut();
@@ -475,7 +475,7 @@ public:
 				node = waitingProducers->deq();
 				if ( (mustWait = (node == null)) )
 					node = waitingConsumers->enq(null);
-			}
+            }}
 
 			if (mustWait) {
 				sp<E> x = node->waitForPut(nanos);
@@ -503,7 +503,7 @@ public:
 			sp<Node> node;
 			SYNCBLOCK(qlock) {
 				node = waitingProducers->deq();
-			}
+            }}
 			if (node == null)
 				return null;
 

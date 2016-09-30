@@ -14,8 +14,8 @@
 #include "ECollection.hh"
 #include "EInterruptedException.hh"
 
-# define SEMAPHORE_SYNCBLOCK(lock) \
-	for (efc::semaphore::Guard __synchronizer__(lock); __synchronizer__.begin(); __synchronizer__.end())
+# define SEMAPHORE_SYNCBLOCK(lock) { \
+	efc::semaphore::Guard __synchronizer__(lock);
 
 namespace efc {
 	namespace semaphore {
@@ -523,7 +523,7 @@ public:
 	 *
 	 * @return a string identifying this semaphore, as well as its state
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 protected:
 	/**
@@ -557,7 +557,7 @@ private:
 namespace semaphore {
 	class Guard {
 	public:
-		Guard(ESemaphore* lock) : _lock(lock), _only(true) {
+		Guard(ESemaphore* lock) : _lock(lock) {
 			if (_lock) {
 				_lock->acquire();
 			}
@@ -567,15 +567,8 @@ namespace semaphore {
 				_lock->release();
 			}
 		}
-		boolean begin() {
-			return _only;
-		}
-		void end() {
-			_only = false;
-		}
 	private:
 		ESemaphore* _lock;
-		boolean _only;
 	};
 }
 

@@ -349,7 +349,7 @@ public:
 	 *
 	 * @return  The current hash code of this buffer
 	 */
-	int hashCode();
+	virtual int hashCode();
 
 	/**
 	 * Tells whether or not this buffer is equal to another object.

@@ -37,7 +37,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class EServerSocket : public ESocketOptions {
+class EServerSocket : virtual public ESocketOptions {
 public:
 	virtual ~EServerSocket();
 	
@@ -110,6 +110,7 @@ public:
      * @since 1.4
      */
     virtual void bind(EInetSocketAddress *endpoint, int backlog=50) THROWS(EIOException);
+    virtual void bind(const char* hostname, int port, int backlog=50) THROWS(EIOException);
     virtual void bind(int port, int backlog=50) THROWS(EIOException);
     
     /**

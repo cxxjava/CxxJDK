@@ -249,7 +249,7 @@ SP容器内的对象生命期由对象的智能指针决定；
     void syncAdd(int i) {
 	  	SYNCHRONIZED(this) { //!
   			n += i;
-  		}
+  		}}
   	}
   };
   
@@ -263,7 +263,7 @@ SP容器内的对象生命期由对象的智能指针决定；
     void syncAdd(int i) {
 		SYNCBLOCK(&lock) { //!
 			n += i;
-		}
+		}}
 	}
   };
   ```
@@ -335,7 +335,7 @@ SP容器内的对象生命期由对象的智能指针决定；
     } catch (EException& e) {
       e.printStackTrace();
     }
-  }
+  }}
   ```
   
   **注意：**[ON_FINALLY_NOTHROW](../inc/EScopeGuard.hh)宏并不支持宏内异常抛出或return一个对象返回!!!
@@ -421,7 +421,7 @@ template<class T> sp<T> atomic_load( sp<T> const * p )
 {
 	SCOPED_SLOCK0(p) {
     return *p;
-	}
+	}}
 }
 ```
 解决方法：

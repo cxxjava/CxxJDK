@@ -2,7 +2,7 @@
  * EPattern.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EPattern_HH_
@@ -691,7 +691,7 @@ public:
 	 * @return  The string representation of this pattern
 	 * @since 1.5
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 	/**
 	 * Return c pcre ptr.

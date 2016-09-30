@@ -2,13 +2,13 @@
  * EFloat.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EFloat_HH_
 #define EFloat_HH_
 
-#include "EObject.hh"
+#include "ENumber.hh"
 #include "EString.hh"
 #include "ENumberFormatException.hh"
 
@@ -41,7 +41,7 @@ namespace efc {
 #define FLOAT_MIN_EXPONENT   -126
 #define FLOAT_SIZE           32
 
-class EFloat: virtual public EComparable<EFloat*> {
+class EFloat: public ENumber, virtual public EComparable<EFloat*> {
 public:
 	/**
 	 * A constant holding the largest positive finite value of type
@@ -460,12 +460,12 @@ public:
 	 */
 	virtual EStringBase toString();
 
-	byte byteValue();
-	short shortValue();
-	int intValue();
-	long longValue();
-	float floatValue();
-	double doubleValue();
+	virtual byte byteValue();
+	virtual short shortValue();
+	virtual int intValue();
+	virtual llong llongValue();
+	virtual float floatValue();
+	virtual double doubleValue();
 
 	/**
 	 * Returns a hash code for this <code>Float</code> object. The

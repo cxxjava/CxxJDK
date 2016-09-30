@@ -2,7 +2,7 @@
  * EConcurrentQueue.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ECONCURRENT_QUEUE_HH_

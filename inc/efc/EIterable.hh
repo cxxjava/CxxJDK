@@ -2,7 +2,7 @@
  * EIterable.hh
  *
  *  Created on: 2013-3-19
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EITERABLE_HH_
@@ -31,7 +31,7 @@ interface EIterable : virtual public EObject
      *
      * @return an Iterator.
      */
-    virtual EIterator<T>* iterator(int index=0) = 0;
+    virtual sp<EIterator<T> > iterator(int index=0) = 0;
 };
 
 } /* namespace efc */

@@ -296,7 +296,7 @@ public:
 			sp<V> v;
 			SYNCBLOCK(this) {
 				v = atomic_load(&e->value);
-			}
+            }}
 			return v;
 		}
 
@@ -364,7 +364,7 @@ public:
 					e->value = newValue;
 				}
 				rv = replaced;
-			}
+            }}
 
 			return rv;
 		}
@@ -383,7 +383,7 @@ public:
 					e->value = newValue;
 				}
 				rv = oldValue;
-			}
+            }}
 
 			return rv;
 		}
@@ -415,7 +415,7 @@ public:
 				}
 				DELRC(tab);
 				return oldValue;
-			}
+            }}
 		}
 
 		void rehash() {
@@ -523,7 +523,7 @@ public:
 				}
 				rv = oldValue;
 				DELRC(tab);
-			}
+            }}
 
 			return rv;
 		}
@@ -539,7 +539,7 @@ public:
 					++modCount;
 					count = 0; // write-volatile
 					DELRC(tab);
-				}
+                }}
 			}
 		}
 	};
@@ -703,7 +703,7 @@ public:
 			return eq(key.get(), o->getKey().get()) && eq(value.get(), o->getValue().get());
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			return (key   == null ? 0 : key->hashCode()) ^
 					(value == null ? 0 : value->hashCode());
 		}
@@ -1183,12 +1183,11 @@ public:
 	 * @param m mappings to be stored in this map
 	 */
 	void putAll(EMap<K*, V*>* m) {
-		EIterator<EMapEntry<K*,V*>*>* it = m->entrySet()->iterator();
+		sp<EIterator<EMapEntry<K*,V*>*> > it = m->entrySet()->iterator();
 		while (it->hasNext()) {
 			EMapEntry<K*,V*>* e = it->next();
 			put(e->getKey(), e->getValue());
 		}
-		delete it;
 	}
 
 	/**

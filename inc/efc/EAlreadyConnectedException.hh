@@ -11,7 +11,6 @@
 #include "EIllegalStateException.hh"
 
 namespace efc {
-namespace nio {
 
 #define EALREADYCONNECTEDEXCEPTION        EAlreadyConnectedException(__FILE__, __LINE__, errno)
 #define EALREADYCONNECTEDEXCEPTIONS(msg)  EAlreadyConnectedException(__FILE__, __LINE__, msg)
@@ -49,6 +48,5 @@ public:
 	}
 };
 
-} /* namespace nio */
 } /* namespace efc */
 #endif /* EALREADYCONNECTEDEXCEPTION_HH_ */

@@ -2,13 +2,13 @@
  * EDouble.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EDouble_HH_
 #define EDouble_HH_
 
-#include "EObject.hh"
+#include "ENumber.hh"
 #include "EString.hh"
 #include "ENumberFormatException.hh"
 
@@ -37,7 +37,7 @@ namespace efc {
 #define DOUBLE_MIN_EXPONENT   -102
 #define DOUBLE_SIZE           64
 
-class EDouble: virtual public EComparable<EDouble*> {
+class EDouble: public ENumber, virtual public EComparable<EDouble*> {
 public:
 	/**
 	 * A constant holding the largest positive finite value of type
@@ -501,12 +501,12 @@ public:
 	 */
 	virtual EStringBase toString();
 
-	byte byteValue();
-	short shortValue();
-	int intValue();
-	long longValue();
-	float floatValue();
-	double doubleValue();
+	virtual byte byteValue();
+	virtual short shortValue();
+	virtual int intValue();
+	virtual llong llongValue();
+	virtual float floatValue();
+	virtual double doubleValue();
 
 	/**
 	 * Returns a hash code for this <code>Float</code> object. The

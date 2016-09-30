@@ -39,7 +39,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class ESocket : public ESocketOptions {
+class ESocket : virtual public ESocketOptions {
 public:
 	virtual ~ESocket();
 	
@@ -183,7 +183,8 @@ public:
      * @since 1.4
      * @spec JSR-51
      */
-    virtual void connect(EInetSocketAddress *endpoint=null, int timeout=0) THROWS(EIOException);
+    virtual void connect(EInetSocketAddress *endpoint, int timeout=0) THROWS(EIOException);
+    virtual void connect(const char *hostname, int port, int timeout=0) THROWS(EIOException);
 
     /**
      * Binds the socket to a local address.
@@ -201,6 +202,7 @@ public:
      * @see #isBound
      */
     virtual void bind(EInetSocketAddress *bindpoint) THROWS(EIOException);
+    virtual void bind(const char *hostname, int port) THROWS(EIOException);
 
     /**
      * Returns the address to which the socket is connected.
@@ -851,12 +853,6 @@ protected:
      * Only for sub class.
      */
     ESocket(void* dummy);
-
-	/*
-     * Map the Java level socket option to the platform specific
-     * level and option name.
-     */
-    static int mapSocketOption(int cmd, int *level, int *optname);
 
 private:
     friend class SocketInputStream;

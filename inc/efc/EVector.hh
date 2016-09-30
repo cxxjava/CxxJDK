@@ -9,6 +9,7 @@
 #define EVECTOR_HH_
 
 #include "EArrayList.hh"
+#include "ESharedPtr.hh"
 #include "EEnumeration.hh"
 #include "ESynchronizeable.hh"
 #include "EIndexOutOfBoundsException.hh"
@@ -109,7 +110,7 @@ public:
 	void setThreadSafe(boolean safe=true) {
 		SYNCHRONIZED(this) {
 			_threadSafe = safe;
-		}
+        }}
 	}
 
 	/**
@@ -118,7 +119,7 @@ public:
 	boolean getThreadSafe() {
 		SYNCHRONIZED(this) {
 			return _threadSafe;
-		}
+        }}
 	}
 
 	/**
@@ -162,7 +163,7 @@ protected:
 	class EVEnumeration : public EEnumeration<E> {
 	public:
 		~EVEnumeration() {
-			delete _iter;
+			//
 		}
 		EVEnumeration(EVector<E>* v) {
 			_iter = ((EAbstractList<E>*)v)->iterator();
@@ -174,7 +175,7 @@ protected:
 			return _iter->next();
 		}
 	private:
-		EIterator<E>* _iter;
+		sp<EIterator<E> > _iter;
 	};
 
 public:
@@ -187,7 +188,7 @@ public:
 	 * @return  an enumeration of the components of this vector
 	 * @see     Iterator
 	 */
-	EEnumeration<E>* elements() {
+	sp<EEnumeration<E> > elements() {
 		return new EVEnumeration(this);
 	}
 

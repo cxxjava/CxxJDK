@@ -48,6 +48,36 @@ public:
 	ESocketException(const char *_file_, int _line_, const char *s, int errn = 0) :
 			EIOException(_file_, _line_, s, errn) {
 	}
+
+	/**
+	 * Constructs an <code>ESocketException</code> with the specified detail message.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	ESocketException(const char *_file_, int _line_, EThrowable* cause) :
+		EIOException(_file_, _line_, cause) {
+	}
+
+	/**
+	 * Constructs a new exception with the specified detail message and
+	 * cause.
+	 *
+	 * @param   _file_   __FILE__
+	 * @param   _line_   __LINE__
+	 * @param   s   the detail message.
+	 * @param   cause    the cause (which is saved for later retrieval by the
+	 *         {@link #getCause()} method).  (A {@code null} value is
+	 *         permitted, and indicates that the cause is nonexistent or
+	 *         unknown.)
+	 */
+	ESocketException(const char *_file_, int _line_, const char *s, EThrowable* cause) :
+		EIOException(_file_, _line_, s, cause) {
+	}
 };
 
 } /* namespace efc */

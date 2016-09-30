@@ -83,28 +83,46 @@
 
 #ifdef CPP11_SUPPORT
 #if defined( __clang__ ) && !defined( _LIBCPP_VERSION )
-typedef decltype(nullptr) es_nullptr_t;
+	typedef decltype(nullptr) es_nullptr_t;
 #else
-typedef std::nullptr_t    es_nullptr_t;
+	typedef std::nullptr_t    es_nullptr_t;
 #endif
-#else
-//@see: https://en.wikibooks.org/wiki/More_C%2B%2B_Idioms/nullptr#Solution_and_Sample_Code
-const // It is a const object...
-class es_nullptr_t
+#else //!
+#if defined(_MSC_VER)
+	#define ALWAYS_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define ALWAYS_INLINE __attribute__ ((__visibility__("hidden"), __always_inline__))
+#endif
+struct es_nullptr_t
 {
-  public:
-    template<class T>
-    inline operator T*() const // convertible to any type of null non-member pointer...
-    { return 0; }
+    void* __lx;
 
-    template<class C, class T>
-    inline operator T C::*() const   // or any type of null member pointer...
-    { return 0; }
+    struct __nat {int __for_bool_;};
 
-  private:
-    void operator&() const;  // Can't take address of nullptr
+    ALWAYS_INLINE es_nullptr_t() : __lx(0) {}
+    ALWAYS_INLINE es_nullptr_t(int __nat::*) : __lx(0) {}
 
-} nullptr = {};
+    ALWAYS_INLINE operator int __nat::*() const {return 0;}
+
+    template <class _Tp>
+    	ALWAYS_INLINE
+        operator _Tp* () const {return 0;}
+
+    template <class _Tp, class _Up>
+    	ALWAYS_INLINE
+        operator _Tp _Up::* () const {return 0;}
+
+    friend ALWAYS_INLINE bool operator==(es_nullptr_t, es_nullptr_t) {return true;}
+    friend ALWAYS_INLINE bool operator!=(es_nullptr_t, es_nullptr_t) {return false;}
+    friend ALWAYS_INLINE bool operator<(es_nullptr_t, es_nullptr_t) {return false;}
+    friend ALWAYS_INLINE bool operator<=(es_nullptr_t, es_nullptr_t) {return true;}
+    friend ALWAYS_INLINE bool operator>(es_nullptr_t, es_nullptr_t) {return false;}
+    friend ALWAYS_INLINE bool operator>=(es_nullptr_t, es_nullptr_t) {return true;}
+};
+
+inline ALWAYS_INLINE es_nullptr_t es_get_nullptr_t() {return es_nullptr_t(0);}
+
+#define nullptr es_get_nullptr_t()
 #endif
 
 #ifndef null
@@ -223,6 +241,12 @@ class es_nullptr_t
 	CLASS* clone() { \
 		return new CLASS(*this); \
 	}
+
+#define IPv4_INT2ARR(intip)		((ubyte*)&intip)
+#define IPv4_ARR4INT(iparr)		(*(int*)iparr)
+#define MAC6_LLONG2ARR(lmac)	((ubyte*)&lmac)
+#define MAC6_ARR2LLONG(macarr)	(*(llong*)macarr)
+#define MAC6_LEN				6
 
 enum OSReturn {
 	OS_OK = 0,			// Operation was successful

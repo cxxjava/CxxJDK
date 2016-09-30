@@ -180,13 +180,13 @@ private:
 			return valEquals(key,o->getKey()) && valEquals(value,o->getValue());
 		}
 
-		int hashCode() {
+		virtual int hashCode() {
 			int keyHash = (key==null ? 0 : key->hashCode());
 			int valueHash = (value==null ? 0 : value->hashCode());
 			return keyHash ^ valueHash;
 		}
 
-		EStringBase toString() {
+		virtual EStringBase toString() {
 			return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
 		}
 	};
@@ -330,7 +330,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<V>* iterator(int index=0) {
+		sp<EIterator<V> > iterator(int index=0) {
 			ES_ASSERT(index == 0);
 			return new ValueIterator(_map->getFirstEntry(), _map);
 		}
@@ -367,7 +367,7 @@ private:
 			_map = map;
 		}
 
-		EIterator<EMapEntry<K,V>*>* iterator(int index=0) {
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
 			return new EntryIterator(_map->getFirstEntry(), _map);
 		}
 
@@ -405,11 +405,11 @@ private:
 	public:
 		KeySet(ETreeMap<K,V>* map) { m = map; }
 
-		EIterator<K>* iterator(int index=0) {
+		sp<EIterator<K> > iterator(int index=0) {
 			return m->keyIterator();
 		}
 
-		EIterator<K>* descendingIterator() {
+		sp<EIterator<K> > descendingIterator() {
 			return m->descendingKeyIterator();
 		}
 
@@ -1268,11 +1268,11 @@ public:
 		throw EToDoException(__FILE__, __LINE__);
 	}
 
-	EIterator<K>* keyIterator() {
+	sp<EIterator<K> > keyIterator() {
 		return new KeyIterator(getFirstEntry(), this);
 	}
 
-	EIterator<K>* descendingKeyIterator() {
+	sp<EIterator<K> > descendingKeyIterator() {
 		return new DescendingKeyIterator(getLastEntry(), this);
 	}
 

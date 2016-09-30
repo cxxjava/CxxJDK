@@ -11,7 +11,6 @@
 #include "EIllegalArgumentException.hh"
 
 namespace efc {
-namespace nio {
 
 #define EUNRESOLVEDADDRESSEXCEPTION       EUnresolvedAddressException(__FILE__, __LINE__, errno)
 #define EUNRESOLVEDADDRESSEXCEPTIONS(msg) EUnresolvedAddressException(__FILE__, __LINE__, msg)
@@ -48,6 +47,5 @@ public:
 	}
 };
 
-} /* namespace nio */
 } /* namespace efc */
 #endif /* EUNRESOLVEDADDRESSEXCEPTION_HH_ */

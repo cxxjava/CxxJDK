@@ -11,7 +11,6 @@
 #include "EIllegalStateException.hh"
 
 namespace efc {
-namespace nio {
 
 #define ENOTYETCONNECTEDEXCEPTION        ENotYetConnectedException(__FILE__, __LINE__, errno)
 #define ENOTYETCONNECTEDEXCEPTIONS(msg)  ENotYetConnectedException(__FILE__, __LINE__, msg)
@@ -49,6 +48,5 @@ public:
 	}
 };
 
-} /* namespace nio */
 } /* namespace efc */
 #endif /* ENOTYETCONNECTEDEXCEPTION_HH_ */

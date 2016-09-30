@@ -2,7 +2,7 @@
  * EAbstractCollection.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EAbstractCollection_HH_
@@ -65,7 +65,7 @@ public:
 	 *
 	 * @return an iterator over the elements contained in this collection
 	 */
-	virtual EIterator<E>* iterator(int index=0) = 0;
+	virtual sp<EIterator<E> > iterator(int index=0) = 0;
 
 	virtual int size() = 0;
 
@@ -88,13 +88,11 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean contains(E o) {
-		EIterator<E> *e = iterator();
+		sp<EIterator<E> > e = iterator();
 		while (e->hasNext())
 			if (o->equals(e->next())) {
-				delete e;
 				return true;
 			}
-		delete e;
 		return false;
 	}
 
@@ -133,15 +131,13 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual boolean remove(E o) {
-		EIterator<E> *e = iterator();
+		sp<EIterator<E> > e = iterator();
 		while (e->hasNext()) {
 			if (o->equals(e->next())) {
 				e->remove();
-				delete e;
 				return true;
 			}
 		}
-		delete e;
 		return false;
 	}
 
@@ -160,13 +156,11 @@ public:
 	 * @see #contains(Object)
 	 */
 	virtual boolean containsAll(ECollection<E> *c) {
-		EIterator<E> *e = c->iterator();
+		sp<EIterator<E> > e = c->iterator();
 		while (e->hasNext())
 			if (!contains(e->next())) {
-				delete e;
 				return false;
 			}
-		delete e;
 		return true;
 	}
 
@@ -190,12 +184,11 @@ public:
 	 */
 	virtual boolean addAll(ECollection<E> *c) {
 		boolean modified = false;
-		EIterator<E> *e = c->iterator();
+		sp<EIterator<E> > e = c->iterator();
 		while (e->hasNext()) {
 			if (add(e->next()))
 				modified = true;
 		}
-		delete e;
 		return modified;
 	}
 
@@ -222,14 +215,13 @@ public:
 	 */
 	virtual boolean removeAll(ECollection<E> *c) {
 		boolean modified = false;
-		EIterator<E> *e = iterator();
+		sp<EIterator<E> > e = iterator();
 		while (e->hasNext()) {
 			if (c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -256,14 +248,13 @@ public:
 	 */
 	virtual boolean retainAll(ECollection<E> *c) {
 		boolean modified = false;
-		EIterator<E> *e = iterator();
+		sp<EIterator<E> > e = iterator();
 		while (e->hasNext()) {
 			if (!c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -283,12 +274,11 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<E> *it = iterator();
+		sp<EIterator<E> > it = iterator();
 		while (it->hasNext()) {
 			it->next();
 			it->remove();
 		}
-		delete it;
 	}
 
 	//  String conversion
@@ -303,10 +293,9 @@ public:
 	 *
 	 * @return a string representation of this collection
 	 */
-	EStringBase toString() {
-		EIterator<E>* it = iterator();
+	virtual EStringBase toString() {
+		sp<EIterator<E> > it = iterator();
 		if (! it->hasNext()) {
-			delete it;
 			return "[]";
 		}
 
@@ -316,7 +305,6 @@ public:
 			E e = it->next();
 			sb.append((void*)e == (void*)this ? "(this Collection)" : e->toString().c_str());
 			if (! it->hasNext()) {
-				delete it;
 				return sb.append(']');
 			}
 			sb.append(',').append(' ');
@@ -345,7 +333,7 @@ public:
 	 *
 	 * @return an iterator over the elements contained in this collection
 	 */
-	virtual EIterator<int>* iterator(int index=0) = 0;
+	virtual sp<EIterator<int> > iterator(int index=0) = 0;
 
 	virtual int size() = 0;
 
@@ -368,13 +356,11 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean contains(int o) {
-		EIterator<int> *e = iterator();
+		sp<EIterator<int> > e = iterator();
 		while (e->hasNext())
 			if (o == e->next()) {
-				delete e;
 				return true;
 			}
-		delete e;
 		return false;
 	}
 
@@ -413,15 +399,13 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual boolean remove(int o) {
-		EIterator<int> *e = iterator();
+		sp<EIterator<int> > e = iterator();
 		while (e->hasNext()) {
 			if (o == (e->next())) {
 				e->remove();
-				delete e;
 				return true;
 			}
 		}
-		delete e;
 		return false;
 	}
 
@@ -440,13 +424,11 @@ public:
 	 * @see #contains(Object)
 	 */
 	virtual boolean containsAll(ECollection<int> *c) {
-		EIterator<int> *e = c->iterator();
+		sp<EIterator<int> > e = c->iterator();
 		while (e->hasNext())
 			if (!contains(e->next())) {
-				delete e;
 				return false;
 			}
-		delete e;
 		return true;
 	}
 
@@ -470,12 +452,11 @@ public:
 	 */
 	virtual boolean addAll(ECollection<int> *c) {
 		boolean modified = false;
-		EIterator<int> *e = c->iterator();
+		sp<EIterator<int> > e = c->iterator();
 		while (e->hasNext()) {
 			if (add(e->next()))
 				modified = true;
 		}
-		delete e;
 		return modified;
 	}
 
@@ -502,14 +483,13 @@ public:
 	 */
 	virtual boolean removeAll(ECollection<int> *c) {
 		boolean modified = false;
-		EIterator<int> *e = iterator();
+		sp<EIterator<int> > e = iterator();
 		while (e->hasNext()) {
 			if (c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -536,14 +516,13 @@ public:
 	 */
 	virtual boolean retainAll(ECollection<int> *c) {
 		boolean modified = false;
-		EIterator<int> *e = iterator();
+		sp<EIterator<int> > e = iterator();
 		while (e->hasNext()) {
 			if (!c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -563,12 +542,11 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<int> *it = iterator();
+		sp<EIterator<int> > it = iterator();
 		while (it->hasNext()) {
 			it->next();
 			it->remove();
 		}
-		delete it;
 	}
 
 	//  String conversion
@@ -583,10 +561,9 @@ public:
 	 *
 	 * @return a string representation of this collection
 	 */
-	EStringBase toString() {
-		EIterator<int>* it = iterator();
+	virtual EStringBase toString() {
+		sp<EIterator<int> > it = iterator();
 		if (! it->hasNext()) {
-			delete it;
 			return "[]";
 		}
 
@@ -596,7 +573,6 @@ public:
 			int e = it->next();
 			sb.append(e);
 			if (! it->hasNext()) {
-				delete it;
 				return sb.append(']');
 			}
 			sb.append(',').append(' ');
@@ -625,7 +601,7 @@ public:
 	 *
 	 * @return an iterator over the elements contained in this collection
 	 */
-	virtual EIterator<llong>* iterator(int index=0) = 0;
+	virtual sp<EIterator<llong> > iterator(int index=0) = 0;
 
 	virtual int size() = 0;
 
@@ -648,13 +624,11 @@ public:
 	 * @throws NullPointerException {@inheritDoc}
 	 */
 	virtual boolean contains(llong o) {
-		EIterator<llong> *e = iterator();
+		sp<EIterator<llong> > e = iterator();
 		while (e->hasNext())
 			if (o == (e->next())) {
-				delete e;
 				return true;
 			}
-		delete e;
 		return false;
 	}
 
@@ -693,15 +667,13 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
 	virtual boolean remove(llong o) {
-		EIterator<llong> *e = iterator();
+		sp<EIterator<llong> > e = iterator();
 		while (e->hasNext()) {
 			if (o == (e->next())) {
 				e->remove();
-				delete e;
 				return true;
 			}
 		}
-		delete e;
 		return false;
 	}
 
@@ -720,13 +692,11 @@ public:
 	 * @see #contains(Object)
 	 */
 	virtual boolean containsAll(ECollection<llong> *c) {
-		EIterator<llong> *e = c->iterator();
+		sp<EIterator<llong> > e = c->iterator();
 		while (e->hasNext())
 			if (!contains(e->next())) {
-				delete e;
 				return false;
 			}
-		delete e;
 		return true;
 	}
 
@@ -750,12 +720,11 @@ public:
 	 */
 	virtual boolean addAll(ECollection<llong> *c) {
 		boolean modified = false;
-		EIterator<llong> *e = c->iterator();
+		sp<EIterator<llong> > e = c->iterator();
 		while (e->hasNext()) {
 			if (add(e->next()))
 				modified = true;
 		}
-		delete e;
 		return modified;
 	}
 
@@ -782,14 +751,13 @@ public:
 	 */
 	virtual boolean removeAll(ECollection<llong> *c) {
 		boolean modified = false;
-		EIterator<llong> *e = iterator();
+		sp<EIterator<llong> > e = iterator();
 		while (e->hasNext()) {
 			if (c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -816,14 +784,13 @@ public:
 	 */
 	virtual boolean retainAll(ECollection<llong> *c) {
 		boolean modified = false;
-		EIterator<llong> *e = iterator();
+		sp<EIterator<llong> > e = iterator();
 		while (e->hasNext()) {
 			if (!c->contains(e->next())) {
 				e->remove();
 				modified = true;
 			}
 		}
-		delete e;
 		return modified;
 	}
 
@@ -843,12 +810,11 @@ public:
 	 * @throws UnsupportedOperationException {@inheritDoc}
 	 */
 	virtual void clear() {
-		EIterator<llong> *it = iterator();
+		sp<EIterator<llong> > it = iterator();
 		while (it->hasNext()) {
 			it->next();
 			it->remove();
 		}
-		delete it;
 	}
 
 	//  String conversion
@@ -863,10 +829,9 @@ public:
 	 *
 	 * @return a string representation of this collection
 	 */
-	EStringBase toString() {
-		EIterator<llong>* it = iterator();
+	virtual EStringBase toString() {
+		sp<EIterator<llong> > it = iterator();
 		if (! it->hasNext()) {
-			delete it;
 			return "[]";
 		}
 
@@ -876,7 +841,6 @@ public:
 			llong e = it->next();
 			sb.append(e);
 			if (! it->hasNext()) {
-				delete it;
 				return sb.append(']');
 			}
 			sb.append(',').append(' ');

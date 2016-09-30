@@ -29,7 +29,6 @@ namespace efc {
 
 namespace tpe {
 	class Worker;
-	class WorkerKiller;
 }
 
 /**
@@ -546,7 +545,7 @@ public:
 	 *         cannot be accepted for execution
 	 * @throws NullPointerException if {@code command} is null
 	 */
-	void execute(sp<ERunnable> command);
+	virtual void execute(sp<ERunnable> command);
 
 	/**
 	 * Initiates an orderly shutdown in which previously submitted
@@ -559,7 +558,7 @@ public:
 	 *
 	 * @throws SecurityException {@inheritDoc}
 	 */
-	void shutdown();
+	virtual void shutdown();
 
 	/**
 	 * Attempts to stop all actively executing tasks, halts the
@@ -578,9 +577,9 @@ public:
 	 *
 	 * @throws SecurityException {@inheritDoc}
 	 */
-	eal<ERunnable> shutdownNow();
+	virtual eal<ERunnable> shutdownNow();
 
-	boolean isShutdown();
+	virtual boolean isShutdown();
 
 	/**
 	 * Returns true if this executor is in the process of terminating
@@ -593,12 +592,12 @@ public:
 	 *
 	 * @return true if terminating but not yet terminated
 	 */
-	boolean isTerminating();
+	virtual boolean isTerminating();
 
-	boolean isTerminated();
+	virtual boolean isTerminated();
 
-	boolean awaitTermination() THROWS(EInterruptedException);
-	boolean awaitTermination(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException);
+	virtual boolean awaitTermination() THROWS(EInterruptedException);
+	virtual boolean awaitTermination(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException);
 
 	/**
 	 * Sets the thread factory used to create new threads.
@@ -607,7 +606,7 @@ public:
 	 * @throws NullPointerException if threadFactory is null
 	 * @see #getThreadFactory
 	 */
-	void setThreadFactory(sp<EThreadFactory> threadFactory);
+	virtual void setThreadFactory(sp<EThreadFactory> threadFactory);
 
 	/**
 	 * Returns the thread factory used to create new threads.
@@ -615,7 +614,7 @@ public:
 	 * @return the current thread factory
 	 * @see #setThreadFactory
 	 */
-	sp<EThreadFactory> getThreadFactory();
+	virtual sp<EThreadFactory> getThreadFactory();
 
 	/**
 	 * Sets a new handler for unexecutable tasks.
@@ -624,7 +623,7 @@ public:
 	 * @throws NullPointerException if handler is null
 	 * @see #getRejectedExecutionHandler
 	 */
-	void setRejectedExecutionHandler(sp<ERejectedExecutionHandler> handler);
+	virtual void setRejectedExecutionHandler(sp<ERejectedExecutionHandler> handler);
 
 	/**
 	 * Returns the current handler for unexecutable tasks.
@@ -632,7 +631,7 @@ public:
 	 * @return the current handler
 	 * @see #setRejectedExecutionHandler
 	 */
-	sp<ERejectedExecutionHandler> getRejectedExecutionHandler();
+	virtual sp<ERejectedExecutionHandler> getRejectedExecutionHandler();
 
 	/**
 	 * Sets the core number of threads.  This overrides any value set
@@ -645,7 +644,7 @@ public:
 	 * @throws IllegalArgumentException if {@code corePoolSize < 0}
 	 * @see #getCorePoolSize
 	 */
-	void setCorePoolSize(int corePoolSize);
+	virtual void setCorePoolSize(int corePoolSize);
 
 	/**
 	 * Returns the core number of threads.
@@ -653,7 +652,7 @@ public:
 	 * @return the core number of threads
 	 * @see #setCorePoolSize
 	 */
-	int getCorePoolSize();
+	virtual int getCorePoolSize();
 
 	/**
 	 * Starts a core thread, causing it to idly wait for work. This
@@ -663,7 +662,7 @@ public:
 	 *
 	 * @return {@code true} if a thread was started
 	 */
-	boolean prestartCoreThread();
+	virtual boolean prestartCoreThread();
 
 	/**
 	 * Starts all core threads, causing them to idly wait for work. This
@@ -672,7 +671,7 @@ public:
 	 *
 	 * @return the number of threads started
 	 */
-	int prestartAllCoreThreads();
+	virtual int prestartAllCoreThreads();
 
 	/**
 	 * Returns true if this pool allows core threads to time out and
@@ -687,7 +686,7 @@ public:
 	 *
 	 * @since 1.6
 	 */
-	boolean allowsCoreThreadTimeOut();
+	virtual boolean allowsCoreThreadTimeOut();
 
 	/**
 	 * Sets the policy governing whether core threads may time out and
@@ -706,7 +705,7 @@ public:
 	 *
 	 * @since 1.6
 	 */
-	void allowCoreThreadTimeOut(boolean value);
+	virtual void allowCoreThreadTimeOut(boolean value);
 
 	/**
 	 * Sets the maximum allowed number of threads. This overrides any
@@ -720,7 +719,7 @@ public:
 	 *         less than the {@linkplain #getCorePoolSize core pool size}
 	 * @see #getMaximumPoolSize
 	 */
-	void setMaximumPoolSize(int maximumPoolSize);
+	virtual void setMaximumPoolSize(int maximumPoolSize);
 
 	/**
 	 * Returns the maximum allowed number of threads.
@@ -728,7 +727,7 @@ public:
 	 * @return the maximum allowed number of threads
 	 * @see #setMaximumPoolSize
 	 */
-	int getMaximumPoolSize();
+	virtual int getMaximumPoolSize();
 
 	/**
 	 * Sets the time limit for which threads may remain idle before
@@ -744,7 +743,7 @@ public:
 	 *         if {@code time} is zero and {@code allowsCoreThreadTimeOut}
 	 * @see #getKeepAliveTime
 	 */
-	void setKeepAliveTime(llong time, ETimeUnit* unit);
+	virtual void setKeepAliveTime(llong time, ETimeUnit* unit);
 
 	/**
 	 * Returns the thread keep-alive time, which is the amount of time
@@ -755,7 +754,7 @@ public:
 	 * @return the time limit
 	 * @see #setKeepAliveTime
 	 */
-	llong getKeepAliveTime(ETimeUnit* unit);
+	virtual llong getKeepAliveTime(ETimeUnit* unit);
 
 	/* User-level queue utilities */
 
@@ -767,7 +766,7 @@ public:
 	 *
 	 * @return the task queue
 	 */
-	sp<EBlockingQueue<ERunnable> > getQueue();
+	virtual sp<EBlockingQueue<ERunnable> > getQueue();
 
 	/**
 	 * Removes this task from the executor's internal queue if it is
@@ -785,7 +784,7 @@ public:
 	 * @param task the task to remove
 	 * @return true if the task was removed
 	 */
-	boolean remove(sp<ERunnable> task);
+	virtual boolean remove(sp<ERunnable> task);
 
 	/**
 	 * Tries to remove from the work queue all {@link Future}
@@ -797,7 +796,7 @@ public:
 	 * However, this method may fail to remove tasks in
 	 * the presence of interference by other threads.
 	 */
-	void purge();
+	virtual void purge();
 
 	/* Statistics */
 
@@ -806,7 +805,7 @@ public:
 	 *
 	 * @return the number of threads
 	 */
-	int getPoolSize();
+	virtual int getPoolSize();
 
 	/**
 	 * Returns the approximate number of threads that are actively
@@ -814,7 +813,7 @@ public:
 	 *
 	 * @return the number of threads
 	 */
-	int getActiveCount();
+	virtual int getActiveCount();
 
 	/**
 	 * Returns the largest number of threads that have ever
@@ -822,7 +821,7 @@ public:
 	 *
 	 * @return the number of threads
 	 */
-	int getLargestPoolSize();
+	virtual int getLargestPoolSize();
 
 	/**
 	 * Returns the approximate total number of tasks that have ever been
@@ -832,7 +831,7 @@ public:
 	 *
 	 * @return the number of tasks
 	 */
-	llong getTaskCount();
+	virtual llong getTaskCount();
 
 	/**
 	 * Returns the approximate total number of tasks that have
@@ -843,7 +842,7 @@ public:
 	 *
 	 * @return the number of tasks
 	 */
-	llong getCompletedTaskCount();
+	virtual llong getCompletedTaskCount();
 
 	/**
 	 * Returns a string identifying this pool, as well as its state,
@@ -852,7 +851,7 @@ public:
 	 *
 	 * @return a string identifying this pool, as well as its state
 	 */
-	EStringBase toString();
+	virtual EStringBase toString();
 
 protected:
 	/**
@@ -860,13 +859,13 @@ protected:
 	 * invocation of shutdown.  A no-op here, but used by
 	 * ScheduledThreadPoolExecutor to cancel delayed tasks.
 	 */
-	void onShutdown();
+	virtual void onShutdown();
 
 	/**
 	 * Invokes {@code shutdown} when this executor is no longer
 	 * referenced and it has no threads.
 	 */
-	void finalize();
+	virtual void finalize();
 
 	/* Extension hooks */
 
@@ -949,11 +948,10 @@ protected:
 	 * Same as prestartCoreThread except arranges that at least one
 	 * thread is started even if corePoolSize is 0.
 	 */
-	void ensurePrestart();
+	virtual void ensurePrestart();
 
 private:
 	friend class tpe::Worker;
-	friend class tpe::WorkerKiller;
 
 	EAtomicInteger* ctl;// = new AtomicInteger(ctlOf(RUNNING, 0));
 	static const int COUNT_BITS = EInteger::SIZE - 3;

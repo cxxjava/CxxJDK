@@ -2,7 +2,7 @@
  * EArrayDeque.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EARRAYDEQUE_HH_
@@ -583,12 +583,12 @@ public:
 	 *
 	 * @return an iterator over the elements in this deque
 	 */
-	EIterator<E>* iterator(int index=0) {
+	sp<EIterator<E> > iterator(int index=0) {
 		ES_ASSERT(index == 0);
 		return new DeqIterator(this);
 	}
 
-	EIterator<E>* descendingIterator() {
+	sp<EIterator<E> > descendingIterator() {
 		return new DescendingIterator(this);
 	}
 

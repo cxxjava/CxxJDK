@@ -8,7 +8,7 @@
 #ifndef EATOMICLLONG_HH_
 #define EATOMICLLONG_HH_
 
-#include "EBase.hh"
+#include "ENumber.hh"
 #include "EString.hh"
 
 namespace efc {
@@ -26,7 +26,7 @@ namespace efc {
  * @since 1.5
  */
 
-class EAtomicLLong: public EObject {
+class EAtomicLLong: public ENumber {
 public:
 	/**
      * Creates a new AtomicLong with the given initial value.
@@ -143,16 +143,13 @@ public:
      * Returns the String representation of the current value.
      * @return the String representation of the current value.
      */
-    EStringBase toString();
+    virtual EStringBase toString();
 
 
-    int intValue();
-
-    llong longValue();
-
-    float floatValue();
-
-    double doubleValue();
+    virtual int intValue();
+	virtual llong llongValue();
+	virtual float floatValue();
+	virtual double doubleValue();
 
 private:
     volatile llong value ES_ALIGN;

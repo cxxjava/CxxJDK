@@ -77,6 +77,7 @@ int main(int argc, const char **argv) {
 	}
 	
 	executor->shutdown();
+	executor->awaitTermination();
 	
 	delete executor; //object free!
 }
@@ -125,6 +126,7 @@ Total Number of Cores:	2
 |	AbstractQueue                   |  EAbstractQueue                  |
 |	AbstractSet                     |  EAbstractSet                    |
 |	AlreadyBoundException           |  EAlreadyBoundException          |
+|   ArithmeticException             |  EArithmeticException            |
 |	Array                           |  EArray                          |
 |	ArrayDeque                      |  EArrayDeque                     |
 |	ArrayList                       |  EArrayList                      |
@@ -153,6 +155,8 @@ Total Number of Cores:	2
 |	Condition                       |  ECondition                      |
 |	ConnectException                |  EConnectException               |
 |	DataFormatException             |  EDataFormatException            |
+|	DatagramPacket                  |  EDatagramPacket                 |
+|	DatagramSocket                  |  EDatagramSocket                 |
 |	DataInput                       |  EDataInput                      |
 |	DataInputStream                 |  EDataInputStream                |
 |	DataOutput                      |  EDataOutput                     |
@@ -195,6 +199,7 @@ Total Number of Cores:	2
 |	InflaterInputStream             |  EInflaterInputStream            |
 |	InputStream                     |  EInputStream                    |
 |	Integer                         |  EInteger                        |
+|	InterfaceAddress                |  EInterfaceAddress               |
 |	InterruptedException            |  EInterruptedException           |
 |	InterruptedIOException          |  EInterruptedIOException         |
 |	Interruptible                   |  EInterruptible                  |
@@ -211,11 +216,15 @@ Total Number of Cores:	2
 |	Matcher                         |  EMatcher                        |
 |	Math                            |  EMath                           |
 |	MathFP                          |  EMathFP                         |
+|	MulticastSocket                 |  EMulticastSocket                |
 |	NavigableMap                    |  ENavigableMap                   |
 |	NavigableSet                    |  ENavigableSet                   |
+|	NetworkInterface                |  ENetworkInterface               |
 |	NoRouteToHostException          |  ENoRouteToHostException         |
 |	NoSuchElementException          |  ENoSuchElementException         |
+|	NotYetBoundException            |  ENotYetBoundException           |
 |	NullPointerException            |  ENullPointerException           |
+|	Number                          |  ENumber                         |
 |	NumberFormatException           |  ENumberFormatException          |
 |	Object                          |  EObject                         |
 |	Observable                      |  EObservable                     |
@@ -251,7 +260,7 @@ Total Number of Cores:	2
 |	SocketTimeoutException          |  ESocketTimeoutException         |
 |	SortedMap                       |  ESortedMap                      |
 |	SortedSet                       |  ESortedSet                      |
-|   Stack                           |  EStack                          |
+|	Stack                           |  EStack                          |
 |	String                          |  EString                         |
 |	StringTokenizer                 |  EStringTokenizer                |
 |	System                          |  ESystem                         |
@@ -272,10 +281,11 @@ Total Number of Cores:	2
 |	URLString                       |  EURLString                      |
 |	UnknownHostException            |  EUnknownHostException           |
 |	UnknownServiceException         |  EUnknownServiceException        |
+|	UnsupportedAddressTypeException |  EUnsupportedAddressTypeException |
 |	UnsupportedEncodingException    |  EUnsupportedEncodingException   |
 |	UnsupportedOperationException   |  EUnsupportedOperationException  |
 |	Vector                          |  EVector                         |
-|   try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}   |
+|	try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}   |
 
                     
 ######concurrent:
@@ -362,6 +372,7 @@ Total Number of Cores:	2
 | ClosedChannelException          |  EClosedChannelException            |
 | ClosedSelectorException         |  EClosedSelectorException           |
 | ConnectionPendingException      |  EConnectionPendingException        |
+| DatagramChannel                 |  EDatagramChannel                   |
 | FileChannel                     |  EFileChannel                       |
 | FileLock                        |  EFileLock                          |
 | xxByteBuffer                    |  EIOByteBuffer                      |
@@ -369,6 +380,8 @@ Total Number of Cores:	2
 | InterruptibleChannel            |  EInterruptibleChannel              |
 | InvalidMarkException            |  EInvalidMarkException              |
 | MappedByteBuffer                |  EMappedByteBuffer                  |
+| MembershipKey                   |  EMembershipKey                     |
+| MulticastChannel                |  EMulticastChannel                  |
 | NativeThreadSet                 |  ENativeThreadSet                   |
 | NoConnectionPendingException    |  ENoConnectionPendingException      |
 | NonReadableChannelException     |  ENonReadableChannelException       |
@@ -404,13 +417,14 @@ Total Number of Cores:	2
 | EStream               | C++ wrapper for io stream |
 | EOS                   | Utils for OS              |
 | EAtomic               | C++ wrapper for atomic operation |
+| EThreadX              | C++11 wrapper for EThread |
+| EScopeGuard           | C++11 assistant for scope guards |
+
    
 ####Manual
 See [Guide document](doc/Guide.md).
 
 ####TODO
-    java.net.DatagramSocket；
-    java.nio.channels.DatagramChannel；
     java.security.*;
 
 ####Support

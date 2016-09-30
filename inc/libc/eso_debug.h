@@ -19,14 +19,14 @@ extern es_uint32_t g_tickcount_last;
 #define DBG_PRINTF(a) \
 		do {		\
 			eso_log a;	\
-		}while(0);
+		}while(0)
 
 #define	QUICK_DBG \
 		do { \
 			es_uint32_t tickcount_curr = eso_get_tick_count(); \
 			DBG_PRINTF(("FILE:%s @LINE: %d @TICK: %d", __FILE__,__LINE__, tickcount_curr - g_tickcount_last)); \
 			g_tickcount_last = tickcount_curr; \
-		}while(0);
+		}while(0)
 
 #else
 

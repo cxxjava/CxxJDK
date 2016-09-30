@@ -77,6 +77,7 @@ int main(int argc, const char **argv) {
 	}
 	
 	executor->shutdown();
+	executor->awaitTermination();
 	
 	delete executor; //对象资源释放!
 }
@@ -126,6 +127,7 @@ put 20线程 && get 20线程
 |	AbstractQueue                   |  EAbstractQueue                  |
 |	AbstractSet                     |  EAbstractSet                    |
 |	AlreadyBoundException           |  EAlreadyBoundException          |
+|	ArithmeticException             |  EArithmeticException            |
 |	Array                           |  EArray                          |
 |	ArrayDeque                      |  EArrayDeque                     |
 |	ArrayList                       |  EArrayList                      |
@@ -154,6 +156,8 @@ put 20线程 && get 20线程
 |	Condition                       |  ECondition                      |
 |	ConnectException                |  EConnectException               |
 |	DataFormatException             |  EDataFormatException            |
+|	DatagramPacket                  |  EDatagramPacket                 |
+|	DatagramSocket                  |  EDatagramSocket                 |
 |	DataInput                       |  EDataInput                      |
 |	DataInputStream                 |  EDataInputStream                |
 |	DataOutput                      |  EDataOutput                     |
@@ -196,6 +200,7 @@ put 20线程 && get 20线程
 |	InflaterInputStream             |  EInflaterInputStream            |
 |	InputStream                     |  EInputStream                    |
 |	Integer                         |  EInteger                        |
+|	InterfaceAddress                |  EInterfaceAddress               |
 |	InterruptedException            |  EInterruptedException           |
 |	InterruptedIOException          |  EInterruptedIOException         |
 |	Interruptible                   |  EInterruptible                  |
@@ -212,11 +217,15 @@ put 20线程 && get 20线程
 |	Matcher                         |  EMatcher                        |
 |	Math                            |  EMath                           |
 |	MathFP                          |  EMathFP                         |
+|	MulticastSocket                 |  EMulticastSocket                |
 |	NavigableMap                    |  ENavigableMap                   |
 |	NavigableSet                    |  ENavigableSet                   |
+|	NetworkInterface                |  ENetworkInterface               |
 |	NoRouteToHostException          |  ENoRouteToHostException         |
 |	NoSuchElementException          |  ENoSuchElementException         |
+|	NotYetBoundException            |  ENotYetBoundException           |
 |	NullPointerException            |  ENullPointerException           |
+|	Number                          |  ENumber                         |
 |	NumberFormatException           |  ENumberFormatException          |
 |	Object                          |  EObject                         |
 |	Observable                      |  EObservable                     |
@@ -252,7 +261,7 @@ put 20线程 && get 20线程
 |	SocketTimeoutException          |  ESocketTimeoutException         |
 |	SortedMap                       |  ESortedMap                      |
 |	SortedSet                       |  ESortedSet                      |
-|   Stack                           |  EStack                          |
+|	Stack                           |  EStack                          |
 |	String                          |  EString                         |
 |	StringTokenizer                 |  EStringTokenizer                |
 |	System                          |  ESystem                         |
@@ -273,10 +282,11 @@ put 20线程 && get 20线程
 |	URLString                       |  EURLString                      |
 |	UnknownHostException            |  EUnknownHostException           |
 |	UnknownServiceException         |  EUnknownServiceException        |
+|	UnsupportedAddressTypeException |  EUnsupportedAddressTypeException |
 |	UnsupportedEncodingException    |  EUnsupportedEncodingException   |
 |	UnsupportedOperationException   |  EUnsupportedOperationException  |
 |	Vector                          |  EVector                         |
-|   try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}   |
+|	try {xxx} finally {yyy}         |  ON_FINALLY_NOTHROW(yyy) {xxx}}  |
 
                     
 ######concurrent:
@@ -363,6 +373,7 @@ put 20线程 && get 20线程
 | ClosedChannelException          |  EClosedChannelException            |
 | ClosedSelectorException         |  EClosedSelectorException           |
 | ConnectionPendingException      |  EConnectionPendingException        |
+| DatagramChannel                 |  EDatagramChannel                   |
 | FileChannel                     |  EFileChannel                       |
 | FileLock                        |  EFileLock                          |
 | xxByteBuffer                    |  EIOByteBuffer                      |
@@ -370,6 +381,8 @@ put 20线程 && get 20线程
 | InterruptibleChannel            |  EInterruptibleChannel              |
 | InvalidMarkException            |  EInvalidMarkException              |
 | MappedByteBuffer                |  EMappedByteBuffer                  |
+| MembershipKey                   |  EMembershipKey                     |
+| MulticastChannel                |  EMulticastChannel                  |
 | NativeThreadSet                 |  ENativeThreadSet                   |
 | NoConnectionPendingException    |  ENoConnectionPendingException      |
 | NonReadableChannelException     |  ENonReadableChannelException       |
@@ -389,12 +402,12 @@ put 20线程 && get 20线程
 
 | cxxjdk类 | 类描述 |
 | ----- | ----- |
-| EConfig               | Foundation for application configuration |
-| EByteBuffer           | Byte array buffer |
-| ESharedPtr            | Smart Pointer |
-| ELockPool             | SpinLock Pool |
-| EOrderAccess          | Memory Access Ordering Model |
-| EFork                 | Process system call, only for Unix/Linux system |
+| EConfig               | 应用配置管理 |
+| EByteBuffer           | 二进制数据缓存 |
+| ESharedPtr            | C++智能指针 |
+| ELockPool             | SpinLock池化管理类 |
+| EOrderAccess          | 内存访问模型辅助类 |
+| EFork                 | Unix/Linux系统下的进程创建 |
 | ESimpleCondition      | C++ style condition |
 | ESimpleLock           | C++ style mutex lock      |
 | ESpinLock             | C++ wrapper for spin lock |
@@ -402,17 +415,17 @@ put 20线程 && get 20线程
 | ESimpleStack          | C++ wrapper for stack     |
 | ESimpleVector         | C++ wrapper for vector    |
 | ESimpleEnumeration    | Enumeration for ESimpleXXX|
-| EStream               | C++ wrapper for io stream |
-| EOS                   | Utils for OS              |
-| EAtomic               | C++ wrapper for atomic operation |
+| EStream               | IO数据流操作类 |
+| EOS                   | 操作系统相关工具类              |
+| EAtomic               | 原子操作类 |
+| EThreadX              | C++11风格封装的EThread线程 |
+| EScopeGuard           | C++11风格封装的通过局部变量析构函数来管理资源的辅助类 |
    
 
 ####手册
 详见[Guide文档](doc/Guide.md)
 
 ####TODO
-    java.net.DatagramSocket；
-    java.nio.channels.DatagramChannel；
     java.security.*;
 
 ####Support

@@ -8,7 +8,7 @@
 #ifndef EALREADYBOUNDEXCEPTION_HH_
 #define EALREADYBOUNDEXCEPTION_HH_
 
-#include "EException.hh"
+#include "EIllegalStateException.hh"
 
 namespace efc {
 
@@ -25,7 +25,7 @@ namespace efc {
  * @see     java.rmi.registry.Registry#bind(String, java.rmi.Remote)
  */
 
-class EAlreadyBoundException: public EException {
+class EAlreadyBoundException: public EIllegalStateException {
 public:
 	/**
 	 * Constructs an <code>EAlreadyBoundException</code> with no
@@ -36,7 +36,7 @@ public:
 	 * @param   errn     errno
 	 */
 	EAlreadyBoundException(const char *_file_, int _line_, int errn = 0) :
-			EException(_file_, _line_, errn) {
+			EIllegalStateException(_file_, _line_, errn) {
 	}
 
 	/**
@@ -47,8 +47,8 @@ public:
 	 * @param   _line_   __LINE__.
 	 * @param   s   the detail message.
 	 */
-	EAlreadyBoundException(const char *_file_, int _line_, const char *s, int errn = 0) :
-			EException(_file_, _line_, s, errn) {
+	EAlreadyBoundException(const char *_file_, int _line_, const char *s) :
+			EIllegalStateException(_file_, _line_, s) {
 	}
 };
 

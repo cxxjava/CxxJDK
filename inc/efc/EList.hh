@@ -2,7 +2,7 @@
  * EList.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef ELIST_HH_
@@ -218,7 +218,7 @@ interface EList : virtual public ECollection<E>
      * @throws IndexOutOfBoundsException if the index is out of range
      *         ({@code index < 0 || index > size()})
      */
-    virtual EListIterator<E>* listIterator(int index = 0) = 0;
+    virtual sp<EListIterator<E> > listIterator(int index = 0) = 0;
 };
 
 } /* namespace efc */

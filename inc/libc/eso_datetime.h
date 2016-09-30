@@ -56,6 +56,12 @@ typedef struct
 es_tm_t* eso_dt_now(es_tm_t *tm);
 
 /**
+ * Gets the current value of localtime.
+ * Accurate to millisecond: 1 second = 1000 milliseconds
+ */
+es_int64_t eso_dt_millis(void);
+
+/**
  * Gets the current value of the system clock.
  * Accurate to nanosecond: 1 second = 1000*1000*1000 nanoseconds
  */

@@ -136,12 +136,6 @@ namespace nio {
 
 class EFileChannel : public EInterruptibleChannel, virtual public EByteChannel {
 public:
-	// -- Locks --
-	static const int NO_LOCK = -1;       // Failed to lock
-	static const int LOCKED = 0;         // Obtained requested lock
-	//static const int RET_EX_LOCK = 1;    // Obtained exclusive lock
-	static const int INTERRUPTED = 2;    // Request interrupted
-
 	virtual ~EFileChannel();
 
 	/**
@@ -165,7 +159,7 @@ public:
 	 * read.  Otherwise this method behaves exactly as specified in the {@link
 	 * ReadableByteChannel} interface. </p>
 	 */
-	int read(EIOByteBuffer* dst) THROWS(EIOException);
+	virtual int read(EIOByteBuffer* dst) THROWS(EIOException);
 
 	/**
 	 * Reads a sequence of bytes from this channel into a subsequence of the
@@ -176,7 +170,7 @@ public:
 	 * read.  Otherwise this method behaves exactly as specified in the {@link
 	 * ScatteringByteChannel} interface.  </p>
 	 */
-	long read(EA<EIOByteBuffer*>* dsts, int offset, int length) THROWS(EIOException);
+	virtual long read(EA<EIOByteBuffer*>* dsts, int offset, int length) THROWS(EIOException);
 
 	/**
 	 * Reads a sequence of bytes from this channel into the given buffers.
@@ -186,7 +180,7 @@ public:
 	 * read.  Otherwise this method behaves exactly as specified in the {@link
 	 * ScatteringByteChannel} interface.  </p>
 	 */
-	long read(EA<EIOByteBuffer*>* dsts) THROWS(EIOException);
+	virtual long read(EA<EIOByteBuffer*>* dsts) THROWS(EIOException);
 
 	/**
 	 * Writes a sequence of bytes to this channel from the given buffer.
@@ -199,7 +193,7 @@ public:
 	 * behaves exactly as specified by the {@link WritableByteChannel}
 	 * interface. </p>
 	 */
-	int write(EIOByteBuffer* src) THROWS(EIOException);
+	virtual int write(EIOByteBuffer* src) THROWS(EIOException);
 
 	/**
 	 * Writes a sequence of bytes to this channel from a subsequence of the
@@ -213,7 +207,7 @@ public:
 	 * behaves exactly as specified in the {@link GatheringByteChannel}
 	 * interface.  </p>
 	 */
-	long write(EA<EIOByteBuffer*>* srcs, int offset, int length) THROWS(EIOException);
+	virtual long write(EA<EIOByteBuffer*>* srcs, int offset, int length) THROWS(EIOException);
 
 	/**
 	 * Writes a sequence of bytes to this channel from the given buffers.
@@ -226,7 +220,7 @@ public:
 	 * behaves exactly as specified in the {@link GatheringByteChannel}
 	 * interface.  </p>
 	 */
-	long write(EA<EIOByteBuffer*>* srcs) THROWS(EIOException);
+	virtual long write(EA<EIOByteBuffer*>* srcs) THROWS(EIOException);
 
 	// -- Other operations --
 
@@ -243,7 +237,7 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	long position() THROWS(EIOException);
+	virtual long position() THROWS(EIOException);
 
 	/**
 	 * Sets this channel's file position.
@@ -285,7 +279,7 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	long size() THROWS(EIOException);
+	virtual long size() THROWS(EIOException);
 
 	/**
 	 * Truncates this channel's file to the given size.
@@ -539,7 +533,7 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	int read(EIOByteBuffer* dst, long position) THROWS(EIOException);
+	virtual int read(EIOByteBuffer* dst, long position) THROWS(EIOException);
 
 	/**
 	 * Writes a sequence of bytes to this channel from the given buffer,
@@ -584,12 +578,12 @@ public:
 	 * @throws  IOException
 	 *          If some other I/O error occurs
 	 */
-	int write(EIOByteBuffer* src, long position) THROWS(EIOException);
+	virtual int write(EIOByteBuffer* src, long position) THROWS(EIOException);
 
 	/**
 	 *
 	 */
-	int getFDVal();
+	virtual int getFDVal();
 
 	// -- Memory-mapped buffers --
 

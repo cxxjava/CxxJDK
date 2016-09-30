@@ -2,7 +2,7 @@
  * EAbstractSet.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EAbstractSet_HH_
@@ -84,7 +84,7 @@ public:
 		EAbstractCollection<E>::clear();
 	}
 
-	virtual EIterator<E>* iterator(int index=0) {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -115,6 +115,9 @@ public:
 		if (o == this)
 	    	return true;
 
+		ESet<E>* s = dynamic_cast<ESet<E>*>(o);
+		if (!s) return false;
+
 		ECollection<E>* c = dynamic_cast<ECollection<E>*>(o);
 		if (!c || c->size() != size())
 	    	return false;
@@ -141,13 +144,12 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		EIterator<E>* i = iterator();
+		sp<EIterator<E> > i = iterator();
 		while (i->hasNext()) {
 			E obj = i->next();
 			if (obj != null)
 				h += obj->hashCode();
 		}
-		delete i;
 		return h;
 	}
 
@@ -188,7 +190,7 @@ public:
      */
     virtual boolean removeAll(ECollection<E> *c) {
         boolean modified = false;
-		EIterator<E> *i = null;
+		sp<EIterator<E> > i = null;
 		
         if (size() > c->size()) {
             for (i = c->iterator(); i->hasNext(); )
@@ -201,7 +203,6 @@ public:
                 }
             }
         }
-        delete i;
         return modified;
     }
 
@@ -251,7 +252,7 @@ public:
 		EAbstractCollection<int>::clear();
 	}
 
-	virtual EIterator<int>* iterator(int index=0) {
+	virtual sp<EIterator<int> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -278,11 +279,14 @@ public:
      * @param o object to be compared for equality with this set
      * @return <tt>true</tt> if the specified object is equal to this set
      */
-    virtual boolean equals(ESet<int>* o) {
+    virtual boolean equals(EObject* o) {
     	if (o == this)
 	    	return true;
 
-		ECollection<int>* c = static_cast<ECollection<int>*>(o);
+    	ESet<int>* s = dynamic_cast<ESet<int>*>(o);
+		if (!s) return false;
+
+		ECollection<int>* c = dynamic_cast<ECollection<int>*>(o);
 		if (!c || c->size() != size())
 	    	return false;
 
@@ -308,11 +312,10 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		EIterator<int>* i = iterator();
+		sp<EIterator<int> > i = iterator();
 		while (i->hasNext()) {
 			h += i->next();
 		}
-		delete i;
 		return h;
 	}
 
@@ -353,7 +356,7 @@ public:
      */
     virtual boolean removeAll(ECollection<int> *c) {
         boolean modified = false;
-		EIterator<int> *i = null;
+		sp<EIterator<int> > i = null;
 
         if (size() > c->size()) {
             for (i = c->iterator(); i->hasNext(); )
@@ -366,7 +369,6 @@ public:
                 }
             }
         }
-        delete i;
         return modified;
     }
 
@@ -416,7 +418,7 @@ public:
 		EAbstractCollection<llong>::clear();
 	}
 
-	virtual EIterator<llong>* iterator(int index=0) {
+	virtual sp<EIterator<llong> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -443,11 +445,14 @@ public:
      * @param o object to be compared for equality with this set
      * @return <tt>true</tt> if the specified object is equal to this set
      */
-    virtual boolean equals(ESet<llong>* o) {
+    virtual boolean equals(EObject* o) {
 		if (o == this)
 	    	return true;
 
-		ECollection<llong>* c = static_cast<ECollection<llong>*>(o);
+		ESet<llong>* s = dynamic_cast<ESet<llong>*>(o);
+		if (!s) return false;
+
+		ECollection<llong>* c = dynamic_cast<ECollection<llong>*>(o);
 		if (!c || c->size() != size())
 	    	return false;
 
@@ -491,7 +496,7 @@ public:
      */
     virtual boolean removeAll(ECollection<llong> *c) {
         boolean modified = false;
-		EIterator<llong> *i = null;
+		sp<EIterator<llong> > i = null;
 
         if (size() > c->size()) {
             for (i = c->iterator(); i->hasNext(); )
@@ -504,7 +509,6 @@ public:
                 }
             }
         }
-        delete i;
         return modified;
     }
 };

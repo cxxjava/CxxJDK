@@ -2,7 +2,7 @@
  * EInetAddress.hh
  *
  *  Created on: 2013-3-25
- *      Author: Administrator
+ *      Author: cxxjava@163.com
  */
 
 #ifndef EInetAddress_HH_
@@ -70,6 +70,8 @@ namespace efc {
  * @since 1.4
  */
 
+class ENetworkInterface;
+
 class EInetAddress : virtual public EObject {
 public:
 	virtual ~EInetAddress();
@@ -77,10 +79,6 @@ public:
     EInetAddress();
     EInetAddress(const char* hostName, byte addr[4]);
     EInetAddress(const char* hostName, int address);
-    
-    void setHostName(const char* hostName);
-    void setAddress(byte addr[4]);
-    void setAddress(int address);
     
     /**
      * Utility routine to check if the InetAddress is an
@@ -265,7 +263,41 @@ public:
      * @throws  IllegalArgumentException if <code>timeout</code> is negative.
      * @since 1.5
      */
-    //boolean isReachable(int timeout) THROWS(EIOException);
+    boolean isReachable(int timeout) THROWS(EIOException);
+
+    /**
+	 * Test whether that address is reachable. Best effort is made by the
+	 * implementation to try to reach the host, but firewalls and server
+	 * configuration may block requests resulting in a unreachable status
+	 * while some specific ports may be accessible.
+	 * A typical implementation will use ICMP ECHO REQUESTs if the
+	 * privilege can be obtained, otherwise it will try to establish
+	 * a TCP connection on port 7 (Echo) of the destination host.
+	 * <p>
+	 * The {@code network interface} and {@code ttl} parameters
+	 * let the caller specify which network interface the test will go through
+	 * and the maximum number of hops the packets should go through.
+	 * A negative value for the {@code ttl} will result in an
+	 * IllegalArgumentException being thrown.
+	 * <p>
+	 * The timeout value, in milliseconds, indicates the maximum amount of time
+	 * the try should take. If the operation times out before getting an
+	 * answer, the host is deemed unreachable. A negative value will result
+	 * in an IllegalArgumentException being thrown.
+	 *
+	 * @param   netif   the NetworkInterface through which the
+	 *                    test will be done, or null for any interface
+	 * @param   ttl     the maximum numbers of hops to try or 0 for the
+	 *                  default
+	 * @param   timeout the time, in milliseconds, before the call aborts
+	 * @throws  IllegalArgumentException if either {@code timeout}
+	 *                          or {@code ttl} are negative.
+	 * @return a {@code boolean}indicating if the address is reachable.
+	 * @throws IOException if a network error occurs
+	 * @since 1.5
+	 */
+	boolean isReachable(ENetworkInterface* netif, int ttl,
+							   int timeout) THROWS(EIOException);
 
     /**
      * Returns a hashcode for this IP address.
@@ -453,25 +485,22 @@ private:
 	/**
      * @serial
      */
-    EString _hostName;
+    sp<EString> _hostName;
 
     /* Used to store the best available hostname */
-    EString _canonicalHostName;
+    sp<EString> _canonicalHostName;
 
     /**
      * Holds a 32-bit IPv4 address.
+     *
+     * the same to network byte order.
      *
      * @serial
      */
     es_byte_t _address[4];
 
-    /**
-     * Specifies the address family type, for instance, '1' for IPv4
-     * addresses, and '2' for IPv6 addresses.
-     *
-     * @serial
-     */
-    int _family;
+	void setAddress(byte addr[4]);
+	void setAddress(int address);
 };
 
 } /* namespace efc */

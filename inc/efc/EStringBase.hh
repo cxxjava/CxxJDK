@@ -147,7 +147,6 @@ public:
 	 * @since 1.6
 	 */
 	boolean isEmpty();
-	boolean isNotEmpty();
 
 	static EStringBase formatOf(const char* fmt, ...);
 	static EStringBase valueOf(const char *data);
