@@ -11,10 +11,9 @@
 #include "ESelectableChannel.hh"
 #include "EByteChannel.hh"
 #include "EMulticastChannel.hh"
+#include "EDatagramSocket.hh"
 #include "EMembershipKey.hh"
 #include "EInetSocketAddress.hh"
-#include "EDatagramSocketAdaptor.hh"
-#include "EMembershipRegistry.hh"
 
 namespace efc {
 namespace nio {
@@ -95,6 +94,8 @@ namespace nio {
  * @since 1.4
  */
 
+class EDatagramSocketAdaptor;
+class EMembershipRegistry;
 class EDatagramChannel: public ESelectableChannel, virtual public EMulticastChannel {
 public:
 	virtual ~EDatagramChannel();
