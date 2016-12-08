@@ -12,6 +12,9 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#ifdef __MAIN__
+#define MAIN_IMPL(name) int main(int argc, const char **argv)
+#else //!
 #define MAIN_IMPL(name)                                                       \
 	int run_main_##name(int argc, const char** argv);                         \
 	int run_main_##name(int argc, const char** argv)
@@ -19,6 +22,7 @@ extern "C" {
 #define MAIN_CALL(name)                                                       \
 	extern int run_main_##name(int argc, const char** argv);                  \
 	run_main_##name(argc, argv)
+#endif //!__MAIN__
 
 #ifdef __cplusplus
 }

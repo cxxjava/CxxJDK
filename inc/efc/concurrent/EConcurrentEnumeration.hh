@@ -63,5 +63,23 @@ interface EConcurrentEnumeration : virtual public EObject {
     virtual sp<E> nextElement() = 0;
 };
 
+//=============================================================================
+
+#define ECE_DECLARE(E) template<> \
+interface EConcurrentEnumeration<E> : virtual public EObject { \
+	virtual ~EConcurrentEnumeration() {} \
+    virtual boolean hasMoreElements() = 0; \
+    virtual E nextElement() = 0; \
+};
+
+ECE_DECLARE(byte)
+ECE_DECLARE(char)
+ECE_DECLARE(int)
+ECE_DECLARE(short)
+ECE_DECLARE(long)
+ECE_DECLARE(llong)
+ECE_DECLARE(float)
+ECE_DECLARE(double)
+
 } /* namespace efc */
 #endif //!__EConcurrentEnumeration_H__

@@ -96,6 +96,14 @@ public:
 #endif
 	}
 
+	ECondition* getCondition() {
+#ifdef HAVE_THREADS
+		return __cond__;
+#else
+		return null;
+#endif
+	}
+
 	/**
 	 * Wakes up a single thread that is waiting on this object's
 	 * monitor. If any threads are waiting on this object, one of them

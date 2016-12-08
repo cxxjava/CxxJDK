@@ -448,6 +448,8 @@ private:
 		return o1 == null ? o2 == null : o1->equals(o2);
 	}
 public:
+	virtual ~EConcurrentImmutableEntry(){}
+
 	/**
 	 * Creates an entry representing a mapping from the specified
 	 * key to the specified value.
@@ -500,6 +502,104 @@ public:
 				(value == null ? 0 : value->hashCode());
 	}
 };
+
+//=============================================================================
+
+#define ECME_DECLARE(K) template<typename V> \
+interface EConcurrentMapEntry<K, V> : virtual public EObject { \
+	virtual ~EConcurrentMapEntry() { \
+	} \
+	virtual K getKey() = 0; \
+	virtual sp<V> getValue() = 0; \
+	virtual sp<V> setValue(sp<V> value) = 0; \
+	virtual boolean equals(sp<EConcurrentMapEntry<K,V> > o) = 0; \
+	virtual int hashCode() = 0; \
+};
+
+ECME_DECLARE(byte)
+ECME_DECLARE(char)
+ECME_DECLARE(int)
+ECME_DECLARE(short)
+ECME_DECLARE(long)
+ECME_DECLARE(llong)
+ECME_DECLARE(float)
+ECME_DECLARE(double)
+
+
+#define ECM_DECLARE(K) template<typename V> \
+interface EConcurrentMap<K, V> : virtual public EObject { \
+	virtual ~EConcurrentMap(){ \
+	} \
+	virtual int size() = 0; \
+	virtual boolean isEmpty() = 0; \
+	virtual boolean containsKey(K key) = 0; \
+	virtual boolean containsValue(V* value) = 0; \
+	virtual sp<V> get(K key) = 0; \
+	virtual sp<V> put(K key, V* value) = 0; \
+	virtual sp<V> put(K key, sp<V> value) = 0; \
+	virtual sp<V> remove(K key) = 0; \
+	virtual void clear() = 0; \
+	virtual sp<EConcurrentSet<K> > keySet() = 0; \
+	virtual sp<EConcurrentCollection<V> > values() = 0; \
+	virtual sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() = 0; \
+	virtual sp<V> putIfAbsent(K key, V* value) = 0; \
+	virtual sp<V> putIfAbsent(K key, sp<V> value) = 0; \
+	virtual boolean remove(K key, V* value) = 0; \
+	virtual boolean replace(K key, V* oldValue, V* newValue) = 0; \
+	virtual boolean replace(K key, V* oldValue, sp<V> newValue) = 0; \
+	virtual sp<V> replace(K key, V* value) = 0; \
+	virtual sp<V> replace(K key, sp<V> value) = 0; \
+};
+
+ECM_DECLARE(byte)
+ECM_DECLARE(char)
+ECM_DECLARE(int)
+ECM_DECLARE(short)
+ECM_DECLARE(long)
+ECM_DECLARE(llong)
+ECM_DECLARE(float)
+ECM_DECLARE(double)
+
+
+#define ECIE_DECLARE(K) template<typename V> \
+class EConcurrentImmutableEntry<K, V>: public EConcurrentMapEntry<K, V> { \
+private: \
+	K key; \
+	sp<V> value; \
+	static boolean eq(EObject* o1, EObject* o2) { \
+		return o1 == null ? o2 == null : o1->equals(o2); \
+	} \
+public: \
+	virtual ~EConcurrentImmutableEntry(){} \
+	EConcurrentImmutableEntry(K key, sp<V> value) { \
+		this->key = key; \
+		this->value = value; \
+	} \
+	K getKey() { \
+		return key; \
+	} \
+	sp<V> getValue() { \
+		return value; \
+	} \
+	sp<V> setValue(sp<V> value) { \
+		throw EUNSUPPORTEDOPERATIONEXCEPTION; \
+	} \
+	boolean equals(sp<EConcurrentMapEntry<K, V> > o) { \
+		return (key == o->getKey()) && eq(value.get(), o->getValue().get()); \
+	} \
+	virtual int hashCode() { \
+		return (key) ^ (value == null ? 0 : value->hashCode()); \
+	} \
+};
+
+ECIE_DECLARE(byte)
+ECIE_DECLARE(char)
+ECIE_DECLARE(int)
+ECIE_DECLARE(short)
+ECIE_DECLARE(long)
+ECIE_DECLARE(llong)
+ECIE_DECLARE(float)
+ECIE_DECLARE(double)
 
 } /* namespace efc */
 #endif /* ECONCURRENTMAP_HH_ */

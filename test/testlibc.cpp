@@ -2,8 +2,6 @@
 #include "libc.h"
 #include "eso_except.h"
 
-#define HAS_XTHREAD 0
-
 typedef void * volatile vvoidp;
 typedef vvoidp *pvvoidp;
 
@@ -629,41 +627,6 @@ static void test_thread(void) {
 	eso_thread_destroy(&thread);
 }
 
-#if HAS_XTHREAD
-static void xthread_proc(es_uint32_t handle)
-{
-	int k = 0;
-	while (k < 5) {
-		eso_log("k=%d", k++);
-		eso_xthread_suspend(handle);
-		eso_log("k==");
-		eso_xthread_suspend(handle);
-	}
-}
-#endif
-
-static void test_xthread(void) {
-#if HAS_XTHREAD
-	int j = 0;
-	es_uint32_t handle;
-	
-	handle = eso_xthread_new(4096);
-	while (j < 10) {
-		eso_log("j = %d", j++);
-		if (!eso_xthread_is_execute(handle)) {
-			eso_xthread_start(handle, xthread_proc);
-			eso_log("thread start...");
-		}
-		else {
-			eso_xthread_resume(handle);
-			eso_log("-------------");
-			eso_xthread_resume(handle);
-		}
-	}
-	eso_xthread_die(handle);
-#endif
-}
-
 static void test_alogger(void) {
 	es_alogger_t* logger = eso_alogger_create("alog.txt", 1024000);
 
@@ -1282,10 +1245,6 @@ MAIN_IMPL(testlibc) {
 //		test_proc();
 //		test_proc2();
 //		test_thread();
-// 		for (int i=0; i<1000; i++)
-// 		{
-// 			test_xthread();
-// 		}
 //		test_alogger();
 //		test_exception();
 //		test_md4();

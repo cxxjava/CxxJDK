@@ -74,5 +74,26 @@ interface EConcurrentIterator : virtual public EObject
 	virtual void remove() = 0;
 };
 
+//=============================================================================
+
+#define ECI_DECLARE(E) template<> \
+interface EConcurrentIterator<E> : virtual public EObject \
+{ \
+	virtual ~EConcurrentIterator(){} \
+	virtual boolean hasNext() = 0; \
+	virtual E next() = 0; \
+	virtual void remove() = 0; \
+};
+
+ECI_DECLARE(byte)
+ECI_DECLARE(char)
+ECI_DECLARE(int)
+ECI_DECLARE(short)
+ECI_DECLARE(long)
+ECI_DECLARE(llong)
+ECI_DECLARE(float)
+ECI_DECLARE(double)
+
+
 } /* namespace efc */
 #endif /* ECONCURRENT_ITERATOR_HH_ */

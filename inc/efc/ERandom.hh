@@ -387,7 +387,7 @@ protected:
 private:
 	static const llong multiplier = 0x5DEECE66DL;
 	static const llong addend = 0xBL;
-	static const llong mask = (1L << 48) - 1;
+	static const llong mask = (LLONG(1) << 48) - 1;
 
 	/**
 	 * The internal state associated with this pseudorandom number generator.

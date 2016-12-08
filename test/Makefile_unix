@@ -26,19 +26,19 @@ else
 endif
 
 ifeq ($(VERTYPE), RELEASE)
-CCOMPILEOPTION = -c -g -O2
+CCOMPILEOPTION = -c -g -O2 -D__MAIN__
 CPPCOMPILEOPTION = -std=$(CPPSTD) -c -g -O2 -fpermissive
 TESTEFC = testefc
 TESTC11 = testc11
 TESTNIO = testnio
 TESTBON = testbon
 else
-CCOMPILEOPTION = -c -g
+CCOMPILEOPTION = -c -g -D__MAIN__
 CPPCOMPILEOPTION = -std=$(CPPSTD) -c -g -fpermissive -DDEBUG
-TESTEFC = testefc_r
-TESTC11 = testc11_r
-TESTNIO = testnio_r
-TESTBON = testbon_r
+TESTEFC = testefc_d
+TESTC11 = testc11_d
+TESTNIO = testnio_d
+TESTBON = testbon_d
 endif
 
 CCOMPILE = gcc
@@ -47,6 +47,7 @@ INCLUDEDIR = -I../inc \
 	-I../inc/comm \
 	-I../inc/efc \
 	-I../inc/efc/concurrent \
+	-I../inc/efc/cpp11 \
 	-I../inc/efc/nio \
 	-I../inc/libc \
 
@@ -55,7 +56,7 @@ LINKOPTION = -std=$(CPPSTD) -g
 LIBDIRS = -L../lib/$(LIBDIR)
 APPENDLIB = 
 
-BASE_OBJS = main.o 
+BASE_OBJS = 
 
 TESTEFC_OBJS = testefc.o
 

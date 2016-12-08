@@ -228,6 +228,12 @@ static void test_nioclient() {
 		}
 		selectionKeys->clear();
 	} while (nn < 1);
+
+	selector->close();
+	delete selector;
+
+	socketChannel->close();
+	delete socketChannel;
 }
 
 //===========================================================================

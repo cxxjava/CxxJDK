@@ -1,6 +1,5 @@
 #include "main.hh"
 #include "Efc.hh"
-#include "ELog.hh"
 
 #ifdef WIN32
 #define LOG ESystem::out->println
@@ -127,16 +126,29 @@ static void test_finally() {
 }
 
 static void test_threadx() {
-	int n = 999;
+	ESynchronizeable sync;
 
-	EThreadX* tx = EThreadX::execute([&](){
-		LOG("execute: n=%d", n);
+	sp<EThread> ths1 = EThreadX::execute([&]() {
+		//EThread::sleep(1000); //if wait after notify then will blocked forever.
+		SYNCHRONIZED(&sync) {
+			sync.wait();
+		}}
 	});
+//	ths1->start(); //exception: Already started.
 
-//	tx->start(); //exception: Already started.
+	sp<EThread> ths2 = EThreadX::execute([&]() {
+		EThread::sleep(1000);
+		SYNCHRONIZED(&sync) {
+			LOG("at here.");
+		}}
+		SYNCHRONIZED(&sync) {
+			sync.notify();
+		}}
+	});
+	ths1->join();
+	ths2->join();
 
-	tx->join();
-	delete tx;
+	LOG("end of test_threadx().");
 }
 
 MAIN_IMPL(testc11) {

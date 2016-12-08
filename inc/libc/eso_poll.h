@@ -59,34 +59,34 @@ extern "C" {
 typedef struct es_poll_t es_poll_t;
 
 /* Types and data structures */
-typedef void aeFileProc(es_poll_t *poll, int fd, void *clientData, int mask);
-typedef int aeTimeProc(es_poll_t *poll, es_int64_t id, void *clientData);
-typedef void aeEventFinalizerProc(es_poll_t *poll, void *clientData);
+typedef void esFileProc(es_poll_t *poll, int fd, void *clientData, int mask);
+typedef int esTimeProc(es_poll_t *poll, es_int64_t id, void *clientData);
+typedef void esEventFinalizerProc(es_poll_t *poll, void *clientData);
 
 /* File event structure */
-typedef struct aeFileEvent {
+typedef struct esFileEvent {
     int mask; /* one of ES_POLL_(READABLE|WRITABLE) */
-    aeFileProc *rfileProc;
-    aeFileProc *wfileProc;
+    esFileProc *rfileProc;
+    esFileProc *wfileProc;
     void *clientData;
-} aeFileEvent;
+} esFileEvent;
 
 /* Time event structure */
-typedef struct aeTimeEvent {
+typedef struct esTimeEvent {
 	es_int64_t id; /* time event identifier. */
     long when_sec; /* seconds */
     long when_ms; /* milliseconds */
-    aeTimeProc *timeProc;
-    aeEventFinalizerProc *finalizerProc;
+    esTimeProc *timeProc;
+    esEventFinalizerProc *finalizerProc;
     void *clientData;
-    struct aeTimeEvent *next;
-} aeTimeEvent;
+    struct esTimeEvent *next;
+} esTimeEvent;
 
 /* A fired event */
-typedef struct aeFiredEvent {
+typedef struct esFiredEvent {
     int fd;
     int mask;
-} aeFiredEvent;
+} esFiredEvent;
 
 /* State of an event based program */
 struct es_poll_t {
@@ -94,9 +94,9 @@ struct es_poll_t {
     int setsize; /* max number of file descriptors tracked */
     es_int64_t timeEventNextId;
     time_t lastTime;     /* Used to detect system clock skew */
-    aeFileEvent *events; /* Registered events */
-    aeFiredEvent *fired; /* Fired events */
-    aeTimeEvent *timeEventHead;
+    esFileEvent *events; /* Registered events */
+    esFiredEvent *fired; /* Fired events */
+    esTimeEvent *timeEventHead;
     void *apidata; /* This is used for polling API specific data */
 };
 
@@ -107,10 +107,10 @@ void eso_poll_destroy(es_poll_t** ppoll);
 /* Resize the maximum set size of the event loop.
  * If the requested set size is smaller than the current set size, but
  * there is already a file descriptor in use that is >= the requested
- * set size minus one, AE_ERR is returned and the operation is not
+ * set size minus one, -1 is returned and the operation is not
  * performed at all.
  *
- * Otherwise AE_OK is returned and the operation is successful. */
+ * Otherwise 0 is returned and the operation is successful. */
 int eso_poll_resize(es_poll_t *poll, int setsize);
 
 /* Process every pending time event, then every pending file event
@@ -129,15 +129,15 @@ int eso_poll_resize(es_poll_t *poll, int setsize);
 int eso_poll_process_events(es_poll_t* poll, int flags, es_int64_t timeout);
 
 es_status_t eso_poll_file_event_create(es_poll_t* poll, int fd, int mask,
-		aeFileProc *proc, void *clientData);
+		esFileProc *proc, void *clientData);
 es_status_t eso_poll_file_event_update(es_poll_t *poll, int fd, int mask,
-        aeFileProc *proc, void *clientData);
+        esFileProc *proc, void *clientData);
 void eso_poll_file_event_delete(es_poll_t* poll, int fd, int mask);
 int eso_poll_get_file_events(es_poll_t* poll, int fd);
 
 es_int64_t eso_poll_time_event_create(es_poll_t* poll, es_int64_t milliseconds,
-		aeTimeProc *proc, void *clientData,
-		aeEventFinalizerProc *finalizerProc);
+		esTimeProc *proc, void *clientData,
+		esEventFinalizerProc *finalizerProc);
 es_status_t eso_poll_time_event_delete(es_poll_t* poll, es_int64_t id);
 
 /* Wait for milliseconds until the given file descriptor becomes

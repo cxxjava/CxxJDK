@@ -1,7 +1,7 @@
 #ifndef __EFC_H__
 #define __EFC_H__
 
-#define EFC_VERSION "0.2.0"
+#define EFC_VERSION "0.4.0"
 
 #include "EBase.hh"
 
@@ -249,7 +249,7 @@
 #include "EServerSocketChannel.hh"
 #include "ESocketChannel.hh"
 
-//efc::c11
+//efc::cpp11
 #include "EScopeGuard.hh"
 #include "EThreadX.hh"
 

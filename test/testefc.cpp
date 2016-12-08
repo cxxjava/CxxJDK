@@ -297,6 +297,82 @@ static void test_secureRandom() {
 	LOG("d=%lf", d);
 }
 
+#define LOCKED_WORK_THREADS 10
+#define MAX_LOCKED_COUNTE 10000000
+static long locked_counter = 0L;
+static EReentrantLock locked_counter_lock;
+#if defined(__linux__)
+static pthread_mutex_t locked_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+static void test_lock_benchmark() {
+	class Thread: public EThread {
+	public:
+		virtual void run() {
+			while (true) {
+				//1. use ELockPool
+				//mac: 10 thread run 10000000 times, cost 1494 ms
+				//linux: 10 thread run 10000000 times, cost 1737 ms
+				//linux2: 10 thread run 10000000 times, cost 3554 ms/1 thread run 10000000 times, cost 160 ms/2 thread run 10000000 times, cost 2582 ms
+				if (0) {
+					SCOPED_SLOCK5(&locked_counter) {
+						locked_counter++;
+						if (locked_counter > MAX_LOCKED_COUNTE) {
+							break;
+						}
+					}}
+				}
+
+				//2. use EReentrantLock
+				//mac: 10 thread run 10000000 times, cost 3276 ms
+				//linux: 10 thread run 10000000 times, cost 1512 ms
+				//linux2: 10 thread run 10000000 times, cost 1588 ms/1 thread run 10000000 times, cost 595 ms/2 thread run 10000000 times, cost 6031 ms
+				if (1) {
+					SYNCBLOCK(&locked_counter_lock) {
+						locked_counter++;
+						if (locked_counter > MAX_LOCKED_COUNTE) {
+							break;
+						}
+					}}
+				}
+
+#if defined(__linux__)
+				//4. pthread mutex
+				//mac: 10 thread run 10000000 times, cost 46415 ms
+				//linux: 10 thread run 10000000 times, cost 975 ms
+				//linux2: 10 thread run 10000000 times, cost 1096 ms/1 thread run 10000000 times, cost 241 ms/2 thread run 10000000 times, cost 1047 ms
+				if (0) {
+					pthread_mutex_lock( &locked_counter_mutex );
+					locked_counter++;
+					if (locked_counter > MAX_LOCKED_COUNTE) {
+						pthread_mutex_unlock( &locked_counter_mutex );
+						break;
+					}
+					pthread_mutex_unlock( &locked_counter_mutex );
+				}
+#endif
+			}
+		}
+	};
+
+	llong t1 = ESystem::currentTimeMillis();
+
+	eal<Thread> arrs;
+	for (int i=0; i<LOCKED_WORK_THREADS; i++) {
+		sp<Thread> t = new Thread();
+		arrs.add(t);
+		t->start();
+	}
+
+	for (int i=0; i<LOCKED_WORK_THREADS; i++) {
+		arrs.get(i)->join();
+	}
+
+	llong t2 = ESystem::currentTimeMillis();
+
+	LOG("%d thread run %ld times, cost %ld ms\nper second op times: %f",
+			LOCKED_WORK_THREADS, MAX_LOCKED_COUNTE, t2 - t1, ((double)MAX_LOCKED_COUNTE)/(t2-t1)*1000);
+}
+
 static void test_lock(int flag) {
 	//1. ESynchronizeable
 	class A : public ESynchronizeable
@@ -342,7 +418,7 @@ static void test_lock(int flag) {
 	lock->lock();
 	printf("lock1\n");
 #if 0
-	lock->lock();
+	lock->lock(); //blocked!
 	printf("lock2\n");
 	lock->unlock();
 #endif
@@ -467,7 +543,7 @@ public:
 //					SYNCBLOCK(TestThread::lock_) {
 //						ECondition* cond_ = TestThread::lock_->newCondition();
 //						delete cond_;
-//					}
+//					}}
 
 					SYNCBLOCK(lock2_) {
 						//
@@ -478,10 +554,10 @@ public:
 //						try {
 //						SYNCHRONIZED(&xxx) {
 //							xxx.printf();
-//						}
+//						}}
 //						} catch(...) {
 //						}
-//					}
+//					}}
 				}
 
 				//====
@@ -5352,6 +5428,405 @@ static void test_concurrentHashmap()
 	}
 }
 
+static void test_concurrentHashmap2()
+{
+#define K int
+
+	gDeadlineTimestamp = ESystem::currentTimeSeconds() + 60; //30s
+
+	//========================
+	class putCHashmapThread : public EThread {
+	private:
+		EConcurrentHashMap<K, EInteger>* chm;// = null;
+		Count* c;// = null;
+
+	public:
+		putCHashmapThread(EConcurrentHashMap<K, EInteger>* chm, Count* c) {
+			this->chm = chm;
+			this->c = c;
+		}
+
+		void run() {
+			int tt = 13;
+			int i = 1;
+			try {
+                ERandom r;
+				while (true) {
+//				for (i=0; i<50000; i++) {
+					tt = EMath::abs(tt * (tt - i) - 119);
+//                    tt = r.nextInt();
+					sp<EInteger> oldV = chm->put(tt, new EInteger(tt));
+//					LOG("put %d, oldV=%d", i, oldV != null ? oldV->intValue() : -1);
+
+#if 1
+					//remove
+					if (i % 10 == 0) {
+						sp<EInteger> v = chm->remove(tt);
+//						LOG("remove ei=%d, v=%d", ei.intValue(), v==null ? -1 : v->intValue());
+					}
+#endif
+					c->addcount1(); // put
+					i++;
+
+					if (ESystem::currentTimeSeconds() - gDeadlineTimestamp > 0) {
+						break;
+					}
+
+//					EThread::sleep(500);
+				}
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+            LOG("end of put thread run().");
+		}
+	};
+
+	class getCHashmapThread : public EThread { // get
+	private:
+		EConcurrentHashMap<K, EInteger>* chm;// = null;
+		Count* c;// = null;
+
+	public:
+		getCHashmapThread(EConcurrentHashMap<K, EInteger>* chm, Count* c) {
+			this->chm = chm;
+			this->c = c;
+		}
+
+		void run() {
+			int tt = 13;
+			int i = 1;
+			try {
+				while (true) {
+//				for (i=0; i<10000; i++) {
+					tt = EMath::abs(tt * (tt - i) - 119);
+					sp<EInteger> v = chm->get(tt);
+//					LOG("get i=%d, v=%d", i, v==null ? -1 : v->intValue());
+
+#if 0
+					//test containsKey
+					if (v!=null) {
+						boolean r = chm->containsKey(tt);
+//						LOG("containsKey r=%d", r);
+					}
+
+					//test containsValue
+					if (v!=null) {
+						boolean r = chm->containsValue(v.get());
+//						LOG("containsValue r=%d", r);
+					}
+
+					//test iterator
+					sp<EConcurrentSet<EConcurrentMapEntry<K,EInteger> > > set = chm->entrySet();
+					sp<EConcurrentIterator<EConcurrentMapEntry<K,EInteger> > > it = set->iterator();
+					while (it->hasNext()) {
+						sp<EConcurrentMapEntry<K,EInteger> > me = it->next();
+						K ki = me->getKey();
+						sp<EInteger> vi = me->getValue();
+//						LOG("k=%d, v=%d", ki->intValue(), vi->intValue());
+					}
+
+					//test elements
+					sp<EConcurrentEnumeration<EInteger> > ce = chm->elements();
+					while (ce->hasMoreElements()) {
+						sp<EInteger> o = ce->nextElement();
+//						LOG("v=%d", o->intValue());
+					}
+#endif
+					c->addcount2(); // get
+					i++;
+
+					if (ESystem::currentTimeSeconds() - gDeadlineTimestamp > 0) {
+						break;
+					}
+
+//					EThread::sleep(100);
+				}
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of get thread run().");
+		}
+	};
+
+	class iteCHashmapThread : public EThread { // get操作线程
+	private:
+		EConcurrentHashMap<EInteger, EInteger>* chm;// = null;
+
+	public:
+		iteCHashmapThread(EConcurrentHashMap<EInteger, EInteger>* chm) {
+			this->chm = chm;
+		}
+
+		void run() {
+			try {
+				chm->entrySet()->iterator();
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of ite thread run().");
+		}
+	};
+
+	class ProbeThread : public EThread { //
+	private:
+		boolean run_;// = true;
+		Count* cc;
+
+	public:
+		ProbeThread(Count* cc) : run_(true) {
+			this->cc = cc;
+		}
+
+		void run() {
+			int c1 = 0, c2 = 0;
+			int cc1 = 0, cc2 = 0;
+			while (this->run_) {
+				c2 = cc->getcount1();
+				cc2 = cc->getcount2();
+				LOG("put:[%d/%d]  get:[%d/%d]",
+						(c2 - c1) / 2, c2,
+						(cc2 - cc1) / 2, cc2);
+				c1 = c2;
+				cc1 = cc2;
+
+				if (ESystem::currentTimeSeconds() - gDeadlineTimestamp > 0) {
+					break;
+				}
+
+				try {
+					EThread::sleep(1000 * 2 - 1);
+				} catch (EException& ex) {
+					LOG("Error[ProbeThread.run]:%s", ex.getMessage());
+				}
+			}
+		}
+	};
+
+	try {
+		Count* c = new Count();
+		EConcurrentHashMap<K, EInteger>* chm = new EConcurrentHashMap<K, EInteger>();
+
+		EArray<EThread*> arr;
+		int i;
+		for (i = 0; i < 20; i++) {
+			putCHashmapThread* pct = new putCHashmapThread(chm, c);
+			pct->start();// put
+			arr.add(pct);
+		}
+
+		for (i = 0; i < 20; i++) {
+			getCHashmapThread* gct = new getCHashmapThread(chm, c);
+			gct->start(); // get
+			arr.add(gct);
+		}
+
+//		for (i = 0; i < 2; i++) {
+//			iteCHashmapThread* ict = new iteCHashmapThread(chm);
+//			ict->start();// iterator
+//			arr.add(ict);
+//		}
+
+		ProbeThread* pt = new ProbeThread(c); //
+		pt->start();
+		arr.add(pt);
+
+		for (i = 0; i < arr.length(); i++) {
+			arr.getAt(i)->join();
+		}
+		delete chm;
+		delete c;
+
+		LOG("test_concurrentHashmap...");
+
+//		EThread::sleep(3000);
+	} catch (EException& e) {
+		e.printStackTrace();
+	}
+}
+
+template<typename E, typename LOCK=ESpinLock>
+class ConcurrentQueue {
+public:
+	typedef struct node_t {
+	    E* volatile value;
+	    node_t* volatile next;
+
+	    node_t(): next(null) {}
+	} NODE;
+
+public:
+	~ConcurrentQueue() {
+		NODE* node = head;
+		while (node != null) {
+			NODE* n = node->next;
+			delete node;
+			node = n;
+		}
+	}
+
+	ConcurrentQueue() {
+		NODE* node = new NODE();
+		head = tail = node;
+	}
+
+	void add(E* e) {
+		NODE* node = new NODE();
+		node->value = e;
+		node->next = null;
+		tl.lock();
+			tail->next = node;
+			tail = node;
+		tl.unlock();
+	}
+
+	E* poll() {
+		E* v;
+		NODE* node = null;
+		hl.lock();
+			node = head;
+			NODE* new_head = node->next;
+			if (new_head == null) {
+				hl.unlock();
+				return null;
+			}
+			v = new_head->value;
+			head = new_head;
+		hl.unlock();
+		delete node;
+		return v;
+	}
+
+private:
+	NODE *head;
+	NODE *tail;
+	LOCK hl;
+	LOCK tl;
+};
+
+static ConcurrentQueue<EInteger> g_queue;
+static EConcurrentHashMap<EInteger, EInteger> g_queue_datas;
+static void test_concurrent_queue() {
+#define NUM 1000000
+
+	class Thread: public EThread {
+	private:
+		int id;
+	public:
+		Thread(int i): id(i) {}
+		virtual void run() {
+			int j = NUM * id;
+			for (int i = 0; i < NUM; i++) {
+				if (id < 2)
+					g_queue.add(new EInteger(i));
+				else {
+					sp<EInteger> n = g_queue.poll();
+					//LOG("i=%d", i);
+					if (n != null) {
+						g_queue_datas.put(n, n);
+					}
+				}
+			}
+		}
+	};
+
+	es_int64_t ts1, ts2;
+	ts1 = ESystem::currentTimeMillis();
+
+	Thread t0(0);
+	Thread t1(1);
+	Thread t2(2);
+	Thread t3(3);
+	t0.start();
+	t1.start();
+	t2.start();
+	t3.start();
+	t0.join();
+	t1.join();
+	t2.join();
+	t3.join();
+
+	ts2 = ESystem::currentTimeMillis();
+//	LOG("%lld", ts2-ts1);
+
+	int n = g_queue_datas.size();
+	ES_ASSERT(n == NUM);
+	LOG("%s", (n != NUM) ? "error!!!" : "success.");
+}
+
+static void test_concurrentLinkedQueue2() {
+
+#define NUM 10000000
+
+#if 1
+	EConcurrentLinkedQueue<EInteger> queue;
+
+	class Thread: public EThread {
+	private:
+		EConcurrentLinkedQueue<EInteger>& queue;
+		int id;
+	public:
+		Thread(EConcurrentLinkedQueue<EInteger>& q, int i): queue(q), id(i) {}
+		virtual void run() {
+			int j = NUM * id;
+			for (int i = 0; i < NUM; i++) {
+				if (id < 2)
+					queue.add(new EInteger(i));
+				else {
+					sp<EInteger> n = queue.poll();
+					LOG("i=%d", i);
+				}
+			}
+		}
+	};
+
+	es_int64_t ts1, ts2;
+	ts1 = ESystem::currentTimeMillis();
+
+	Thread t0(queue, 0);
+	Thread t1(queue, 1);
+	Thread t2(queue, 2);
+	Thread t3(queue, 3);
+	t0.start();
+	t1.start();
+	t2.start();
+	t3.start();
+	t0.join();
+	t1.join();
+	t2.join();
+	t3.join();
+#else
+	EConcurrentLinkedQueue<EInteger> queue;
+
+	EInteger* ii = new EInteger(999);
+	queue.add(ii);
+
+	class Thread: public EThread {
+	private:
+		EConcurrentLinkedQueue<EInteger>& queue;
+		int id;
+	public:
+		Thread(EConcurrentLinkedQueue<EInteger>& q, int i): queue(q), id(i) {}
+		virtual void run() {
+			int j = NUM * id;
+			for (int i = 0; i < NUM; i++) {
+				sp<EInteger> n = queue.poll();
+				queue.add(n);
+			}
+		}
+	};
+
+	es_int64_t ts1, ts2;
+	ts1 = ESystem::currentTimeMillis();
+
+	Thread t0(queue, 0);
+	t0.start();
+	t0.join();
+#endif
+
+	ts2 = ESystem::currentTimeMillis();
+	LOG("%lld", ts2-ts1);
+}
+
 static void test_concurrentLinkedQueue() {
 #if 1
 	{
@@ -8270,6 +8745,7 @@ static void test_c_thread() {
 }
 
 static void test_test(int argc, const char** argv) {
+//	test_null();
 //	test_cmpxchg();
 //	test_interface();
 //	test_vc6bug();
@@ -8290,6 +8766,7 @@ static void test_test(int argc, const char** argv) {
 //	test_threadlocal5();
 //	test_threadJoin();
 //	test_threadState();
+//	test_lock_benchmark();
 //	test_lock(0);
 //	test_lock();
 //	test_tryLock();
@@ -8297,7 +8774,8 @@ static void test_test(int argc, const char** argv) {
 //	test_condition();
 //	test_readWriteLock();
 //	test_exception();
-//	test_number();
+//	test_number_int();
+//	test_number_long();
 //	test_filepath();
 //	test_config();
 //	test_system();
@@ -8327,6 +8805,7 @@ static void test_test(int argc, const char** argv) {
 //	test_fork();
 //	test_process();
 //	test_runtime();
+//	test_inetaddress();
 //	test_socket();
 //	test_serversocket();
 //	test_calendar();
@@ -8335,10 +8814,7 @@ static void test_test(int argc, const char** argv) {
 //	test_urlstring();
 //	test_datastream();
 //	test_gzipstream();
-//	test_pattern();
-//	test_atomic();
-//	test_atomic2();
-//	test_collections();
+//	test_sequencestream();
 //	test_pattern();
 //	test_atomic();
 //	test_atomic2();
@@ -8355,7 +8831,10 @@ static void test_test(int argc, const char** argv) {
 //	test_copyOnWrite1();
 //	test_copyOnWrite2();
 //	test_concurrentHashmap();
+//	test_concurrentHashmap2();
+	test_concurrent_queue();
 //	test_concurrentLinkedQueue();
+//	test_concurrentLinkedQueue2();
 //	test_concurrentSkipListMap();
 //	test_concurrentSkipListMap2();
 //	test_linkedTransferQueue();
@@ -8377,14 +8856,14 @@ static void test_test(int argc, const char** argv) {
 //	test_file_read_write(argc > 1 ? argv[1] : "/tmp/f.out");
 //	test_buffered_stream();
 //	test_synchronousQueue();
-	test_executors();
-//	test_callable_and_future();
-//	test_threadLocalRandom();
-//	test_uri();
 //	test_executors();
 //	test_callable_and_future();
 //	test_threadLocalRandom();
 //	test_uri();
+//	test_networkInferface();
+//	test_datagramSocket();
+//	test_multicastSocket();
+//	test_c_thread();
 //
 //	EThread::sleep(3000);
 }
@@ -8403,10 +8882,10 @@ MAIN_IMPL(testefc) {
 		boolean loop = EBoolean::parseBoolean(ESystem::getProgramArgument("loop"));
 		do {
 			test_test(argc, argv);
-//		} while (++i < 5);
+
 
 //		} while (++i < 5);
-		} while (1);
+		} while (0);
 	}
 	catch (EException& e) {
 //		LOG("e=%s", e.toString().c_str());

@@ -1439,5 +1439,867 @@ private:
 	}
 };
 
+//=============================================================================
+
+#define ECHM_DECLARE(K) template<typename V> \
+class EConcurrentHashMap<K, V>: public EConcurrentMap<K, V> { \
+public: \
+	class HashEntry { \
+	public: \
+		K key; \
+		sp<V> value; \
+		sp<HashEntry> next; \
+		int hash; \
+ \
+		HashEntry(K key, int hash, \
+				sp<HashEntry>& next, \
+				sp<V> value) { \
+			this->key = key; \
+			this->hash = hash; \
+			this->next = next; \
+			this->value = value; \
+		} \
+ \
+		static ea<HashEntry>* newArray(int i) { \
+			return NEWRC(ea<HashEntry>)(i); \
+		} \
+	}; \
+ \
+	class Segment : public EReentrantLock { \
+	public: \
+		volatile int count; \
+		int modCount; \
+		int threshold; \
+		ea<HashEntry>* volatile table; \
+		float loadFactor; \
+ \
+		EConcurrentHashMap<K,V>* chm; \
+ \
+		~Segment() { \
+			DELRC(table); \
+		} \
+ \
+		Segment(int initialCapacity, float lf, \
+				EConcurrentHashMap<K, V>* chm) : \
+				count(0), modCount(0), threshold(0), table(null), chm(chm) { \
+			loadFactor = lf; \
+			setTable(HashEntry::newArray(initialCapacity)); \
+		} \
+ \
+		static EA<Segment*>* newArray(int i) { \
+			return new EA<Segment*>(i); \
+		} \
+ \
+		void setTable(ea<HashEntry>* newTable) { \
+			threshold = (int)(newTable->length() * loadFactor); \
+			ea<HashEntry>* oldTable = GETRC(table); \
+			table = newTable; \
+			DELRC(oldTable); \
+		} \
+ \
+		sp<HashEntry> getFirst(int hash) { \
+			ea<HashEntry>* tab = GETRC(table); \
+			sp<HashEntry> e = tab->atomicGet(hash & (tab->length() - 1)); \
+			DELRC(tab); \
+			return e; \
+		} \
+ \
+		sp<V> readValueUnderLock(sp<HashEntry>& e) { \
+			sp<V> v; \
+			SYNCBLOCK(this) { \
+				v = atomic_load(&e->value); \
+            }} \
+			return v; \
+		} \
+ \
+		sp<V> get(K key, int hash) { \
+			if (count != 0) { \
+				sp<HashEntry> e = getFirst(hash); \
+				while (e != null) { \
+					if (e->hash == hash && e->key == key) { \
+						sp<V> v = atomic_load(&e->value); \
+						if (v != null) \
+							return v; \
+						return readValueUnderLock(e); \
+					} \
+					e = e->next; \
+				} \
+			} \
+			return null; \
+		} \
+ \
+		boolean containsKey(K key, int hash) { \
+			if (count != 0) { \
+				sp<HashEntry> e = getFirst(hash); \
+				while (e != null) { \
+					if (e->hash == hash && e->key == key) \
+						return true; \
+					e = e->next; \
+				} \
+			} \
+			return false; \
+		} \
+ \
+		boolean containsValue(V* value) { \
+			if (count != 0) { \
+				ea<HashEntry>* tab = GETRC(table); \
+				int len = tab->length(); \
+				for (int i = 0 ; i < len; i++) { \
+					for (sp<HashEntry> e = tab->atomicGet(i); e != null; e = e->next) { \
+						sp<V> v = atomic_load(&e->value); \
+						if (v == null) \
+							v = readValueUnderLock(e); \
+						if (v->equals(value)) { \
+							DELRC(tab); \
+							return true; \
+						} \
+					} \
+				} \
+				DELRC(tab); \
+			} \
+			return false; \
+		} \
+ \
+		boolean replace(K key, int hash, V* oldValue, sp<V> newValue) { \
+			boolean rv; \
+ \
+			SYNCBLOCK(this) { \
+				sp<HashEntry> e = getFirst(hash); \
+				while (e != null && (e->hash != hash || e->key != key)) \
+					e = e->next; \
+ \
+				boolean replaced = false; \
+				if (e != null && e->value->equals(oldValue)) { \
+					replaced = true; \
+					e->value = newValue; \
+				} \
+				rv = replaced; \
+            }} \
+ \
+			return rv; \
+		} \
+ \
+		sp<V> replace(K key, int hash, sp<V> newValue) { \
+			sp<V> rv; \
+ \
+			SYNCBLOCK(this) { \
+				sp<HashEntry> e = getFirst(hash); \
+				while (e != null && (e->hash != hash || e->key != key)) \
+					e = e->next; \
+ \
+				sp<V> oldValue = null; \
+				if (e != null) { \
+					oldValue = e->value; \
+					e->value = newValue; \
+				} \
+				rv = oldValue; \
+            }} \
+ \
+			return rv; \
+		} \
+ \
+		sp<V> put(K key, int hash, sp<V>& value, boolean onlyIfAbsent) { \
+			SYNCBLOCK(this) { \
+				int c = count; \
+				if (c++ > threshold) \
+					rehash(); \
+				ea<HashEntry>* tab = GETRC(table); \
+				int index = hash & (tab->length() - 1); \
+				sp<HashEntry> first = tab->atomicGet(index); \
+				sp<HashEntry> e = first; \
+				while (e != null && (e->hash != hash || (e->key != key))) \
+					e = e->next; \
+ \
+				sp<V> oldValue; \
+				if (e != null) { \
+					oldValue = atomic_load(&e->value); \
+					if (!onlyIfAbsent) { \
+						atomic_store(&e->value, value); \
+					} \
+				} \
+				else { \
+					++modCount; \
+					sp<HashEntry> newEntry(new HashEntry(key, hash, first, value)); \
+					tab->atomicSet(index, newEntry); \
+					count = c; \
+				} \
+				DELRC(tab); \
+				return oldValue; \
+            }} \
+		} \
+ \
+		void rehash() { \
+			ea<HashEntry>* oldTable = GETRC(table); \
+			int oldCapacity = oldTable->length(); \
+			if (oldCapacity >= CHM_MAXIMUM_CAPACITY) { \
+				DELRC(oldTable); \
+				return; \
+			} \
+ \
+			ea<HashEntry>* newTable = HashEntry::newArray(oldCapacity<<1); \
+			threshold = (int)(newTable->length() * loadFactor); \
+			int sizeMask = newTable->length() - 1; \
+			for (int i = 0; i < oldCapacity ; i++) { \
+				sp<HashEntry> e = oldTable->atomicGet(i); \
+ \
+				if (e != null) { \
+					sp<HashEntry> next = e->next; \
+					int idx = e->hash & sizeMask; \
+ \
+					if (next == null) \
+						(*newTable)[idx] = e; \
+ \
+					else { \
+						sp<HashEntry> lastRun = e; \
+						int lastIdx = idx; \
+						for (sp<HashEntry> last = next; \
+							 last != null; \
+							 last = last->next) { \
+							int k = last->hash & sizeMask; \
+							if (k != lastIdx) { \
+								lastIdx = k; \
+								lastRun = last; \
+							} \
+						} \
+						(*newTable)[lastIdx] = lastRun; \
+ \
+						for (sp<HashEntry> p = e; p != lastRun; p = p->next) { \
+							int k = p->hash & sizeMask; \
+							sp<HashEntry> n = (*newTable)[k]; \
+							sp<HashEntry> newEntry(new HashEntry(p->key, p->hash, n, atomic_load(&p->value))); \
+							(*newTable)[k] = newEntry; \
+						} \
+					} \
+				} \
+			} \
+			table = newTable; \
+ \
+			DELRC(oldTable); \
+			DELRC(oldTable); \
+		} \
+ \
+		sp<V> remove(K key, int hash, V* value) { \
+			sp<V> rv; \
+ \
+			SYNCBLOCK(this) { \
+				int c = count - 1; \
+				ea<HashEntry>* tab = GETRC(table); \
+				int index = hash & (tab->length() - 1); \
+				sp<HashEntry> first = tab->atomicGet(index); \
+				sp<HashEntry> e = first; \
+				while (e != null && (e->hash != hash || (key != e->key))) \
+					e = e->next; \
+ \
+				sp<V> oldValue = null; \
+				if (e != null) { \
+					sp<V> v = atomic_load(&e->value); \
+					if (value == null || value->equals(v.get())) { \
+						oldValue = v; \
+						++modCount; \
+						sp<HashEntry> newFirst = e->next; \
+						for (sp<HashEntry> p = first; p != e; p = p->next) { \
+							newFirst = new HashEntry(p->key, p->hash, \
+													newFirst, atomic_load(&p->value)); \
+						} \
+						tab->atomicSet(index, newFirst); \
+						count = c; \
+					} \
+				} \
+				rv = oldValue; \
+				DELRC(tab); \
+            }} \
+ \
+			return rv; \
+		} \
+ \
+		void clear() { \
+			if (count != 0) { \
+				SYNCBLOCK(this) { \
+					ea<HashEntry>* tab = GETRC(table); \
+					for (int i = 0; i < tab->length() ; i++) { \
+						sp<HashEntry> nullPtr; \
+						tab->atomicSet(i, nullPtr); \
+					} \
+					++modCount; \
+					count = 0; \
+					DELRC(tab); \
+                }} \
+			} \
+		} \
+	}; \
+ \
+	abstract class HashIterator { \
+		EConcurrentHashMap<K,V>* chm; \
+		int nextSegmentIndex; \
+		int nextTableIndex; \
+		ea<HashEntry>* currentTable; \
+		sp<HashEntry> nextEntry_; \
+		sp<HashEntry> lastReturned; \
+ \
+		void advance() { \
+			if (nextEntry_ != null && (nextEntry_ = nextEntry_->next) != null) \
+				return; \
+ \
+			while (nextTableIndex >= 0) { \
+				if ( (nextEntry_ = (*currentTable)[nextTableIndex--]) != null) \
+					return; \
+			} \
+ \
+			while (nextSegmentIndex >= 0) { \
+				Segment* seg = (*chm->segments_)[nextSegmentIndex--]; \
+				if (seg->count != 0) { \
+					DELRC(currentTable); \
+					currentTable = GETRC(seg->table); \
+					for (int j = currentTable->length() - 1; j >= 0; --j) { \
+						if ( (nextEntry_ = (*currentTable)[j]) != null) { \
+							nextTableIndex = j - 1; \
+							return; \
+						} \
+					} \
+				} \
+			} \
+		} \
+ \
+	public: \
+		HashIterator(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
+			nextSegmentIndex = chm->segments_->length() - 1; \
+			nextTableIndex = -1; \
+			currentTable = null; \
+			advance(); \
+		} \
+ \
+		virtual ~HashIterator() { \
+			DELRC(currentTable); \
+		} \
+ \
+		sp<HashEntry> nextEntry() { \
+			if (nextEntry_ == null) \
+				throw ENoSuchElementException(__FILE__, __LINE__); \
+			lastReturned = nextEntry_; \
+			advance(); \
+			return lastReturned; \
+		} \
+ \
+		boolean hasMoreElements() { \
+			return hasNext(); \
+		} \
+ \
+		boolean hasNext() { \
+			return nextEntry_ != null; \
+		} \
+ \
+		void remove() { \
+			if (lastReturned == null) \
+				throw EIllegalStateException(__FILE__, __LINE__); \
+			chm->remove(lastReturned->key); \
+			lastReturned = null; \
+		} \
+	}; \
+ \
+	class KeyIterator: public HashIterator, public EConcurrentIterator< \
+	K>, public EConcurrentEnumeration<K> { \
+	public: \
+		KeyIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {} \
+		boolean hasMoreElements()    { return HashIterator::hasMoreElements();  } \
+		boolean hasNext()            { return HashIterator::hasNext();          } \
+		K next()        { return HashIterator::nextEntry()->key; } \
+		K nextElement() { return HashIterator::nextEntry()->key; } \
+		void remove()                { HashIterator::remove();                  } \
+	}; \
+ \
+	class ValueIterator: public HashIterator, public EConcurrentIterator< \
+	V>, public EConcurrentEnumeration<V> { \
+	public: \
+		ValueIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {} \
+		boolean hasMoreElements()      { return HashIterator::hasMoreElements();  } \
+		boolean hasNext()              { return HashIterator::hasNext();          } \
+		sp<V> next()        { return HashIterator::nextEntry()->value; } \
+		sp<V> nextElement() { return HashIterator::nextEntry()->value; } \
+		void remove()                  { HashIterator::remove();                  } \
+	}; \
+ \
+	class WriteThroughEntry: public EConcurrentMapEntry<K, V> { \
+	private: \
+		K key; \
+		sp<V> value; \
+		EConcurrentHashMap<K, V>* chm; \
+ \
+		static boolean eq(EObject* o1, EObject* o2) { \
+			return o1 == null ? o2 == null : o1->equals(o2); \
+		} \
+	public: \
+		WriteThroughEntry(K key, sp<V>& value, \
+				EConcurrentHashMap<K, V>* chm) : chm(chm) { \
+			this->key = key; \
+			this->value = value; \
+		} \
+ \
+		K getKey() { \
+			return key; \
+		} \
+ \
+		sp<V> getValue() { \
+			return value; \
+		} \
+ \
+		sp<V> setValue(sp<V> value) { \
+			if (value == null) \
+				throw ENullPointerException(__FILE__, __LINE__); \
+ \
+			sp<V> oldValue = this->value; \
+			this->value = value; \
+			return oldValue; \
+		} \
+ \
+		boolean equals(sp<EConcurrentMapEntry<K, V> > o) { \
+			return (key == o->getKey()) && eq(value.get(), o->getValue().get()); \
+		} \
+ \
+		virtual int hashCode() { \
+			return (key) ^ \
+					(value == null ? 0 : value->hashCode()); \
+		} \
+	}; \
+ \
+	class EntryIterator: public HashIterator, \
+	                     public EConcurrentIterator<EConcurrentMapEntry<K, V> > \
+	{ \
+	private: \
+		EConcurrentHashMap<K, V>* chm; \
+	public: \
+		EntryIterator(EConcurrentHashMap<K, V>* chm) : \
+				HashIterator(chm), chm(chm) { \
+		} \
+		sp<EConcurrentMapEntry<K, V> > next() { \
+			sp<HashEntry> e = HashIterator::nextEntry(); \
+			return new WriteThroughEntry(e->key, e->value, chm); \
+		} \
+		boolean hasNext() { \
+			return HashIterator::hasNext(); \
+		} \
+		void remove() { \
+			HashIterator::remove(); \
+		} \
+	}; \
+ \
+	class KeySet : public EConcurrentSet<K> { \
+	private: \
+		EConcurrentHashMap<K,V>* chm; \
+	public: \
+		KeySet(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
+		} \
+		sp<EConcurrentIterator<K> > iterator() { \
+			return new KeyIterator(chm); \
+		} \
+		int size() { \
+			return chm->size(); \
+		} \
+		boolean isEmpty() { \
+			return chm->isEmpty(); \
+		} \
+		boolean contains(K o) { \
+			return chm->containsKey(o); \
+		} \
+		boolean remove(K o) { \
+			return chm->remove(o) != null; \
+		} \
+		void clear() { \
+			chm->clear(); \
+		} \
+		boolean add(K e) { \
+			throw EUnsupportedOperationException(__FILE__, __LINE__); \
+		} \
+	}; \
+ \
+	class Values : public EAbstractConcurrentCollection<V> { \
+	private: \
+		EConcurrentHashMap<K,V>* chm; \
+	public: \
+		Values(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
+		} \
+		sp<EConcurrentIterator<V> > iterator() { \
+			return new ValueIterator(chm); \
+		} \
+		int size() { \
+			return chm->size(); \
+		} \
+		boolean isEmpty() { \
+			return chm->isEmpty(); \
+		} \
+		boolean contains(V* o) { \
+			return chm->containsValue(o); \
+		} \
+		void clear() { \
+			chm->clear(); \
+		} \
+	}; \
+ \
+	class EntrySet : public EConcurrentSet<EConcurrentMapEntry<K,V> > { \
+	private: \
+		EConcurrentHashMap<K,V>* chm; \
+	public: \
+		EntrySet(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
+		} \
+		sp<EConcurrentIterator<EConcurrentMapEntry<K,V> > > iterator() { \
+			return new EntryIterator(chm); \
+		} \
+		boolean contains(EConcurrentMapEntry<K,V>* e) { \
+			sp<V> v = chm->get(e->getKey()); \
+			return v != null && v->equals(e->getValue().get()); \
+		} \
+		boolean remove(EConcurrentMapEntry<K,V>* e) { \
+			return chm->remove(e->getKey(), e->getValue().get()); \
+		} \
+		int size() { \
+			return chm->size(); \
+		} \
+		boolean isEmpty() { \
+			return chm->isEmpty(); \
+		} \
+		void clear() { \
+			chm->clear(); \
+		} \
+		boolean add(EConcurrentMapEntry<K,V>* e) { \
+			throw EUnsupportedOperationException(__FILE__, __LINE__); \
+		} \
+		boolean add(sp<EConcurrentMapEntry<K,V> > e) { \
+			throw EUnsupportedOperationException(__FILE__, __LINE__); \
+		} \
+	}; \
+ \
+public: \
+	~EConcurrentHashMap() { \
+		delete segments_; \
+	} \
+ \
+	EConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel) { \
+		init(initialCapacity, loadFactor, concurrencyLevel); \
+	} \
+ \
+	EConcurrentHashMap(int initialCapacity, float loadFactor) { \
+		init(initialCapacity, loadFactor, CHM_DEFAULT_CONCURRENCY_LEVEL); \
+	} \
+ \
+	EConcurrentHashMap(int initialCapacity) { \
+		init(initialCapacity, CHM_DEFAULT_LOAD_FACTOR, CHM_DEFAULT_CONCURRENCY_LEVEL); \
+	} \
+ \
+	EConcurrentHashMap() { \
+		init(CHM_DEFAULT_INITIAL_CAPACITY, CHM_DEFAULT_LOAD_FACTOR, CHM_DEFAULT_CONCURRENCY_LEVEL); \
+	} \
+ \
+	EConcurrentHashMap(EMap<K, V>* m) : \
+			segmentMask(0), segmentShift(0), segments_(null) { \
+		this(EMath::max((int) (m->size() / CHM_DEFAULT_LOAD_FACTOR) + 1, \
+						CHM_DEFAULT_INITIAL_CAPACITY), CHM_DEFAULT_LOAD_FACTOR, \
+				CHM_DEFAULT_CONCURRENCY_LEVEL); \
+		putAll(m); \
+	} \
+ \
+	boolean isEmpty() { \
+		EA<Segment*>* segments = this->segments_; \
+		int* mc = new int[segments->length()](); \
+		int mcsum = 0; \
+		for (int i = 0; i < segments->length(); ++i) { \
+			if ((*segments)[i]->count != 0) { \
+				delete[] mc; \
+				return false; \
+			} else { \
+				mcsum += mc[i] = (*segments)[i]->modCount; \
+			} \
+		} \
+		if (mcsum != 0) { \
+			for (int i = 0; i < segments->length(); ++i) { \
+				if ((*segments)[i]->count != 0 || \
+					mc[i] != (*segments)[i]->modCount) { \
+					delete[] mc; \
+					return false; \
+				} \
+			} \
+		} \
+		delete[] mc; \
+		return true; \
+	} \
+ \
+	int size() { \
+		EA<Segment*>* segments = this->segments_; \
+		long sum = 0; \
+		long check = 0; \
+		int* mc = new int[segments->length()](); \
+		for (int k = 0; k < CHM_RETRIES_BEFORE_LOCK; ++k) { \
+			check = 0; \
+			sum = 0; \
+			int mcsum = 0; \
+			for (int i = 0; i < segments->length(); ++i) { \
+				sum += (*segments)[i]->count; \
+				mcsum += mc[i] = (*segments)[i]->modCount; \
+			} \
+			if (mcsum != 0) { \
+				for (int i = 0; i < segments->length(); ++i) { \
+					check += (*segments)[i]->count; \
+					if (mc[i] != (*segments)[i]->modCount) { \
+						check = -1; \
+						break; \
+					} \
+				} \
+			} \
+			if (check == sum) \
+				break; \
+		} \
+		if (check != sum) { \
+			sum = 0; \
+			int i; \
+			for (i = 0; i < segments->length(); ++i) \
+				(*segments)[i]->lock(); \
+			for (i = 0; i < segments->length(); ++i) \
+				sum += (*segments)[i]->count; \
+			for (i = 0; i < segments->length(); ++i) \
+				(*segments)[i]->unlock(); \
+		} \
+		if (sum > EInteger::MAX_VALUE) { \
+			delete[] mc; \
+			return EInteger::MAX_VALUE; \
+		} \
+		else { \
+			delete[] mc; \
+			return (int)sum; \
+		} \
+	} \
+ \
+	sp<V> get(K key) { \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->get(key, hash); \
+	} \
+ \
+	boolean containsKey(K key) { \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->containsKey(key, hash); \
+	} \
+ \
+	boolean containsValue(V* value) { \
+		if (value == null) \
+			throw ENullPointerException(__FILE__, __LINE__); \
+ \
+		EA<Segment*>* segments = this->segments_; \
+		int* mc = new int[segments->length()](); \
+ \
+		for (int k = 0; k < CHM_RETRIES_BEFORE_LOCK; ++k) { \
+			int mcsum = 0; \
+			for (int i = 0; i < segments->length(); ++i) { \
+				mcsum += mc[i] = (*segments)[i]->modCount; \
+				if ((*segments)[i]->containsValue(value)) { \
+					delete[] mc; \
+					return true; \
+				} \
+			} \
+			boolean cleanSweep = true; \
+			if (mcsum != 0) { \
+				for (int i = 0; i < segments->length(); ++i) { \
+					if (mc[i] != (*segments)[i]->modCount) { \
+						cleanSweep = false; \
+						break; \
+					} \
+				} \
+			} \
+			if (cleanSweep) { \
+				delete[] mc; \
+				return false; \
+			} \
+		} \
+		for (int i = 0; i < segments->length(); ++i) \
+			(*segments)[i]->lock(); \
+		boolean found = false; \
+		try { \
+			for (int i = 0; i < segments->length(); ++i) { \
+				if ((*segments)[i]->containsValue(value)) { \
+					found = true; \
+					break; \
+				} \
+			} \
+		} catch(...) { \
+			finally { \
+				for (int i = 0; i < segments->length(); ++i) \
+					(*segments)[i]->unlock(); \
+			} \
+			delete[] mc; \
+			throw; \
+		} finally { \
+			for (int i = 0; i < segments->length(); ++i) \
+				(*segments)[i]->unlock(); \
+		} \
+		delete[] mc; \
+		return found; \
+	} \
+ \
+	boolean contains(V* value) { \
+		return containsValue(value); \
+	} \
+ \
+	sp<V> put(K key, V* value) { \
+		K k(key); \
+		sp<V> v(value); \
+		return put(k, v); \
+	} \
+	sp<V> put(K key, sp<V> value) { \
+		if (value == null) \
+			throw ENullPointerException(__FILE__, __LINE__); \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->put(key, hash, value, false); \
+	} \
+ \
+	sp<V> putIfAbsent(K key, V* value) { \
+		K k(key); \
+		sp<V> v(value); \
+		return putIfAbsent(k, v); \
+	} \
+	sp<V> putIfAbsent(K key, sp<V> value) { \
+		if (value == null) \
+			throw ENullPointerException(__FILE__, __LINE__); \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->put(key, hash, value, true); \
+	} \
+ \
+	void putAll(EMap<K, V*>* m) { \
+		sp<EIterator<EMapEntry<K,V*>*> > it = m->entrySet()->iterator(); \
+		while (it->hasNext()) { \
+			EMapEntry<K,V*>* e = it->next(); \
+			put(e->getKey(), e->getValue()); \
+		} \
+	} \
+ \
+	sp<V> remove(K key) { \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->remove(key, hash, null); \
+	} \
+ \
+	boolean remove(K key, V* value) { \
+		int hash = hashIt(key); \
+		if (value == null) \
+			return false; \
+		return segmentFor(hash)->remove(key, hash, value) != null; \
+	} \
+ \
+	boolean replace(K key, V* oldValue, V* newValue) { \
+		sp<V> nv(newValue); \
+		return replace(key, oldValue, nv); \
+	} \
+	boolean replace(K key, V* oldValue, sp<V> newValue) { \
+		if (oldValue == null || newValue == null) \
+			throw ENullPointerException(__FILE__, __LINE__); \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->replace(key, hash, oldValue, newValue); \
+	} \
+ \
+	sp<V> replace(K key, V* value) { \
+		sp<V> v(value); \
+		return replace(key, v); \
+	} \
+	sp<V> replace(K key, sp<V> value) { \
+		if (value == null) \
+			throw ENullPointerException(__FILE__, __LINE__); \
+		int hash = hashIt(key); \
+		return segmentFor(hash)->replace(key, hash, value); \
+	} \
+ \
+	void clear() { \
+		for (int i = 0; i < segments_->length(); ++i) \
+			(*segments_)[i]->clear(); \
+	} \
+ \
+	sp<EConcurrentSet<K> > keySet() { \
+		if (!keySet_) { \
+			keySet_ = new KeySet(this); \
+		} \
+		return keySet_; \
+	} \
+ \
+	sp<EConcurrentCollection<V> > values() { \
+		if (!values_) { \
+			values_ = new Values(this); \
+		} \
+		return values_; \
+	} \
+ \
+	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() { \
+		if (!entrySet_) { \
+			entrySet_ = new EntrySet(this); \
+		} \
+		return entrySet_; \
+	} \
+ \
+	sp<EConcurrentEnumeration<K> > keys() { \
+		return new KeyIterator(this); \
+	} \
+ \
+	sp<EConcurrentEnumeration<V> > elements() { \
+		return new ValueIterator(this); \
+	} \
+ \
+protected: \
+	friend class HashIterator; \
+	int segmentMask; \
+	int segmentShift; \
+	EA<Segment*>* segments_; \
+	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet_; \
+	sp<EConcurrentSet<K> > keySet_; \
+	sp<EConcurrentCollection<V> > values_; \
+ \
+private: \
+ \
+	void init(int initialCapacity, float loadFactor, \
+			int concurrencyLevel) \
+	{ \
+		if (!(loadFactor > 0) || initialCapacity < 0 || concurrencyLevel <= 0) \
+			throw EIllegalArgumentException(__FILE__, __LINE__); \
+ \
+		if (concurrencyLevel > CHM_MAX_SEGMENTS) \
+			concurrencyLevel = CHM_MAX_SEGMENTS; \
+ \
+		int sshift = 0; \
+		int ssize = 1; \
+		while (ssize < concurrencyLevel) { \
+			++sshift; \
+			ssize <<= 1; \
+		} \
+		segmentShift = 32 - sshift; \
+		segmentMask = ssize - 1; \
+		this->segments_ = Segment::newArray(ssize); \
+ \
+		if (initialCapacity > CHM_MAXIMUM_CAPACITY) \
+			initialCapacity = CHM_MAXIMUM_CAPACITY; \
+		int c = initialCapacity / ssize; \
+		if (c * ssize < initialCapacity) \
+			++c; \
+		int cap = 1; \
+		while (cap < c) \
+			cap <<= 1; \
+ \
+		for (int i = 0; i < this->segments_->length(); ++i) \
+			(*this->segments_)[i] = new Segment(cap, loadFactor, this); \
+	} \
+ \
+	static int hashIt(int h) { \
+		h += (h <<  15) ^ 0xffffcd7d; \
+		h ^= (((unsigned)h) >> 10); \
+		h += (h <<   3); \
+		h ^= (((unsigned)h) >>  6); \
+		h += (h <<   2) + (h << 14); \
+		return h ^ (((unsigned)h) >> 16); \
+	} \
+ \
+	Segment* segmentFor(int hash) { \
+		return (*segments_)[(((unsigned)hash) >> segmentShift) & segmentMask]; \
+	} \
+};
+
+ECHM_DECLARE(byte)
+ECHM_DECLARE(char)
+ECHM_DECLARE(int)
+ECHM_DECLARE(short)
+ECHM_DECLARE(long)
+ECHM_DECLARE(llong)
+ECHM_DECLARE(float)
+ECHM_DECLARE(double)
+
 } /* namespace efc */
 #endif /* ECONCURRENTHASHMAP_HH_ */

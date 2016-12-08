@@ -64,12 +64,17 @@
 #include "eso_util.h"
 #include "eso_uuid.h"
 #include "eso_vector.h"
-#include "eso_xthread.h"
 #include "eso_zlib.h"
 
 #include <new> //need for EObject.hh
 #include <typeinfo> //for typeid()
 #include <algorithm> // for std::swap()
+
+#if defined(_MSC_VER)
+	#define ALWAYS_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+	#define ALWAYS_INLINE __attribute__ ((__visibility__("hidden"), __always_inline__))
+#endif
 
 #ifdef WIN32
 #if _MSC_VER >= 1600 //__cplusplus >= 199711L
@@ -88,11 +93,6 @@
 	typedef std::nullptr_t    es_nullptr_t;
 #endif
 #else //!
-#if defined(_MSC_VER)
-	#define ALWAYS_INLINE __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-	#define ALWAYS_INLINE __attribute__ ((__visibility__("hidden"), __always_inline__))
-#endif
 struct es_nullptr_t
 {
     void* __lx;
@@ -118,6 +118,20 @@ struct es_nullptr_t
     friend ALWAYS_INLINE bool operator<=(es_nullptr_t, es_nullptr_t) {return true;}
     friend ALWAYS_INLINE bool operator>(es_nullptr_t, es_nullptr_t) {return false;}
     friend ALWAYS_INLINE bool operator>=(es_nullptr_t, es_nullptr_t) {return true;}
+
+    friend ALWAYS_INLINE bool operator==(es_nullptr_t, long l) {return (l?false:true);}
+    friend ALWAYS_INLINE bool operator!=(es_nullptr_t, long l) {return (l?true:false);}
+    friend ALWAYS_INLINE bool operator<(es_nullptr_t, long l) {return false;}
+    friend ALWAYS_INLINE bool operator<=(es_nullptr_t, long l) {return true;}
+    friend ALWAYS_INLINE bool operator>(es_nullptr_t, long l) {return false;}
+    friend ALWAYS_INLINE bool operator>=(es_nullptr_t, long l) {return true;}
+    
+    friend ALWAYS_INLINE bool operator==(long l, es_nullptr_t) {return (l?false:true);}
+    friend ALWAYS_INLINE bool operator!=(long l, es_nullptr_t) {return (l?true:false);}
+    friend ALWAYS_INLINE bool operator<(long l, es_nullptr_t) {return false;}
+    friend ALWAYS_INLINE bool operator<=(long l, es_nullptr_t) {return true;}
+    friend ALWAYS_INLINE bool operator>(long l, es_nullptr_t) {return false;}
+    friend ALWAYS_INLINE bool operator>=(long l, es_nullptr_t) {return true;}
 };
 
 inline ALWAYS_INLINE es_nullptr_t es_get_nullptr_t() {return es_nullptr_t(0);}
@@ -222,20 +236,37 @@ inline ALWAYS_INLINE es_nullptr_t es_get_nullptr_t() {return es_nullptr_t(0);}
 
 
 /**
- *
+ * helper for variable initialization
  */
 #define DECLARE_STATIC_INITZZ \
 	static char _initzz_(); \
 	static char _initzz___;
 
+#ifdef DEBUG
+#define DEFINE_STATIC_INITZZ_BEGIN(classz) \
+	char classz::_initzz___ = classz::_initzz_(); \
+	char classz::_initzz_() { \
+		const char* _hint___ = #classz "::initzz()\n"; \
+		if (_initzz___ != 0) return _initzz___; \
+		eso_initialize();
+#else
 #define DEFINE_STATIC_INITZZ_BEGIN(classz) \
 	char classz::_initzz___ = classz::_initzz_(); \
 	char classz::_initzz_() { \
 		if (_initzz___ != 0) return _initzz___; \
 		eso_initialize();
+#endif
+
+#ifdef DEBUG
+#define DEFINE_STATIC_INITZZ_END \
+		printf(_hint___); \
+		return (_initzz___ = 1); \
+	}
+#else
 #define DEFINE_STATIC_INITZZ_END \
 		return (_initzz___ = 1); \
 	}
+#endif
 
 #define DECLARE_SIMPLE_CLONE(CLASS) \
 	CLASS* clone() { \
@@ -278,6 +309,22 @@ enum MEMType {
 # define __CURRENT_FUNCTION__ __func__
 #else
 # define __CURRENT_FUNCTION__ "(unknown)"
+#endif
+
+
+/**
+ * only for c++11
+ */
+#ifdef CPP11_SUPPORT
+#ifdef __linux__
+#define THREAD_TLS thread_local
+#elif defined (__APPLE__)
+#define THREAD_TLS __thread
+#elif defined (_MSC_VER)
+#define THREAD_TLS __declspec(thread)
+#else // !C++11 && !__GNUC__ && !_MSC_VER
+#error "Define a thread local storage qualifier for your compiler/platform!"
+#endif
 #endif
 
 #endif //!__EBASE_H__

@@ -69,7 +69,6 @@ extern "C" {
 #include "eso_util.h"
 #include "eso_uuid.h"
 #include "eso_vector.h"
-#include "eso_xthread.h"
 #include "eso_zlib.h"
 
 #ifdef __cplusplus

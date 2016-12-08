@@ -118,8 +118,8 @@ es_hash_index_t* eso_hash_next(es_hash_index_t *hi);
  * @remark The return pointers should point to a variable that will be set to the
  *         corresponding data, or they may be NULL if the data isn't interesting.
  */
-void eso_hash_this(es_hash_index_t *hi, const void **key, 
-                                es_ssize_t *klen, const void **val);
+void eso_hash_this(es_hash_index_t *hi, void **key,
+                                es_ssize_t *klen, void **val);
 
 /**
  * Get the number of key/value pairs in the hash table.

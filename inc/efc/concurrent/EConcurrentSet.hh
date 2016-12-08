@@ -177,5 +177,29 @@ interface EConcurrentSet : virtual public EObject
 	virtual void clear() = 0;
 };
 
+//=============================================================================
+
+#define ECS_DECLARE(E) template<> \
+interface EConcurrentSet<E> : virtual public EObject \
+{ \
+	virtual ~EConcurrentSet(){} \
+    virtual int size() = 0; \
+    virtual boolean isEmpty() = 0; \
+    virtual boolean contains(E o) = 0; \
+    virtual sp<EConcurrentIterator<E> > iterator() = 0; \
+	virtual boolean add(E e) = 0; \
+	virtual boolean remove(E o) = 0; \
+	virtual void clear() = 0; \
+};
+
+ECS_DECLARE(byte)
+ECS_DECLARE(char)
+ECS_DECLARE(int)
+ECS_DECLARE(short)
+ECS_DECLARE(long)
+ECS_DECLARE(llong)
+ECS_DECLARE(float)
+ECS_DECLARE(double)
+
 } /* namespace efc */
 #endif //!__ECONCURRENT_SET_H__
