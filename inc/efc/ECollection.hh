@@ -10,6 +10,7 @@
 
 #include "EIterable.hh"
 #include "EIterator.hh"
+#include "ETraits.hh"
 
 namespace efc {
 
@@ -111,6 +112,8 @@ namespace efc {
 template<typename E>
 interface ECollection : virtual public EIterable<E>
 {
+	typedef typename ETraits<E>::indexType idxE;
+
 	virtual ~ECollection(){}
 
 	// Query Operations
@@ -145,7 +148,7 @@ interface ECollection : virtual public EIterable<E>
      * @throws NullPointerException if the specified element is null and this
      *         collection does not permit null elements (optional)
      */
-	virtual boolean contains(E o) = 0;
+	virtual boolean contains(idxE o) = 0;
 
     /**
      * Returns an iterator over the elements in this collection.  There are no
@@ -212,7 +215,7 @@ interface ECollection : virtual public EIterable<E>
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation
      *         is not supported by this collection
      */
-	virtual boolean remove(E o) = 0;
+	virtual boolean remove(idxE o) = 0;
 
 
     // Bulk Operations

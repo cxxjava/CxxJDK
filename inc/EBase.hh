@@ -1,6 +1,7 @@
 #ifndef __EBASE_H__
 #define __EBASE_H__
 
+#include "es_config.h"
 #include "es_types.h"
 #include "es_comm.h"
 #include "es_status.h"
@@ -32,8 +33,6 @@
 #include "eso_lz77.h"
 #include "eso_lzma.h"
 #include "eso_map.h"
-#include "eso_md4.h"
-#include "eso_md5.h"
 #include "eso_mem.h"
 #include "eso_mmap.h"
 #include "eso_mpool.h"
@@ -48,8 +47,6 @@
 #include "eso_queue.h"
 #include "eso_ring.h"
 #include "eso_ring_buffer.h"
-#include "eso_sha1.h"
-#include "eso_sha2.h"
 #include "eso_shm.h"
 #include "eso_signal.h"
 #include "eso_sigsegv.h"
@@ -65,6 +62,17 @@
 #include "eso_uuid.h"
 #include "eso_vector.h"
 #include "eso_zlib.h"
+
+#include "eso_md4.h"
+#include "eso_md5.h"
+#include "eso_sha1.h"
+#include "eso_sha2.h"
+
+#ifdef HAVE_OPENSSL
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/conf.h>
+#endif
 
 #include <new> //need for EObject.hh
 #include <typeinfo> //for typeid()

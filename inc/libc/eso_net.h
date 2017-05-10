@@ -99,13 +99,13 @@ int eso_net_listen(int fd, int backlog);
 
 /**
  * server accept
- * Returns >=0 = new socket handle, -1 = fatal failure.
+ * Returns >=0 = new socket handle, -1 = failure, -2 = timeout.
  */
 int eso_net_accept(int fd, struct ip_addr *raddr, int *rport);
 
 /**
  * read data
- * Returns number of bytes read, -1 = failure, -2 = timeout, -3 = disconnected
+ * Returns number of bytes read, 0 = EOF, -1 = failure, -2 = timeout, -3 = disconnected
  */
 int eso_net_read(const int fd, void *buf, int len);
 

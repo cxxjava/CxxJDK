@@ -49,11 +49,11 @@ typedef struct {
   es_uint32_t buf[4];                                    /* scratch buffer */
   es_uint8_t in[64];                              /* input buffer */
   es_uint8_t digest[16];     /* actual digest after MD5Final call */
-} MD5_CTX;
+} es_md5_ctx_t;
 
-void MD5_Init(MD5_CTX *context);
-void MD5_Update(MD5_CTX *mdContext, const es_uint8_t *inBuf, es_uint32_t inLen);
-void MD5_Final(es_uint8_t hash[], MD5_CTX *mdContext);
+void eso_md5_init(es_md5_ctx_t *context);
+void eso_md5_update(es_md5_ctx_t *mdContext, const es_uint8_t *inBuf, es_uint32_t inLen);
+void eso_md5_final(es_uint8_t hash[], es_md5_ctx_t *mdContext);
 
 #ifdef __cplusplus
 }

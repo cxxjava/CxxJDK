@@ -94,6 +94,8 @@ namespace efc {
 template<typename E>
 interface EList : virtual public ECollection<E>
 {
+	typedef typename ETraits<E>::indexType idxE;
+
 	virtual ~EList(){}
 	
     // Positional Access Operations
@@ -182,7 +184,7 @@ interface EList : virtual public ECollection<E>
      * @throws NullPointerException if the specified element is null and this
      *         list does not permit null elements (optional)
      */
-    virtual int indexOf(E o) = 0;
+    virtual int indexOf(idxE o) = 0;
 
     /**
      * Returns the index of the last occurrence of the specified element
@@ -199,7 +201,7 @@ interface EList : virtual public ECollection<E>
      * @throws NullPointerException if the specified element is null and this
      *         list does not permit null elements (optional)
      */
-    virtual int lastIndexOf(E o) = 0;
+    virtual int lastIndexOf(idxE o) = 0;
 
     // List Iterators
 

@@ -418,7 +418,7 @@ public:
      * @see Object#equals(Object)
      * @see System#identityHashCode(Object)
      */
-	ESet<K>* keySet() {
+	sp<ESet<K> > keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new KeySet(this);
 		}
@@ -445,7 +445,7 @@ public:
 	 * behavior of its <tt>contains</tt>, <tt>remove</tt> and
 	 * <tt>containsAll</tt> methods.</b>
 	 */
-	ECollection<V>* values() {
+	sp<ECollection<V> > values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -490,7 +490,7 @@ public:
 	 *
 	 * @return a set view of the identity-mappings contained in this map
 	 */
-	ESet<EMapEntry<K, V>*>* entrySet() {
+	sp<ESet<EMapEntry<K, V>*> > entrySet() {
 		if (!_entrySet) {
 			_entrySet = new EntrySet(this);
 		}

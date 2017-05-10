@@ -676,6 +676,17 @@ public:
 		}
 		return n;
 	}
+	virtual int drainTo(ECollection<sp<E> >* c) {
+		if (c == null)
+			throw ENullPointerException(__FILE__, __LINE__);
+		int n = 0;
+		sp<E> e;
+		while ( (e = poll()) != null) {
+			c->add(e);
+			++n;
+		}
+		return n;
+	}
 
 	/**
 	 * @throws UnsupportedOperationException {@inheritDoc}
@@ -696,7 +707,17 @@ public:
 		}
 		return n;
 	}
-
+	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
+		if (c == null)
+			throw ENullPointerException(__FILE__, __LINE__);
+		int n = 0;
+		sp<E> e;
+		while (n < maxElements && (e = poll()) != null) {
+			c->add(e);
+			++n;
+		}
+		return n;
+	}
 
 private:
 	/** Lock protecting both wait queues */

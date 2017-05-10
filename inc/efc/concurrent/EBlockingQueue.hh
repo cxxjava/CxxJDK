@@ -8,6 +8,7 @@
 #ifndef EBLOCKINGQUEUE_HH_
 #define EBLOCKINGQUEUE_HH_
 
+#include "ECollection.hh"
 #include "EConcurrentQueue.hh"
 #include "EInterruptedException.hh"
 
@@ -331,6 +332,7 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 *         it from being added to the specified collection
 	 */
 	virtual int drainTo(EConcurrentCollection<E>* c) = 0;
+    virtual int drainTo(ECollection<sp<E> >* c) = 0;
 
 	/**
 	 * Removes at most the given number of available elements from
@@ -355,7 +357,8 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 *         queue, or some property of an element of this queue prevents
 	 *         it from being added to the specified collection
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) = 0;
+    virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) = 0;
+    virtual int drainTo(ECollection<sp<E> >* c, int maxElements) = 0;
 };
 
 } /* namespace efc */

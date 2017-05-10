@@ -55,6 +55,7 @@ extern "C" {
 #define ES_POLL_ALL_EVENTS (ES_POLL_FILE_EVENTS|ES_POLL_TIME_EVENTS)
 
 #define ES_POLL_NOMORE -1
+#define ES_POLL_DELETED_EVENT_ID -1
 
 typedef struct es_poll_t es_poll_t;
 

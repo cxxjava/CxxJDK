@@ -65,6 +65,8 @@ namespace efc {
 template<typename E>
 interface ESet : virtual public ECollection<E>
 {
+	typedef typename ETraits<E>::indexType idxE;
+
 	virtual ~ESet(){}
 	
     // Query Operations
@@ -98,7 +100,7 @@ interface ESet : virtual public ECollection<E>
      * @throws NullPointerException if the specified element is null and this
      *         set does not permit null elements (optional)
      */
-    virtual boolean contains(E o) = 0;
+    virtual boolean contains(idxE o) = 0;
 
     /**
      * Returns an iterator over the elements in this set.  The elements are
@@ -164,7 +166,7 @@ interface ESet : virtual public ECollection<E>
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation
      *         is not supported by this set
      */
-    virtual boolean remove(E o) = 0;
+    virtual boolean remove(idxE o) = 0;
 
 
     // Bulk Operations
@@ -185,7 +187,8 @@ interface ESet : virtual public ECollection<E>
      *         elements (optional), or if the specified collection is null
      * @see    #contains(Object)
      */
-    virtual boolean containsAll(ECollection<E> *c) = 0;
+    //virtual boolean containsAll(ECollection<E> *c) = 0;
+    using ECollection<E>::containsAll;
 
     /**
      * Retains only the elements in this set that are contained in the
@@ -206,7 +209,8 @@ interface ESet : virtual public ECollection<E>
      *         or if the specified collection is null
      * @see #remove(Object)
      */
-    virtual boolean retainAll(ECollection<E> *c) = 0;
+    //virtual boolean retainAll(ECollection<E> *c) = 0;
+    using ECollection<E>::retainAll;
 
     /**
      * Removes from this set all of its elements that are contained in the
@@ -227,7 +231,8 @@ interface ESet : virtual public ECollection<E>
      * @see #remove(Object)
      * @see #contains(Object)
      */
-    virtual boolean removeAll(ECollection<E> *c) = 0;
+    //virtual boolean removeAll(ECollection<E> *c) = 0;
+    using ECollection<E>::removeAll;
 
     /**
      * Removes all of the elements from this set (optional operation).

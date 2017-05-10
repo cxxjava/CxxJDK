@@ -12,20 +12,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-
-#define ES_ZIP_BUF_SIZE   2048
-
-// basic unsigned integer types
-typedef unsigned char  WORD8;   // unsigned 8bit integer, prefix "b"
-typedef unsigned short WORD16;  // unsigned 8bit integer, prefix "w"
-typedef unsigned int   WORD32;  // unsigned 8bit integer, prefix "l"
-
-// boolean definitions
-typedef signed char BYTEBOOL;  // 8bit boolean, prefix "bl"
-
-#define BOOL_FALSE  0
-#define BOOL_TRUE   1
-
 /*
  * LZ77
  */

@@ -14,7 +14,6 @@
 #include "EList.hh"
 #include "ELinkedList.hh"
 #include "EInteger.hh"
-#include "ESharedArrLst.hh"
 #include "EAtomicInteger.hh"
 #include "EAtomicCounter.hh"
 #include "EThreadFactory.hh"
@@ -403,7 +402,7 @@ public:
 		  */
 		 void rejectedExecution(sp<ERunnable> r, EThreadPoolExecutor* e) {
 			 if (!e->isShutdown()) {
-				 e->getQueue()->EConcurrentQueue<ERunnable>::poll();
+				 e->getQueue()->poll();
 				 e->execute(r);
 			 }
 		 }
@@ -577,7 +576,7 @@ public:
 	 *
 	 * @throws SecurityException {@inheritDoc}
 	 */
-	virtual eal<ERunnable> shutdownNow();
+	virtual EArrayList<sp<ERunnable> > shutdownNow();
 
 	virtual boolean isShutdown();
 
@@ -1043,7 +1042,7 @@ private:
 	 * Set containing all worker threads in pool. Accessed only when
 	 * holding mainLock.
 	 */
-	eal<tpe::Worker>* workers; // = new HashSet<Worker>();
+	EArrayList<sp<tpe::Worker> >* workers; // = new HashSet<Worker>();
 
 	/**
 	 * Wait condition to support awaitTermination
@@ -1231,7 +1230,7 @@ private:
 	 * queue for which poll or drainTo may fail to remove some
 	 * elements, it deletes them one by one.
 	 */
-	eal<ERunnable> drainQueue();
+	EArrayList<sp<ERunnable> > drainQueue();
 
 	/*
 	 * Methods for creating, running and cleaning up after workers

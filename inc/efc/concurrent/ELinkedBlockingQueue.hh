@@ -451,6 +451,9 @@ public:
 	virtual int drainTo(EConcurrentCollection<E>* c) {
 		return drainTo(c, EInteger::MAX_VALUE);
 	}
+	virtual int drainTo(ECollection<sp<E> >* c) {
+		return drainTo(c, EInteger::MAX_VALUE);
+	}
 
 	/**
 	 * @throws UnsupportedOperationException {@inheritDoc}
@@ -462,6 +465,48 @@ public:
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		if (c == dynamic_cast<EConcurrentCollection<E>*>(this))
+			throw EIllegalArgumentException(__FILE__, __LINE__);
+		boolean signalNotFull_ = false;
+		takeLock.lock(); //lock!
+		int n = ES_MIN(maxElements, count.get());
+		// count.get provides visibility to first n Nodes
+		sp<Node> h = head;
+		int i = 0;
+		try {
+			while (i < n) {
+				sp<Node> p = h->next;
+				c->add(p->item);
+				p->item = null;
+				h->next = null; //!! h->next = h;
+				h = p;
+				++i;
+			}
+		} catch(...) {
+			if (i > 0) {
+				head = h;
+				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+			}
+			takeLock.unlock(); //unlock!
+			if (signalNotFull_)
+				signalNotFull();
+			throw; //!
+		} finally {
+			// Restore invariants even if c.add() threw
+			if (i > 0) {
+				// assert h.item == null;
+				head = h;
+				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+			}
+			takeLock.unlock(); //unlock!
+			if (signalNotFull_)
+				signalNotFull();
+		}
+		return n;
+	}
+	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
+		if (c == null)
+			throw ENullPointerException(__FILE__, __LINE__);
+		if (c == dynamic_cast<ECollection<sp<E> >*>(this))
 			throw EIllegalArgumentException(__FILE__, __LINE__);
 		boolean signalNotFull_ = false;
 		takeLock.lock(); //lock!
@@ -607,10 +652,10 @@ public:
 	 *
 	 * @return an array containing all of the elements in this queue
 	 */
-	virtual ea<E> toArray() {
+	virtual EA<sp<E> > toArray() {
 		fullyLock();
 		int size = count.get();
-		ea<E> a(size);
+		EA<sp<E> > a(size);
 		try {
 			int k = 0;
 			for (sp<Node> p = head->next; p != null; p = p->next)

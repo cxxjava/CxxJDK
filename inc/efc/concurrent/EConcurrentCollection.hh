@@ -8,8 +8,8 @@
 #ifndef ECONCURRENT_COLLECTION_HH_
 #define ECONCURRENT_COLLECTION_HH_
 
+#include "EA.hh"
 #include "EConcurrentIterator.hh"
-#include "ESharedArr.hh"
 
 namespace efc {
 
@@ -173,7 +173,7 @@ interface EConcurrentCollection : virtual public EObject
 	 *
 	 * @return an array containing all of the elements in this collection
 	 */
-	virtual ea<E> toArray() = 0;
+	virtual EA<sp<E> > toArray() = 0;
 
     // Modification Operations
 

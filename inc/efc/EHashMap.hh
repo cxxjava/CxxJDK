@@ -5,6 +5,7 @@
 #include "EInteger.hh"
 #include "EIllegalStateException.hh"
 #include "ENoSuchElementException.hh"
+#include "EUnsupportedOperationException.hh"
 
 namespace efc {
 
@@ -117,10 +118,1736 @@ namespace efc {
  */
 #define  HM_DEFAULT_LOAD_FACTOR 0.75f
 
+//=============================================================================
+//Primitive Key && Native pointer Value.
+
 template<typename K, typename V>
-class EHashMap: public EAbstractMap<K, V>,
+class EHashMap : public EAbstractMap<K, V>,
 		virtual public EMap<K, V> {
 public:
+	class Entry: public EMapEntry<K, V> {
+	private:
+		friend class EHashMap;
+		K key;
+		V value;
+		Entry *next;
+		EHashMap<K, V> *map;
+		int hash;
+
+	public:
+		~Entry() {
+			if (map->getAutoFreeValue()) {
+				delete value;
+			}
+			delete next; //!
+		}
+
+		/**
+		 * Creates new entry.
+		 */
+		Entry(int h, K k, V v,
+				Entry *n,
+				EHashMap<K, V> *m) {
+			value = v;
+			next = n;
+			key = k;
+			hash = h;
+			map = m;
+		}
+
+		K getKey() {
+			return key;
+		}
+
+		V getValue() {
+			return value;
+		}
+
+		V setValue(V newValue) {
+			V oldValue = value;
+			value = newValue;
+			return oldValue;
+		}
+
+		boolean equals(EMapEntry<K, V> *e) {
+			K k1 = getKey();
+			K k2 = e->getKey();
+			if (k1 == k2) {
+				V v1 = getValue();
+				V v2 = e->getValue();
+				if (v1 == v2 || (v1 != null && v1->equals(v2)))
+					return true;
+			}
+			return false;
+		}
+
+		virtual int hashCode() {
+			return key ^ (value == null ? 0 : value->hashCode());
+		}
+
+		/**
+		 * This method is invoked whenever the value in an entry is
+		 * overwritten by an invocation of put(k,v) for a key k that's already
+		 * in the HashMap.
+		 */
+		void recordAccess(EHashMap<K, V> *m) {
+		}
+
+		/**
+		 * This method is invoked whenever the entry is
+		 * removed from the table.
+		 */
+		void recordRemoval(EHashMap<K, V> *m) {
+		}
+	};
+
+private:
+	template<typename I>
+	class HashIterator: public EIterator<I> {
+	private:
+		EHashMap<K,V> *_map;
+
+		Entry *next; // next entry to return
+		int index; // current slot
+		Entry *current; // current entry
+	public:
+		HashIterator(EHashMap<K, V> *map) : next(null), index(0), current(null) {
+			_map = map;
+
+			if (_map->size() > 0) { // advance to first entry
+				Entry **t = _map->_table;
+				while (index < (int)_map->_capacity && (next = t[index++]) == null)
+					;
+			}
+		}
+
+		boolean hasNext() {
+			return next != null;
+		}
+
+		Entry* nextEntry() {
+			Entry *e = next;
+			if (e == null)
+				throw ENOSUCHELEMENTEXCEPTION;
+
+			if ((next = e->next) == null) {
+				Entry **t = _map->_table;
+				while (index < (int)_map->_capacity && (next = t[index++]) == null)
+					;
+			}
+			current = e;
+			return e;
+		}
+
+		void remove() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			K k = current->key;
+			current = null;
+			delete _map->removeEntryForKey(k);
+		}
+
+		Entry* moveOutEntry() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			K k = current->key;
+			current = null;
+			return _map->removeEntryForKey(k);
+		}
+	};
+
+	template<typename EI>
+	class EntryIterator: public HashIterator<EI> {
+	public:
+		EntryIterator(EHashMap<K, V> *map) :
+				HashIterator<EI>(map) {
+		}
+
+		EI next() {
+			return HashIterator<EI>::nextEntry();
+		}
+
+		EI moveOut() {
+			return HashIterator<EI>::moveOutEntry();
+		}
+	};
+
+	class ValueIterator: public HashIterator<V> {
+	public:
+		ValueIterator(EHashMap<K, V> *map) :
+				HashIterator<V>(map) {
+		}
+
+		V next() {
+			return HashIterator<V>::nextEntry()->getValue();
+		}
+
+		V moveOut() {
+			Entry* e = HashIterator<V>::moveOutEntry();
+			V v = e->getValue();
+			delete e;
+			return v;
+		}
+	};
+
+	class KeyIterator: public HashIterator<K> {
+	public:
+		KeyIterator(EHashMap<K, V> *map) :
+				HashIterator<K>(map) {
+		}
+
+		K next() {
+			return HashIterator<K>::nextEntry()->getKey();
+		}
+
+		K moveOut() {
+			Entry* e = HashIterator<K>::moveOutEntry();
+			K k = e->getKey();
+			delete e;
+			return k;
+		}
+	};
+
+	class EntrySet: public EAbstractSet<EMapEntry<K,V>*> {
+	private:
+		EHashMap<K,V> *_map;
+
+	public:
+		EntrySet(EHashMap<K,V> *map) {
+			_map = map;
+		}
+
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
+			return new EntryIterator<EMapEntry<K,V>*>(_map);
+		}
+		boolean contains(EMapEntry<K,V> *e) {
+			EMapEntry<K,V> *candidate = _map->getEntry(e->getKey());
+			return candidate != null && candidate->equals(e);
+		}
+		boolean remove(EMapEntry<K,V> *o) {
+			return _map->removeMapping(o) != null;
+		}
+		int size() {
+			return _map->size();
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+	class Values: public EAbstractCollection<V> {
+	private:
+		EHashMap<K, V> *_map;
+	public:
+		Values(EHashMap<K, V> *map) {
+			_map = map;
+		}
+		~Values() {
+		}
+		sp<EIterator<V> > iterator(int index = 0) {
+			return new ValueIterator(_map);
+		}
+		int size() {
+			return _map->size();
+		}
+		boolean contains(V o) {
+			return _map->containsValue(o);
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+	class Keys: public EAbstractSet<K> {
+	private:
+		EHashMap<K, V> *_map;
+	public:
+		Keys(EHashMap<K, V> *map) {
+			_map = map;
+		}
+		sp<EIterator<K> > iterator(int index = 0) {
+			return new KeyIterator(_map);
+		}
+		int size() {
+			return _map->size();
+		}
+		boolean contains(K o) {
+			return _map->containsKey(o);
+		}
+		boolean remove(K o) {
+			return _map->removeEntryForKey(o) != null;
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+private:
+	/**
+	 * The table, resized as necessary. Length MUST Always be a power of two.
+	 */
+	Entry **_table;
+
+	/**
+	 * The size of _table.
+	 */
+	uint _capacity;
+
+private:
+
+	/**
+	 * Auto free object flag
+	 */
+	boolean _autoFreeValue;
+
+	/**
+	 * The number of key-value mappings contained in this map.
+	 */
+	int _size;
+
+	/**
+	 * The next size value at which to resize (capacity * load factor).
+	 * @serial
+	 */
+	int _threshold;
+
+	/**
+	 * The load factor for the hash table.
+	 *
+	 * @serial
+	 */
+	float _loadFactor;
+
+	// Views
+	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+
+	/**
+	 * Initialization hook for subclasses. This method is called
+	 * in all constructors and pseudo-constructors (clone, readObject)
+	 * after HashMap has been initialized but before any entries have
+	 * been inserted.  (In the absence of this method, readObject would
+	 * require explicit knowledge of subclasses.)
+	 */
+	void init(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
+			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
+		if (initialCapacity > HM_MAXIMUM_CAPACITY)
+			initialCapacity = HM_MAXIMUM_CAPACITY;
+
+		_autoFreeValue = autoFreeValue;
+
+		_size = 0;
+
+		// Find a power of 2 >= initialCapacity
+		_capacity = 1;
+		while (_capacity < initialCapacity)
+			_capacity <<= 1;
+
+		_loadFactor = loadFactor;
+		_threshold = (int) (_capacity * _loadFactor);
+		_table = new Entry*[_capacity]();
+		_entrySet = null;
+	}
+
+	/**
+	 * Special-case code for containsValue with null argument
+	 */
+	boolean containsNullValue() {
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			for (Entry *e = tab[i]; e != null;
+					e = e->next)
+				if (e->value == null)
+					return true;
+		return false;
+	}
+
+	/**
+	 * Auto free.
+	 */
+	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	}
+
+	boolean getAutoFreeKey() {
+		return false;
+	}
+
+public:
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+	 * (16) and the default load factor (0.75).
+	 */
+	EHashMap() {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true);
+	}
+	explicit
+	EHashMap(boolean autoFreeValue) {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	}
+
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and the default load factor (0.75).
+	 *
+	 * @param  initialCapacity the initial capacity.
+	 * @throws IllegalArgumentException if the initial capacity is negative.
+	 */
+	explicit
+	EHashMap(uint initialCapacity, boolean autoFreeValue) {
+		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	}
+
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and load factor.
+	 *
+	 * @param  initialCapacity the initial capacity
+	 * @param  loadFactor      the load factor
+	 * @throws IllegalArgumentException if the initial capacity is negative
+	 *         or the load factor is nonpositive
+	 */
+	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+		init(initialCapacity, loadFactor, autoFreeValue);
+	}
+
+	virtual ~EHashMap() {
+		clear();
+
+		delete[] _table;
+	}
+
+	EHashMap(const EHashMap<K, V>& that) {
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+	}
+
+	EHashMap<K, V>& operator= (const EHashMap<K, V>& that) {
+		if (this == &that) return *this;
+
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		//1.
+		clear();
+
+		delete[] _table;
+
+		//2.
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_autoFreeValue = t->_autoFreeValue;
+		t->setAutoFree(false);
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+
+		return *this;
+	}
+
+	// internal utilities
+
+	/**
+	 * Applies a supplemental hash function to a given hashCode, which
+	 * defends against poor quality hash functions.  This is critical
+	 * because HashMap uses power-of-two length hash tables, that
+	 * otherwise encounter collisions for hashCodes that do not differ
+	 * in lower bits. Note: Null keys always map to hash 0, thus index 0.
+	 */
+	static int hashIt(int h) {
+		// This function ensures that hashCodes that differ only by
+		// constant multiples at each bit position have a bounded
+		// number of collisions (approximately 8 at default load factor).
+		unsigned int uh = (unsigned int) h;
+		uh ^= (uh >> 20) ^ (uh >> 12);
+		return uh ^ (uh >> 7) ^ (uh >> 4);
+	}
+
+	/**
+	 * Returns index for hash code h.
+	 */
+	static int indexFor(int h, int length) {
+		return h & (length - 1);
+	}
+
+	/**
+	 * Returns the number of key-value mappings in this map.
+	 *
+	 * @return the number of key-value mappings in this map
+	 */
+	int size() {
+		return _size;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map contains no key-value mappings.
+	 *
+	 * @return <tt>true</tt> if this map contains no key-value mappings
+	 */
+	boolean isEmpty() {
+		return _size == 0;
+	}
+
+	/**
+	 * Returns the value to which the specified key is mapped,
+	 * or {@code null} if this map contains no mapping for the key.
+	 *
+	 * <p>More formally, if this map contains a mapping from a key
+	 * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+	 * key.equals(k))}, then this method returns {@code v}; otherwise
+	 * it returns {@code null}.  (There can be at most one such mapping.)
+	 *
+	 * <p>A return value of {@code null} does not <i>necessarily</i>
+	 * indicate that the map contains no mapping for the key; it's also
+	 * possible that the map explicitly maps the key to {@code null}.
+	 * The {@link #containsKey containsKey} operation may be used to
+	 * distinguish these two cases.
+	 *
+	 * @see #put(Object, Object)
+	 */
+	V get(K key) {
+		int hash = hashIt(key);
+		for (Entry *e = _table[indexFor(hash,
+				_capacity)]; e != null; e = e->next) {
+			if (e->hash == hash && (e->key == key))
+				return e->value;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map contains a mapping for the
+	 * specified key.
+	 *
+	 * @param   key   The key whose presence in this map is to be tested
+	 * @return <tt>true</tt> if this map contains a mapping for the specified
+	 * key.
+	 */
+	boolean containsKey(K key) {
+		return getEntry(key) != null;
+	}
+
+	/**
+	 * Returns the entry associated with the specified key in the
+	 * HashMap.  Returns null if the HashMap contains no mapping
+	 * for the key.
+	 */
+	Entry* getEntry(K key) {
+		int hash = hashIt(key);
+		for (Entry *e = _table[indexFor(hash,
+				_capacity)]; e != null; e = e->next) {
+			if (e->hash == hash
+					&& (e->key == key))
+				return e;
+		}
+		return null;
+	}
+
+	/**
+	 * Associates the specified value with the specified key in this map.
+	 * If the map previously contained a mapping for the key, the old
+	 * value is replaced.
+	 *
+	 * @param key key with which the specified value is to be associated
+	 * @param value value to be associated with the specified key
+	 * @param absent test key is not exist
+	 * @return the previous value associated with <tt>key</tt>, or
+	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+	 *         (A <tt>null</tt> return can also indicate that the map
+	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
+	 */
+	V put(K key, V value, boolean *absent=null) {
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		for (Entry *e = _table[i]; e != null;
+				e = e->next) {
+			if (e->hash == hash && (e->key == key)) {
+				if (absent) {
+					*absent = false;
+				}
+
+				V oldValue = e->value;
+				e->value = value;
+				e->recordAccess(this);
+				return oldValue;
+			}
+		}
+
+		if (absent) {
+			*absent = true;
+		}
+		addEntry(hash, key, value, i);
+		return null;
+	}
+
+	/**
+	 * Rehashes the contents of this map into a new array with a
+	 * larger capacity.  This method is called automatically when the
+	 * number of keys in this map reaches its _threshold.
+	 *
+	 * If current capacity is MAXIMUM_CAPACITY, this method does not
+	 * resize the map, but sets _threshold to Integer.MAX_VALUE.
+	 * This has the effect of preventing future calls.
+	 *
+	 * @param newCapacity the new capacity, MUST be a power of two;
+	 *        must be greater than current capacity unless current
+	 *        capacity is MAXIMUM_CAPACITY (in which case value
+	 *        is irrelevant).
+	 */
+	void resize(int newCapacity) {
+		int oldCapacity = _capacity;
+		if (oldCapacity == HM_MAXIMUM_CAPACITY) {
+			_threshold = EInteger::MAX_VALUE;
+			return;
+		}
+
+		Entry **newTable = new Entry*[newCapacity]();
+		transfer(newTable, newCapacity);
+		delete[] _table; //!
+		_table = newTable;
+		_capacity = newCapacity;
+		_threshold = (int) (newCapacity * _loadFactor);
+	}
+
+	/**
+	 * Transfers all entries from current table to newTable.
+	 */
+	void transfer(Entry *newTable[],
+			int newCapacity) {
+		Entry **src = _table;
+		for (int j = 0; j < (int)_capacity; j++) {
+			Entry *e = src[j];
+			if (e != null) {
+				do {
+					Entry *next = e->next;
+					int i = indexFor(e->hash, newCapacity);
+					e->next = newTable[i];
+					newTable[i] = e;
+					e = next;
+				} while (e != null);
+			}
+		}
+	}
+
+	/**
+	 * Removes the mapping for the specified key from this map if present.
+	 *
+	 * @param  key key whose mapping is to be removed from the map
+	 * @return the previous value associated with <tt>key</tt>, or
+	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+	 *         (A <tt>null</tt> return can also indicate that the map
+	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
+	 */
+	V remove(K key) {
+		Entry *e = removeEntryForKey(key);
+		if (e) {
+			V v = e->value;
+			e->value = null;
+			delete e;
+			return v;
+		}
+		return null;
+	}
+
+	/**
+	 * Removes and returns the entry associated with the specified key
+	 * in the HashMap.  Returns null if the HashMap contains no mapping
+	 * for this key.
+	 */
+	Entry* removeEntryForKey(K key) {
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		Entry *prev = _table[i];
+		Entry *e = prev;
+
+		while (e != null) {
+			Entry *next = e->next;
+			if (e->hash == hash
+					&& (e->key == key)) {
+				_size--;
+				if (prev == e)
+					_table[i] = next;
+				else
+					prev->next = next;
+				e->recordRemoval(this);
+				e->next = null;
+				return e;
+			}
+			prev = e;
+			e = next;
+		}
+
+		return e;
+	}
+
+	/**
+	 * Special version of remove for EntrySet.
+	 */
+	Entry* removeMapping(EMapEntry<K,V> *entry) {
+		K key = entry->getKey();
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		Entry *prev = _table[i];
+		Entry *e = prev;
+
+		while (e != null) {
+			Entry *next = e->next;
+			if (e->hash == hash && e->equals(entry)) {
+				_size--;
+				if (prev == e)
+					_table[i] = next;
+				else
+					prev->next = next;
+				e->recordRemoval(this);
+				return e;
+			}
+			prev = e;
+			e = next;
+		}
+
+		return e;
+	}
+
+	/**
+	 * Removes all of the mappings from this map.
+	 * The map will be empty after this call returns.
+	 */
+	void clear() {
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			if (tab[i] != null) {
+				delete tab[i];
+				tab[i] = null;
+			}
+		_size = 0;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map maps one or more keys to the
+	 * specified value.
+	 *
+	 * @param value value whose presence in this map is to be tested
+	 * @return <tt>true</tt> if this map maps one or more keys to the
+	 *         specified value
+	 */
+	boolean containsValue(V value) {
+		if (value == null)
+			return containsNullValue();
+
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			for (Entry *e = tab[i]; e != null;
+					e = e->next)
+				if (value->equals(e->value))
+					return true;
+		return false;
+	}
+
+	/**
+	 * Adds a new entry with the specified key, value and hash code to
+	 * the specified bucket.  It is the responsibility of this
+	 * method to resize the table if appropriate.
+	 *
+	 * Subclass overrides this to alter the behavior of put method.
+	 */
+	void addEntry(int hash, K key, V value,
+			int bucketIndex) {
+		Entry *e = _table[bucketIndex];
+		_table[bucketIndex] = new Entry(hash, key,
+				value, e, this);
+		if (_size++ >= _threshold)
+			resize(2 * _capacity);
+	}
+
+	// Views
+
+	/**
+	 * Returns a {@link Set} view of the keys contained in this map.
+	 * The set is backed by the map, so changes to the map are
+	 * reflected in the set, and vice-versa.  If the map is modified
+	 * while an iteration over the set is in progress (except through
+	 * the iterator's own <tt>remove</tt> operation), the results of
+	 * the iteration are undefined.  The set supports element removal,
+	 * which removes the corresponding mapping from the map, via the
+	 * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
+	 * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
+	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
+	 * operations.
+	 */
+	sp<ESet<K> > keySet() {
+		if (!EAbstractMap<K,V>::_keySet) {
+			EAbstractMap<K,V>::_keySet = new Keys(this);
+		}
+		return EAbstractMap<K,V>::_keySet;
+	}
+
+	/**
+	 * Returns a {@link Collection} view of the values contained in this map.
+	 * The collection is backed by the map, so changes to the map are
+	 * reflected in the collection, and vice-versa.  If the map is
+	 * modified while an iteration over the collection is in progress
+	 * (except through the iterator's own <tt>remove</tt> operation),
+	 * the results of the iteration are undefined.  The collection
+	 * supports element removal, which removes the corresponding
+	 * mapping from the map, via the <tt>Iterator.remove</tt>,
+	 * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
+	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
+	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
+	 */
+	sp<ECollection<V> > values() {
+		if (!EAbstractMap<K,V>::_values) {
+			EAbstractMap<K,V>::_values = new Values(this);
+		}
+		return EAbstractMap<K,V>::_values;
+	}
+
+	/**
+	 * Returns a {@link Set} view of the mappings contained in this map.
+	 * The set is backed by the map, so changes to the map are
+	 * reflected in the set, and vice-versa.  If the map is modified
+	 * while an iteration over the set is in progress (except through
+	 * the iterator's own <tt>remove</tt> operation, or through the
+	 * <tt>setValue</tt> operation on a map entry returned by the
+	 * iterator) the results of the iteration are undefined.  The set
+	 * supports element removal, which removes the corresponding
+	 * mapping from the map, via the <tt>Iterator.remove</tt>,
+	 * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt> and
+	 * <tt>clear</tt> operations.  It does not support the
+	 * <tt>add</tt> or <tt>addAll</tt> operations.
+	 *
+	 * @return a set view of the mappings contained in this map
+	 */
+	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+		if (_entrySet == null) {
+			_entrySet = new EntrySet(this);
+		}
+		return _entrySet;
+	}
+
+	// These methods are used when serializing HashSets
+	int capacity() {
+		return _capacity;
+	}
+	float loadFactor() {
+		return _loadFactor;
+	}
+
+	void setAutoFree(boolean autoFreeValue = true) {
+		_autoFreeValue = autoFreeValue;
+	}
+
+	boolean getAutoFreeValue() {
+		return _autoFreeValue;
+	}
+};
+
+//=============================================================================
+//Primitive Key && Shared pointer Value.
+
+template<typename K, typename _V>
+class EHashMap<K, sp<_V> > : public EAbstractMap<K, sp<_V> >,
+		virtual public EMap<K, sp<_V> > {
+public:
+	typedef sp<_V> V;
+
+	class Entry: public EMapEntry<K, V> {
+	private:
+		friend class EHashMap;
+		K key;
+		V value;
+		Entry *next;
+		EHashMap<K, V> *map;
+		int hash;
+
+	public:
+		~Entry() {
+			delete next; //!
+		}
+
+		/**
+		 * Creates new entry.
+		 */
+		Entry(int h, K k, V v,
+				Entry *n,
+				EHashMap<K, V> *m) {
+			value = v;
+			next = n;
+			key = k;
+			hash = h;
+			map = m;
+		}
+
+		K getKey() {
+			return key;
+		}
+
+		V getValue() {
+			return value;
+		}
+
+		V setValue(V newValue) {
+			V oldValue = value;
+			value = newValue;
+			return oldValue;
+		}
+
+		boolean equals(EMapEntry<K, V> *e) {
+			K k1 = getKey();
+			K k2 = e->getKey();
+			if (k1 == k2) {
+				V v1 = getValue();
+				V v2 = e->getValue();
+				if (v1 == v2 || (v1 != null && v1->equals(v2.get())))
+					return true;
+			}
+			return false;
+		}
+
+		virtual int hashCode() {
+			return key ^ (value == null ? 0 : value->hashCode());
+		}
+
+		/**
+		 * This method is invoked whenever the value in an entry is
+		 * overwritten by an invocation of put(k,v) for a key k that's already
+		 * in the HashMap.
+		 */
+		void recordAccess(EHashMap<K, V> *m) {
+		}
+
+		/**
+		 * This method is invoked whenever the entry is
+		 * removed from the table.
+		 */
+		void recordRemoval(EHashMap<K, V> *m) {
+		}
+	};
+
+private:
+	template<typename I>
+	class HashIterator: public EIterator<I> {
+	private:
+		EHashMap<K,V> *_map;
+
+		Entry *next; // next entry to return
+		int index; // current slot
+		Entry *current; // current entry
+	public:
+		HashIterator(EHashMap<K, V> *map) : next(null), index(0), current(null) {
+			_map = map;
+
+			if (_map->size() > 0) { // advance to first entry
+				Entry **t = _map->_table;
+				while (index < (int)_map->_capacity && (next = t[index++]) == null)
+					;
+			}
+		}
+
+		boolean hasNext() {
+			return next != null;
+		}
+
+		Entry* nextEntry() {
+			Entry *e = next;
+			if (e == null)
+				throw ENOSUCHELEMENTEXCEPTION;
+
+			if ((next = e->next) == null) {
+				Entry **t = _map->_table;
+				while (index < (int)_map->_capacity && (next = t[index++]) == null)
+					;
+			}
+			current = e;
+			return e;
+		}
+
+		void remove() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			K k = current->key;
+			current = null;
+			delete _map->removeEntryForKey(k);
+		}
+
+		Entry* moveOutEntry() {
+			if (current == null)
+				throw EILLEGALSTATEEXCEPTION;
+			K k = current->key;
+			current = null;
+			return _map->removeEntryForKey(k);
+		}
+	};
+
+	template<typename EI>
+	class EntryIterator: public HashIterator<EI> {
+	public:
+		EntryIterator(EHashMap<K, V> *map) :
+				HashIterator<EI>(map) {
+		}
+
+		EI next() {
+			return HashIterator<EI>::nextEntry();
+		}
+
+		EI moveOut() {
+			return HashIterator<EI>::moveOutEntry();
+		}
+	};
+
+	class ValueIterator: public HashIterator<V> {
+	public:
+		ValueIterator(EHashMap<K, V> *map) :
+				HashIterator<V>(map) {
+		}
+
+		V next() {
+			return HashIterator<V>::nextEntry()->getValue();
+		}
+
+		V moveOut() {
+			Entry* e = HashIterator<V>::moveOutEntry();
+			V v = e->getValue();
+			delete e;
+			return v;
+		}
+	};
+
+	class KeyIterator: public HashIterator<K> {
+	public:
+		KeyIterator(EHashMap<K, V> *map) :
+				HashIterator<K>(map) {
+		}
+
+		K next() {
+			return HashIterator<K>::nextEntry()->getKey();
+		}
+
+		K moveOut() {
+			Entry* e = HashIterator<K>::moveOutEntry();
+			K k = e->getKey();
+			delete e;
+			return k;
+		}
+	};
+
+	class EntrySet: public EAbstractSet<EMapEntry<K,V>*> {
+	private:
+		EHashMap<K,V> *_map;
+
+	public:
+		EntrySet(EHashMap<K,V> *map) {
+			_map = map;
+		}
+
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
+			return new EntryIterator<EMapEntry<K,V>*>(_map);
+		}
+		boolean contains(EMapEntry<K,V> *e) {
+			EMapEntry<K,V> *candidate = _map->getEntry(e->getKey());
+			return candidate != null && candidate->equals(e);
+		}
+		boolean remove(EMapEntry<K,V> *o) {
+			return _map->removeMapping(o) != null;
+		}
+		int size() {
+			return _map->size();
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+	class Values: public EAbstractCollection<V> {
+	private:
+		EHashMap<K, V> *_map;
+	public:
+		Values(EHashMap<K, V> *map) {
+			_map = map;
+		}
+		~Values() {
+		}
+		sp<EIterator<V> > iterator(int index = 0) {
+			return new ValueIterator(_map);
+		}
+		int size() {
+			return _map->size();
+		}
+		boolean contains(_V* o) {
+			return _map->containsValue(o);
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+	class Keys: public EAbstractSet<K> {
+	private:
+		EHashMap<K, V> *_map;
+	public:
+		Keys(EHashMap<K, V> *map) {
+			_map = map;
+		}
+		sp<EIterator<K> > iterator(int index = 0) {
+			return new KeyIterator(_map);
+		}
+		int size() {
+			return _map->size();
+		}
+		boolean contains(K o) {
+			return _map->containsKey(o);
+		}
+		boolean remove(K o) {
+			return _map->removeEntryForKey(o) != null;
+		}
+		void clear() {
+			_map->clear();
+		}
+	};
+
+private:
+	/**
+	 * The table, resized as necessary. Length MUST Always be a power of two.
+	 */
+	Entry **_table;
+
+	/**
+	 * The size of _table.
+	 */
+	uint _capacity;
+
+private:
+	/**
+	 * The number of key-value mappings contained in this map.
+	 */
+	int _size;
+
+	/**
+	 * The next size value at which to resize (capacity * load factor).
+	 * @serial
+	 */
+	int _threshold;
+
+	/**
+	 * The load factor for the hash table.
+	 *
+	 * @serial
+	 */
+	float _loadFactor;
+
+	// Views
+	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+
+	/**
+	 * Initialization hook for subclasses. This method is called
+	 * in all constructors and pseudo-constructors (clone, readObject)
+	 * after HashMap has been initialized but before any entries have
+	 * been inserted.  (In the absence of this method, readObject would
+	 * require explicit knowledge of subclasses.)
+	 */
+	void init(uint initialCapacity, float loadFactor) {
+		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
+			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
+		if (initialCapacity > HM_MAXIMUM_CAPACITY)
+			initialCapacity = HM_MAXIMUM_CAPACITY;
+		_size = 0;
+
+		// Find a power of 2 >= initialCapacity
+		_capacity = 1;
+		while (_capacity < initialCapacity)
+			_capacity <<= 1;
+
+		_loadFactor = loadFactor;
+		_threshold = (int) (_capacity * _loadFactor);
+		_table = new Entry*[_capacity]();
+		_entrySet = null;
+	}
+
+	/**
+	 * Special-case code for containsValue with null argument
+	 */
+	boolean containsNullValue() {
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			for (Entry *e = tab[i]; e != null;
+					e = e->next)
+				if (e->value == null)
+					return true;
+		return false;
+	}
+
+	/**
+	 * Auto free.
+	 */
+	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	}
+
+	boolean getAutoFreeKey() {
+		return false;
+	}
+
+	boolean getAutoFreeValue() {
+		return true;
+	}
+
+public:
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
+	 * (16) and the default load factor (0.75).
+	 */
+	EHashMap() {
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR);
+	}
+
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and the default load factor (0.75).
+	 *
+	 * @param  initialCapacity the initial capacity.
+	 * @throws IllegalArgumentException if the initial capacity is negative.
+	 */
+	explicit
+	EHashMap(uint initialCapacity) {
+		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR);
+	}
+
+	/**
+	 * Constructs an empty <tt>HashMap</tt> with the specified initial
+	 * capacity and load factor.
+	 *
+	 * @param  initialCapacity the initial capacity
+	 * @param  loadFactor      the load factor
+	 * @throws IllegalArgumentException if the initial capacity is negative
+	 *         or the load factor is nonpositive
+	 */
+	EHashMap(uint initialCapacity, float loadFactor) {
+		init(initialCapacity, loadFactor);
+	}
+
+	virtual ~EHashMap() {
+		clear();
+
+		delete[] _table;
+	}
+
+	EHashMap(const EHashMap<K, V>& that) {
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+	}
+
+	EHashMap<K, V>& operator= (const EHashMap<K, V>& that) {
+		if (this == &that) return *this;
+
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
+
+		//1.
+		clear();
+
+		delete[] _table;
+
+		//2.
+		_table = new Entry*[t->_capacity]();
+		Entry **tab = t->_table;
+		Entry* last = null;
+		for (int i = 0; i < (int)t->_capacity; i++) {
+			for (Entry *e = tab[i]; e != null; e = e->next) {
+				Entry* e2 = new Entry(*e);
+				e2->next = null;
+				e2->map = this;
+
+				if (last == null) {
+					_table[i] = e2;
+				}
+				else {
+					last->next = e2;
+				}
+
+				last = e2;
+			}
+			last = null;
+		}
+
+		_size = t->_size;
+		_capacity = t->_capacity;
+		_loadFactor = t->_loadFactor;
+		_threshold = t->_threshold;
+		_entrySet = null;
+
+		return *this;
+	}
+
+	// internal utilities
+
+	/**
+	 * Applies a supplemental hash function to a given hashCode, which
+	 * defends against poor quality hash functions.  This is critical
+	 * because HashMap uses power-of-two length hash tables, that
+	 * otherwise encounter collisions for hashCodes that do not differ
+	 * in lower bits. Note: Null keys always map to hash 0, thus index 0.
+	 */
+	static int hashIt(int h) {
+		// This function ensures that hashCodes that differ only by
+		// constant multiples at each bit position have a bounded
+		// number of collisions (approximately 8 at default load factor).
+		unsigned int uh = (unsigned int) h;
+		uh ^= (uh >> 20) ^ (uh >> 12);
+		return uh ^ (uh >> 7) ^ (uh >> 4);
+	}
+
+	/**
+	 * Returns index for hash code h.
+	 */
+	static int indexFor(int h, int length) {
+		return h & (length - 1);
+	}
+
+	/**
+	 * Returns the number of key-value mappings in this map.
+	 *
+	 * @return the number of key-value mappings in this map
+	 */
+	int size() {
+		return _size;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map contains no key-value mappings.
+	 *
+	 * @return <tt>true</tt> if this map contains no key-value mappings
+	 */
+	boolean isEmpty() {
+		return _size == 0;
+	}
+
+	/**
+	 * Returns the value to which the specified key is mapped,
+	 * or {@code null} if this map contains no mapping for the key.
+	 *
+	 * <p>More formally, if this map contains a mapping from a key
+	 * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+	 * key.equals(k))}, then this method returns {@code v}; otherwise
+	 * it returns {@code null}.  (There can be at most one such mapping.)
+	 *
+	 * <p>A return value of {@code null} does not <i>necessarily</i>
+	 * indicate that the map contains no mapping for the key; it's also
+	 * possible that the map explicitly maps the key to {@code null}.
+	 * The {@link #containsKey containsKey} operation may be used to
+	 * distinguish these two cases.
+	 *
+	 * @see #put(Object, Object)
+	 */
+	V get(K key) {
+		int hash = hashIt(key);
+		for (Entry *e = _table[indexFor(hash,
+				_capacity)]; e != null; e = e->next) {
+			if (e->hash == hash && (e->key == key))
+				return e->value;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map contains a mapping for the
+	 * specified key.
+	 *
+	 * @param   key   The key whose presence in this map is to be tested
+	 * @return <tt>true</tt> if this map contains a mapping for the specified
+	 * key.
+	 */
+	boolean containsKey(K key) {
+		return getEntry(key) != null;
+	}
+
+	/**
+	 * Returns the entry associated with the specified key in the
+	 * HashMap.  Returns null if the HashMap contains no mapping
+	 * for the key.
+	 */
+	Entry* getEntry(K key) {
+		int hash = hashIt(key);
+		for (Entry *e = _table[indexFor(hash,
+				_capacity)]; e != null; e = e->next) {
+			if (e->hash == hash
+					&& (e->key == key))
+				return e;
+		}
+		return null;
+	}
+
+	/**
+	 * Associates the specified value with the specified key in this map.
+	 * If the map previously contained a mapping for the key, the old
+	 * value is replaced.
+	 *
+	 * @param key key with which the specified value is to be associated
+	 * @param value value to be associated with the specified key
+	 * @param absent test key is not exist
+	 * @return the previous value associated with <tt>key</tt>, or
+	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+	 *         (A <tt>null</tt> return can also indicate that the map
+	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
+	 */
+	V put(K key, V value, boolean *absent=null) {
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		for (Entry *e = _table[i]; e != null;
+				e = e->next) {
+			if (e->hash == hash && (e->key == key)) {
+				if (absent) {
+					*absent = false;
+				}
+
+				V oldValue = e->value;
+				e->value = value;
+				e->recordAccess(this);
+				return oldValue;
+			}
+		}
+
+		if (absent) {
+			*absent = true;
+		}
+		addEntry(hash, key, value, i);
+		return null;
+	}
+
+	/**
+	 * Rehashes the contents of this map into a new array with a
+	 * larger capacity.  This method is called automatically when the
+	 * number of keys in this map reaches its _threshold.
+	 *
+	 * If current capacity is MAXIMUM_CAPACITY, this method does not
+	 * resize the map, but sets _threshold to Integer.MAX_VALUE.
+	 * This has the effect of preventing future calls.
+	 *
+	 * @param newCapacity the new capacity, MUST be a power of two;
+	 *        must be greater than current capacity unless current
+	 *        capacity is MAXIMUM_CAPACITY (in which case value
+	 *        is irrelevant).
+	 */
+	void resize(int newCapacity) {
+		int oldCapacity = _capacity;
+		if (oldCapacity == HM_MAXIMUM_CAPACITY) {
+			_threshold = EInteger::MAX_VALUE;
+			return;
+		}
+
+		Entry **newTable = new Entry*[newCapacity]();
+		transfer(newTable, newCapacity);
+		delete[] _table; //!
+		_table = newTable;
+		_capacity = newCapacity;
+		_threshold = (int) (newCapacity * _loadFactor);
+	}
+
+	/**
+	 * Transfers all entries from current table to newTable.
+	 */
+	void transfer(Entry *newTable[],
+			int newCapacity) {
+		Entry **src = _table;
+		for (int j = 0; j < (int)_capacity; j++) {
+			Entry *e = src[j];
+			if (e != null) {
+				do {
+					Entry *next = e->next;
+					int i = indexFor(e->hash, newCapacity);
+					e->next = newTable[i];
+					newTable[i] = e;
+					e = next;
+				} while (e != null);
+			}
+		}
+	}
+
+	/**
+	 * Removes the mapping for the specified key from this map if present.
+	 *
+	 * @param  key key whose mapping is to be removed from the map
+	 * @return the previous value associated with <tt>key</tt>, or
+	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
+	 *         (A <tt>null</tt> return can also indicate that the map
+	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
+	 */
+	V remove(K key) {
+		Entry *e = removeEntryForKey(key);
+		if (e) {
+			V v = e->value;
+			e->value = null;
+			delete e;
+			return v;
+		}
+		return null;
+	}
+
+	/**
+	 * Removes and returns the entry associated with the specified key
+	 * in the HashMap.  Returns null if the HashMap contains no mapping
+	 * for this key.
+	 */
+	Entry* removeEntryForKey(K key) {
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		Entry *prev = _table[i];
+		Entry *e = prev;
+
+		while (e != null) {
+			Entry *next = e->next;
+			if (e->hash == hash
+					&& (e->key == key)) {
+				_size--;
+				if (prev == e)
+					_table[i] = next;
+				else
+					prev->next = next;
+				e->recordRemoval(this);
+				e->next = null;
+				return e;
+			}
+			prev = e;
+			e = next;
+		}
+
+		return e;
+	}
+
+	/**
+	 * Special version of remove for EntrySet.
+	 */
+	Entry* removeMapping(EMapEntry<K,V> *entry) {
+		K key = entry->getKey();
+		int hash = hashIt(key);
+		int i = indexFor(hash, _capacity);
+		Entry *prev = _table[i];
+		Entry *e = prev;
+
+		while (e != null) {
+			Entry *next = e->next;
+			if (e->hash == hash && e->equals(entry)) {
+				_size--;
+				if (prev == e)
+					_table[i] = next;
+				else
+					prev->next = next;
+				e->recordRemoval(this);
+				return e;
+			}
+			prev = e;
+			e = next;
+		}
+
+		return e;
+	}
+
+	/**
+	 * Removes all of the mappings from this map.
+	 * The map will be empty after this call returns.
+	 */
+	void clear() {
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			if (tab[i] != null) {
+				delete tab[i];
+				tab[i] = null;
+			}
+		_size = 0;
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this map maps one or more keys to the
+	 * specified value.
+	 *
+	 * @param value value whose presence in this map is to be tested
+	 * @return <tt>true</tt> if this map maps one or more keys to the
+	 *         specified value
+	 */
+	boolean containsValue(_V* value) {
+		if (value == null)
+			return containsNullValue();
+
+		Entry **tab = _table;
+		for (int i = 0; i < (int)_capacity; i++)
+			for (Entry *e = tab[i]; e != null;
+					e = e->next)
+				if (value->equals(e->value.get()))
+					return true;
+		return false;
+	}
+
+	/**
+	 * Adds a new entry with the specified key, value and hash code to
+	 * the specified bucket.  It is the responsibility of this
+	 * method to resize the table if appropriate.
+	 *
+	 * Subclass overrides this to alter the behavior of put method.
+	 */
+	void addEntry(int hash, K key, V value,
+			int bucketIndex) {
+		Entry *e = _table[bucketIndex];
+		_table[bucketIndex] = new Entry(hash, key,
+				value, e, this);
+		if (_size++ >= _threshold)
+			resize(2 * _capacity);
+	}
+
+	// Views
+
+	/**
+	 * Returns a {@link Set} view of the keys contained in this map.
+	 * The set is backed by the map, so changes to the map are
+	 * reflected in the set, and vice-versa.  If the map is modified
+	 * while an iteration over the set is in progress (except through
+	 * the iterator's own <tt>remove</tt> operation), the results of
+	 * the iteration are undefined.  The set supports element removal,
+	 * which removes the corresponding mapping from the map, via the
+	 * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
+	 * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
+	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
+	 * operations.
+	 */
+	sp<ESet<K> > keySet() {
+		if (!EAbstractMap<K,V>::_keySet) {
+			EAbstractMap<K,V>::_keySet = new Keys(this);
+		}
+		return EAbstractMap<K,V>::_keySet;
+	}
+
+	/**
+	 * Returns a {@link Collection} view of the values contained in this map.
+	 * The collection is backed by the map, so changes to the map are
+	 * reflected in the collection, and vice-versa.  If the map is
+	 * modified while an iteration over the collection is in progress
+	 * (except through the iterator's own <tt>remove</tt> operation),
+	 * the results of the iteration are undefined.  The collection
+	 * supports element removal, which removes the corresponding
+	 * mapping from the map, via the <tt>Iterator.remove</tt>,
+	 * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
+	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
+	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
+	 */
+	sp<ECollection<V> > values() {
+		if (!EAbstractMap<K,V>::_values) {
+			EAbstractMap<K,V>::_values = new Values(this);
+		}
+		return EAbstractMap<K,V>::_values;
+	}
+
+	/**
+	 * Returns a {@link Set} view of the mappings contained in this map.
+	 * The set is backed by the map, so changes to the map are
+	 * reflected in the set, and vice-versa.  If the map is modified
+	 * while an iteration over the set is in progress (except through
+	 * the iterator's own <tt>remove</tt> operation, or through the
+	 * <tt>setValue</tt> operation on a map entry returned by the
+	 * iterator) the results of the iteration are undefined.  The set
+	 * supports element removal, which removes the corresponding
+	 * mapping from the map, via the <tt>Iterator.remove</tt>,
+	 * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt> and
+	 * <tt>clear</tt> operations.  It does not support the
+	 * <tt>add</tt> or <tt>addAll</tt> operations.
+	 *
+	 * @return a set view of the mappings contained in this map
+	 */
+	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+		if (_entrySet == null) {
+			_entrySet = new EntrySet(this);
+		}
+		return _entrySet;
+	}
+
+	// These methods are used when serializing HashSets
+	int capacity() {
+		return _capacity;
+	}
+	float loadFactor() {
+		return _loadFactor;
+	}
+};
+
+//=============================================================================
+//Native poiner Types.
+
+template<typename _K, typename _V>
+class EHashMap<_K*, _V*>: public EAbstractMap<_K*, _V*>,
+		virtual public EMap<_K*, _V*> {
+public:
+	typedef _K* K;
+	typedef _V* V;
+
 	class Entry: public EMapEntry<K, V> {
 	private:
 		friend class EHashMap;
@@ -420,7 +2147,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	ESet<EMapEntry<K, V>*> *_entrySet;
+	sp<ESet<EMapEntry<K, V>*> > _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -544,7 +2271,6 @@ public:
 		clear();
 
 		delete[] _table;
-		delete _entrySet;
 	}
 
 	EHashMap(const EHashMap<K, V>& that) {
@@ -590,7 +2316,6 @@ public:
 		clear();
 
 		delete[] _table;
-		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -966,7 +2691,7 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	ESet<K>* keySet() {
+	sp<ESet<K> > keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
@@ -986,7 +2711,7 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	ECollection<V>* values() {
+	sp<ECollection<V> > values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -1009,8 +2734,8 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	ESet<EMapEntry<K, V>*>* entrySet() {
-		if (!_entrySet) {
+	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}
 		return _entrySet;
@@ -1024,7 +2749,7 @@ public:
 		return _loadFactor;
 	}
 
-	void setAutoFree(boolean autoFreeKey = true, boolean autoFreeValue = true) {
+	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
 		_autoFreeKey = autoFreeKey;
 		_autoFreeValue = autoFreeValue;
 	}
@@ -1038,37 +2763,36 @@ public:
 	}
 };
 
-
-
 //=============================================================================
+//Shared poiner Types.
 
-template<typename V>
-class EHashMap<int, V> : public EAbstractMap<int, V>,
-		virtual public EMap<int, V> {
+template<typename _K, typename _V>
+class EHashMap<sp<_K>, sp<_V> >: public EAbstractMap<sp<_K>, sp<_V> >,
+		virtual public EMap<sp<_K>, sp<_V> > {
 public:
-	class Entry: public EMapEntry<int, V> {
+	typedef sp<_K> K;
+	typedef sp<_V> V;
+
+	class Entry: public EMapEntry<K, V> {
 	private:
 		friend class EHashMap;
-		int key;
+		K key;
 		V value;
 		Entry *next;
-		EHashMap<int, V> *map;
+		EHashMap<K, V> *map;
 		int hash;
 
 	public:
 		~Entry() {
-			if (map->getAutoFreeValue()) {
-				delete value;
-			}
 			delete next; //!
 		}
 
 		/**
 		 * Creates new entry.
 		 */
-		Entry(int h, int k, V v,
+		Entry(int h, K k, V v,
 				Entry *n,
-				EHashMap<int, V> *m) {
+				EHashMap<K, V> *m) {
 			value = v;
 			next = n;
 			key = k;
@@ -1076,7 +2800,7 @@ public:
 			map = m;
 		}
 
-		int getKey() {
+		K getKey() {
 			return key;
 		}
 
@@ -1090,20 +2814,21 @@ public:
 			return oldValue;
 		}
 
-		boolean equals(EMapEntry<int, V> *e) {
-			int k1 = getKey();
-			int k2 = e->getKey();
-			if (k1 == k2) {
+		boolean equals(EMapEntry<K, V> *e) {
+			K k1 = getKey();
+			K k2 = e->getKey();
+			if (k1 == k2 || (k1 != null && k1->equals(k2.get()))) {
 				V v1 = getValue();
 				V v2 = e->getValue();
-				if (v1 == v2 || (v1 != null && v1->equals(v2)))
+				if (v1 == v2 || (v1 != null && v1->equals(v2.get())))
 					return true;
 			}
 			return false;
 		}
 
 		virtual int hashCode() {
-			return key ^ (value == null ? 0 : value->hashCode());
+			return (key == null ? 0 : key->hashCode())
+					^ (value == null ? 0 : value->hashCode());
 		}
 
 		/**
@@ -1111,14 +2836,14 @@ public:
 		 * overwritten by an invocation of put(k,v) for a key k that's already
 		 * in the HashMap.
 		 */
-		void recordAccess(EHashMap<int, V> *m) {
+		void recordAccess(EHashMap<K, V> *m) {
 		}
 
 		/**
 		 * This method is invoked whenever the entry is
 		 * removed from the table.
 		 */
-		void recordRemoval(EHashMap<int, V> *m) {
+		void recordRemoval(EHashMap<K, V> *m) {
 		}
 	};
 
@@ -1126,13 +2851,13 @@ private:
 	template<typename I>
 	class HashIterator: public EIterator<I> {
 	private:
-		EHashMap<int,V> *_map;
+		EHashMap<K,V> *_map;
 
 		Entry *next; // next entry to return
 		int index; // current slot
 		Entry *current; // current entry
 	public:
-		HashIterator(EHashMap<int, V> *map) : next(null), index(0), current(null) {
+		HashIterator(EHashMap<K, V> *map) : next(null), index(0), current(null) {
 			_map = map;
 
 			if (_map->size() > 0) { // advance to first entry
@@ -1163,7 +2888,7 @@ private:
 		void remove() {
 			if (current == null)
 				throw EILLEGALSTATEEXCEPTION;
-			int k = current->key;
+			K k = current->key;
 			current = null;
 			delete _map->removeEntryForKey(k);
 		}
@@ -1171,7 +2896,7 @@ private:
 		Entry* moveOutEntry() {
 			if (current == null)
 				throw EILLEGALSTATEEXCEPTION;
-			int k = current->key;
+			K k = current->key;
 			current = null;
 			return _map->removeEntryForKey(k);
 		}
@@ -1180,7 +2905,7 @@ private:
 	template<typename EI>
 	class EntryIterator: public HashIterator<EI> {
 	public:
-		EntryIterator(EHashMap<int, V> *map) :
+		EntryIterator(EHashMap<K, V> *map) :
 				HashIterator<EI>(map) {
 		}
 
@@ -1195,7 +2920,7 @@ private:
 
 	class ValueIterator: public HashIterator<V> {
 	public:
-		ValueIterator(EHashMap<int, V> *map) :
+		ValueIterator(EHashMap<K, V> *map) :
 				HashIterator<V>(map) {
 		}
 
@@ -1211,41 +2936,41 @@ private:
 		}
 	};
 
-	class KeyIterator: public HashIterator<int> {
+	class KeyIterator: public HashIterator<K> {
 	public:
-		KeyIterator(EHashMap<int, V> *map) :
-				HashIterator<int>(map) {
+		KeyIterator(EHashMap<K, V> *map) :
+				HashIterator<K>(map) {
 		}
 
-		int next() {
-			return HashIterator<int>::nextEntry()->getKey();
+		K next() {
+			return HashIterator<K>::nextEntry()->getKey();
 		}
 
-		int moveOut() {
-			Entry* e = HashIterator<int>::moveOutEntry();
-			int k = e->getKey();
+		K moveOut() {
+			Entry* e = HashIterator<K>::moveOutEntry();
+			K k = e->getKey();
 			delete e;
 			return k;
 		}
 	};
 
-	class EntrySet: public EAbstractSet<EMapEntry<int,V>*> {
+	class EntrySet: public EAbstractSet<EMapEntry<K,V>*> {
 	private:
-		EHashMap<int,V> *_map;
+		EHashMap<K,V> *_map;
 
 	public:
-		EntrySet(EHashMap<int,V> *map) {
+		EntrySet(EHashMap<K,V> *map) {
 			_map = map;
 		}
 
-		sp<EIterator<EMapEntry<int,V>*> > iterator(int index=0) {
-			return new EntryIterator<EMapEntry<int,V>*>(_map);
+		sp<EIterator<EMapEntry<K,V>*> > iterator(int index=0) {
+			return new EntryIterator<EMapEntry<K,V>*>(_map);
 		}
-		boolean contains(EMapEntry<int,V> *e) {
-			EMapEntry<int,V> *candidate = _map->getEntry(e->getKey());
+		boolean contains(EMapEntry<K,V> *e) {
+			EMapEntry<K,V> *candidate = _map->getEntry(e->getKey());
 			return candidate != null && candidate->equals(e);
 		}
-		boolean remove(EMapEntry<int,V> *o) {
+		boolean remove(EMapEntry<K,V> *o) {
 			return _map->removeMapping(o) != null;
 		}
 		int size() {
@@ -1258,9 +2983,9 @@ private:
 
 	class Values: public EAbstractCollection<V> {
 	private:
-		EHashMap<int, V> *_map;
+		EHashMap<K, V> *_map;
 	public:
-		Values(EHashMap<int, V> *map) {
+		Values(EHashMap<K, V> *map) {
 			_map = map;
 		}
 		~Values() {
@@ -1271,7 +2996,7 @@ private:
 		int size() {
 			return _map->size();
 		}
-		boolean contains(V o) {
+		boolean contains(_V* o) {
 			return _map->containsValue(o);
 		}
 		void clear() {
@@ -1279,23 +3004,23 @@ private:
 		}
 	};
 
-	class Keys: public EAbstractSet<int> {
+	class Keys: public EAbstractSet<K> {
 	private:
-		EHashMap<int, V> *_map;
+		EHashMap<K, V> *_map;
 	public:
-		Keys(EHashMap<int, V> *map) {
+		Keys(EHashMap<K, V> *map) {
 			_map = map;
 		}
-		sp<EIterator<int> > iterator(int index = 0) {
+		sp<EIterator<K> > iterator(int index = 0) {
 			return new KeyIterator(_map);
 		}
 		int size() {
 			return _map->size();
 		}
-		boolean contains(int o) {
+		boolean contains(_K* o) {
 			return _map->containsKey(o);
 		}
-		boolean remove(int o) {
+		boolean remove(_K* o) {
 			return _map->removeEntryForKey(o) != null;
 		}
 		void clear() {
@@ -1315,12 +3040,6 @@ private:
 	uint _capacity;
 
 private:
-
-	/**
-	 * Auto free object flag
-	 */
-	boolean _autoFreeValue;
-
 	/**
 	 * The number of key-value mappings contained in this map.
 	 */
@@ -1340,7 +3059,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	ESet<EMapEntry<int, V>*> *_entrySet;
+	sp<ESet<EMapEntry<K, V>*> > _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -1349,14 +3068,11 @@ private:
 	 * been inserted.  (In the absence of this method, readObject would
 	 * require explicit knowledge of subclasses.)
 	 */
-	void init(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
+	void init(uint initialCapacity, float loadFactor) {
 		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
 			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
 		if (initialCapacity > HM_MAXIMUM_CAPACITY)
 			initialCapacity = HM_MAXIMUM_CAPACITY;
-
-		_autoFreeValue = autoFreeValue;
-
 		_size = 0;
 
 		// Find a power of 2 >= initialCapacity
@@ -1368,6 +3084,39 @@ private:
 		_threshold = (int) (_capacity * _loadFactor);
 		_table = new Entry*[_capacity]();
 		_entrySet = null;
+	}
+
+	/**
+	 * Offloaded version of get() to look up null keys.  Null keys map
+	 * to index 0.  This null case is split out into separate methods
+	 * for the sake of performance in the two most commonly used
+	 * operations (get and put), but incorporated with conditionals in
+	 * others.
+	 */
+	V getForNullKey() {
+		for (Entry *e = _table[0]; e != null;
+				e = e->next) {
+			if (e->key == null)
+				return e->value;
+		}
+		return null;
+	}
+
+	/**
+	 * Offloaded version of put for null keys
+	 */
+	V putForNullKey(V value) {
+		for (Entry *e = _table[0]; e != null;
+				e = e->next) {
+			if (e->key == null) {
+				V oldValue = e->value;
+				e->value = value;
+				e->recordAccess(this);
+				return oldValue;
+			}
+		}
+		addEntry(0, null, value, 0);
+		return null;
 	}
 
 	/**
@@ -1383,27 +3132,13 @@ private:
 		return false;
 	}
 
-	/**
-	 * Auto free.
-	 */
-	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
-	}
-
-	boolean getAutoFreeKey() {
-		return false;
-	}
-
 public:
 	/**
 	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
 	 * (16) and the default load factor (0.75).
 	 */
 	EHashMap() {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true);
-	}
-	explicit
-	EHashMap(boolean autoFreeValue) {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR);
 	}
 
 	/**
@@ -1414,8 +3149,8 @@ public:
 	 * @throws IllegalArgumentException if the initial capacity is negative.
 	 */
 	explicit
-	EHashMap(uint initialCapacity, boolean autoFreeValue) {
-		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
+	EHashMap(uint initialCapacity) {
+		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR);
 	}
 
 	/**
@@ -1428,19 +3163,18 @@ public:
 	 *         or the load factor is nonpositive
 	 */
 	explicit
-	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
-		init(initialCapacity, loadFactor, autoFreeValue);
+	EHashMap(uint initialCapacity, float loadFactor) {
+		init(initialCapacity, loadFactor);
 	}
 
 	virtual ~EHashMap() {
 		clear();
 
 		delete[] _table;
-		delete _entrySet;
 	}
 
-	EHashMap(const EHashMap<int, V>& that) {
-		EHashMap<int, V>* t = (EHashMap<int, V>*)&that;
+	EHashMap(const EHashMap<K, V>& that) {
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
 
 		_table = new Entry*[t->_capacity]();
 		Entry **tab = t->_table;
@@ -1463,8 +3197,6 @@ public:
 			last = null;
 		}
 
-		_autoFreeValue = t->_autoFreeValue;
-		t->setAutoFree(false);
 		_size = t->_size;
 		_capacity = t->_capacity;
 		_loadFactor = t->_loadFactor;
@@ -1472,16 +3204,15 @@ public:
 		_entrySet = null;
 	}
 
-	EHashMap<int, V>& operator= (const EHashMap<int, V>& that) {
+	EHashMap<K, V>& operator= (const EHashMap<K, V>& that) {
 		if (this == &that) return *this;
 
-		EHashMap<int, V>* t = (EHashMap<int, V>*)&that;
+		EHashMap<K, V>* t = (EHashMap<K, V>*)&that;
 
 		//1.
 		clear();
 
 		delete[] _table;
-		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -1505,8 +3236,6 @@ public:
 			last = null;
 		}
 
-		_autoFreeValue = t->_autoFreeValue;
-		t->setAutoFree(false);
 		_size = t->_size;
 		_capacity = t->_capacity;
 		_loadFactor = t->_loadFactor;
@@ -1576,11 +3305,14 @@ public:
 	 *
 	 * @see #put(Object, Object)
 	 */
-	V get(int key) {
-		int hash = hashIt(key);
+	V get(_K* key) {
+		if (key == null)
+			return getForNullKey();
+		int hash = hashIt(key->hashCode());
 		for (Entry *e = _table[indexFor(hash,
 				_capacity)]; e != null; e = e->next) {
-			if (e->hash == hash && (e->key == key))
+			K k;
+			if (e->hash == hash && ((k = e->key) == key || key->equals(k.get())))
 				return e->value;
 		}
 		return null;
@@ -1594,7 +3326,7 @@ public:
 	 * @return <tt>true</tt> if this map contains a mapping for the specified
 	 * key.
 	 */
-	boolean containsKey(int key) {
+	boolean containsKey(_K* key) {
 		return getEntry(key) != null;
 	}
 
@@ -1603,12 +3335,13 @@ public:
 	 * HashMap.  Returns null if the HashMap contains no mapping
 	 * for the key.
 	 */
-	Entry* getEntry(int key) {
-		int hash = hashIt(key);
+	Entry* getEntry(_K* key) {
+		int hash = (key == null) ? 0 : hashIt(key->hashCode());
 		for (Entry *e = _table[indexFor(hash,
 				_capacity)]; e != null; e = e->next) {
+			K k;
 			if (e->hash == hash
-					&& (e->key == key))
+					&& ((k = e->key) == key || (key != null && key->equals(k.get()))))
 				return e;
 		}
 		return null;
@@ -1627,12 +3360,15 @@ public:
 	 *         (A <tt>null</tt> return can also indicate that the map
 	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
 	 */
-	V put(int key, V value, boolean *absent=null) {
-		int hash = hashIt(key);
+	V put(K key, V value, boolean *absent=null) {
+		if (key == null)
+			return putForNullKey(value);
+		int hash = hashIt(key->hashCode());
 		int i = indexFor(hash, _capacity);
 		for (Entry *e = _table[i]; e != null;
 				e = e->next) {
-			if (e->hash == hash && (e->key == key)) {
+			K k;
+			if (e->hash == hash && ((k = e->key) == key || key->equals(k.get()))) {
 				if (absent) {
 					*absent = false;
 				}
@@ -1709,7 +3445,7 @@ public:
 	 *         (A <tt>null</tt> return can also indicate that the map
 	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
 	 */
-	V remove(int key) {
+	V remove(_K* key) {
 		Entry *e = removeEntryForKey(key);
 		if (e) {
 			V v = e->value;
@@ -1725,16 +3461,17 @@ public:
 	 * in the HashMap.  Returns null if the HashMap contains no mapping
 	 * for this key.
 	 */
-	Entry* removeEntryForKey(int key) {
-		int hash = hashIt(key);
+	Entry* removeEntryForKey(_K* key) {
+		int hash = (key == null) ? 0 : hashIt(key->hashCode());
 		int i = indexFor(hash, _capacity);
 		Entry *prev = _table[i];
 		Entry *e = prev;
 
 		while (e != null) {
 			Entry *next = e->next;
+			K k;
 			if (e->hash == hash
-					&& (e->key == key)) {
+					&& ((k = e->key) == key || (key != null && key->equals(k.get())))) {
 				_size--;
 				if (prev == e)
 					_table[i] = next;
@@ -1754,9 +3491,9 @@ public:
 	/**
 	 * Special version of remove for EntrySet.
 	 */
-	Entry* removeMapping(EMapEntry<int,V> *entry) {
-		int key = entry->getKey();
-		int hash = hashIt(key);
+	Entry* removeMapping(EMapEntry<K,V> *entry) {
+		K key = entry->getKey();
+		int hash = (key == null) ? 0 : hashIt(key->hashCode());
 		int i = indexFor(hash, _capacity);
 		Entry *prev = _table[i];
 		Entry *e = prev;
@@ -1801,7 +3538,7 @@ public:
 	 * @return <tt>true</tt> if this map maps one or more keys to the
 	 *         specified value
 	 */
-	boolean containsValue(V value) {
+	boolean containsValue(_V* value) {
 		if (value == null)
 			return containsNullValue();
 
@@ -1809,7 +3546,7 @@ public:
 		for (int i = 0; i < (int)_capacity; i++)
 			for (Entry *e = tab[i]; e != null;
 					e = e->next)
-				if (value->equals(e->value))
+				if (value->equals(e->value.get()))
 					return true;
 		return false;
 	}
@@ -1821,7 +3558,7 @@ public:
 	 *
 	 * Subclass overrides this to alter the behavior of put method.
 	 */
-	void addEntry(int hash, int key, V value,
+	void addEntry(int hash, K key, V value,
 			int bucketIndex) {
 		Entry *e = _table[bucketIndex];
 		_table[bucketIndex] = new Entry(hash, key,
@@ -1845,11 +3582,11 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	ESet<int>* keySet() {
-		if (!EAbstractMap<int,V>::_keySet) {
-			EAbstractMap<int,V>::_keySet = new Keys(this);
+	sp<ESet<K> > keySet() {
+		if (!EAbstractMap<K,V>::_keySet) {
+			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
-		return EAbstractMap<int,V>::_keySet;
+		return EAbstractMap<K,V>::_keySet;
 	}
 
 	/**
@@ -1865,11 +3602,11 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	ECollection<V>* values() {
-		if (!EAbstractMap<int,V>::_values) {
-			EAbstractMap<int,V>::_values = new Values(this);
+	sp<ECollection<V> > values() {
+		if (!EAbstractMap<K,V>::_values) {
+			EAbstractMap<K,V>::_values = new Values(this);
 		}
-		return EAbstractMap<int,V>::_values;
+		return EAbstractMap<K,V>::_values;
 	}
 
 	/**
@@ -1888,8 +3625,8 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	ESet<EMapEntry<int, V>*>* entrySet() {
-		if (!_entrySet) {
+	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}
 		return _entrySet;
@@ -1903,888 +3640,16 @@ public:
 		return _loadFactor;
 	}
 
-	void setAutoFree(boolean autoFreeValue = true) {
-		_autoFreeValue = autoFreeValue;
-	}
-
-	boolean getAutoFreeValue() {
-		return _autoFreeValue;
-	}
-};
-
-
-
-//=============================================================================
-
-template<typename V>
-class EHashMap<llong, V> : public EAbstractMap<llong, V>,
-		virtual public EMap<llong, V> {
-public:
-	class Entry: public EMapEntry<llong, V> {
-	private:
-		friend class EHashMap;
-		llong key;
-		V value;
-		Entry *next;
-		EHashMap<llong, V> *map;
-		int hash;
-
-	public:
-		~Entry() {
-			if (map->getAutoFreeValue()) {
-				delete value;
-			}
-			delete next; //!
-		}
-
-		/**
-		 * Creates new entry.
-		 */
-		Entry(int h, llong k, V v,
-				Entry *n,
-				EHashMap<llong, V> *m) {
-			value = v;
-			next = n;
-			key = k;
-			hash = h;
-			map = m;
-		}
-
-		llong getKey() {
-			return key;
-		}
-
-		V getValue() {
-			return value;
-		}
-
-		V setValue(V newValue) {
-			V oldValue = value;
-			value = newValue;
-			return oldValue;
-		}
-
-		boolean equals(EMapEntry<llong, V> *e) {
-			llong k1 = getKey();
-			llong k2 = e->getKey();
-			if (k1 == k2) {
-				V v1 = getValue();
-				V v2 = e->getValue();
-				if (v1 == v2 || (v1 != null && v1->equals(v2)))
-					return true;
-			}
-			return false;
-		}
-
-		virtual int hashCode() {
-			return key ^ (value == null ? 0 : value->hashCode());
-		}
-
-		/**
-		 * This method is invoked whenever the value in an entry is
-		 * overwritten by an invocation of put(k,v) for a key k that's already
-		 * in the HashMap.
-		 */
-		void recordAccess(EHashMap<llong, V> *m) {
-		}
-
-		/**
-		 * This method is invoked whenever the entry is
-		 * removed from the table.
-		 */
-		void recordRemoval(EHashMap<llong, V> *m) {
-		}
-	};
-
-private:
-	template<typename I>
-	class HashIterator: public EIterator<I> {
-	private:
-		EHashMap<llong,V> *_map;
-
-		Entry *next; // next entry to return
-		int index; // current slot
-		Entry *current; // current entry
-	public:
-		HashIterator(EHashMap<llong, V> *map) : next(null), index(0), current(null) {
-			_map = map;
-
-			if (_map->size() > 0) { // advance to first entry
-				Entry **t = _map->_table;
-				while (index < (int)_map->_capacity && (next = t[index++]) == null)
-					;
-			}
-		}
-
-		boolean hasNext() {
-			return next != null;
-		}
-
-		Entry* nextEntry() {
-			Entry *e = next;
-			if (e == null)
-				throw ENOSUCHELEMENTEXCEPTION;
-
-			if ((next = e->next) == null) {
-				Entry **t = _map->_table;
-				while (index < (int)_map->_capacity && (next = t[index++]) == null)
-					;
-			}
-			current = e;
-			return e;
-		}
-
-		void remove() {
-			if (current == null)
-				throw EILLEGALSTATEEXCEPTION;
-			llong k = current->key;
-			current = null;
-			delete _map->removeEntryForKey(k);
-		}
-
-		Entry* moveOutEntry() {
-			if (current == null)
-				throw EILLEGALSTATEEXCEPTION;
-			llong k = current->key;
-			current = null;
-			return _map->removeEntryForKey(k);
-		}
-	};
-
-	template<typename EI>
-	class EntryIterator: public HashIterator<EI> {
-	public:
-		EntryIterator(EHashMap<llong, V> *map) :
-				HashIterator<EI>(map) {
-		}
-
-		EI next() {
-			return HashIterator<EI>::nextEntry();
-		}
-
-		EI moveOut() {
-			return HashIterator<EI>::moveOutEntry();
-		}
-	};
-
-	class ValueIterator: public HashIterator<V> {
-	public:
-		ValueIterator(EHashMap<llong, V> *map) :
-				HashIterator<V>(map) {
-		}
-
-		V next() {
-			return HashIterator<V>::nextEntry()->getValue();
-		}
-
-		V moveOut() {
-			Entry* e = HashIterator<V>::moveOutEntry();
-			V v = e->getValue();
-			delete e;
-			return v;
-		}
-	};
-
-	class KeyIterator: public HashIterator<llong> {
-	public:
-		KeyIterator(EHashMap<llong, V> *map) :
-				HashIterator<llong>(map) {
-		}
-
-		llong next() {
-			return HashIterator<llong>::nextEntry()->getKey();
-		}
-
-		llong moveOut() {
-			Entry* e = HashIterator<llong>::moveOutEntry();
-			llong k = e->getKey();
-			delete e;
-			return k;
-		}
-	};
-
-	class EntrySet: public EAbstractSet<EMapEntry<llong,V>*> {
-	private:
-		EHashMap<llong,V> *_map;
-
-	public:
-		EntrySet(EHashMap<llong,V> *map) {
-			_map = map;
-		}
-
-		sp<EIterator<EMapEntry<llong,V>*> > iterator(int index=0) {
-			return new EntryIterator<EMapEntry<llong,V>*>(_map);
-		}
-		boolean contains(EMapEntry<llong,V> *e) {
-			EMapEntry<llong,V> *candidate = _map->getEntry(e->getKey());
-			return candidate != null && candidate->equals(e);
-		}
-		boolean remove(EMapEntry<llong,V> *o) {
-			return _map->removeMapping(o) != null;
-		}
-		int size() {
-			return _map->size();
-		}
-		void clear() {
-			_map->clear();
-		}
-	};
-
-	class Values: public EAbstractCollection<V> {
-	private:
-		EHashMap<llong, V> *_map;
-	public:
-		Values(EHashMap<llong, V> *map) {
-			_map = map;
-		}
-		~Values() {
-		}
-		sp<EIterator<V> > iterator(int index = 0) {
-			return new ValueIterator(_map);
-		}
-		int size() {
-			return _map->size();
-		}
-		boolean contains(V o) {
-			return _map->containsValue(o);
-		}
-		void clear() {
-			_map->clear();
-		}
-	};
-
-	class Keys: public EAbstractSet<llong> {
-	private:
-		EHashMap<llong, V> *_map;
-	public:
-		Keys(EHashMap<llong, V> *map) {
-			_map = map;
-		}
-		sp<EIterator<llong> > iterator(int index = 0) {
-			return new KeyIterator(_map);
-		}
-		int size() {
-			return _map->size();
-		}
-		boolean contains(llong o) {
-			return _map->containsKey(o);
-		}
-		boolean remove(llong o) {
-			return _map->removeEntryForKey(o) != null;
-		}
-		void clear() {
-			_map->clear();
-		}
-	};
-
-private:
-	/**
-	 * The table, resized as necessary. Length MUST Always be a power of two.
-	 */
-	Entry **_table;
-
-	/**
-	 * The size of _table.
-	 */
-	uint _capacity;
-
-private:
-
-	/**
-	 * Auto free object flag
-	 */
-	boolean _autoFreeValue;
-
-	/**
-	 * The number of key-value mappings contained in this map.
-	 */
-	int _size;
-
-	/**
-	 * The next size value at which to resize (capacity * load factor).
-	 * @serial
-	 */
-	int _threshold;
-
-	/**
-	 * The load factor for the hash table.
-	 *
-	 * @serial
-	 */
-	float _loadFactor;
-
-	// Views
-	ESet<EMapEntry<llong, V>*> *_entrySet;
-
-	/**
-	 * Initialization hook for subclasses. This method is called
-	 * in all constructors and pseudo-constructors (clone, readObject)
-	 * after HashMap has been initialized but before any entries have
-	 * been inserted.  (In the absence of this method, readObject would
-	 * require explicit knowledge of subclasses.)
-	 */
-	void init(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
-		if (initialCapacity < HM_DEFAULT_INITIAL_CAPACITY)
-			initialCapacity = HM_DEFAULT_INITIAL_CAPACITY;
-		if (initialCapacity > HM_MAXIMUM_CAPACITY)
-			initialCapacity = HM_MAXIMUM_CAPACITY;
-
-		_autoFreeValue = autoFreeValue;
-
-		_size = 0;
-
-		// Find a power of 2 >= initialCapacity
-		_capacity = 1;
-		while (_capacity < initialCapacity)
-			_capacity <<= 1;
-
-		_loadFactor = loadFactor;
-		_threshold = (int) (_capacity * _loadFactor);
-		_table = new Entry*[_capacity]();
-		_entrySet = null;
-	}
-
-	/**
-	 * Special-case code for containsValue with null argument
-	 */
-	boolean containsNullValue() {
-		Entry **tab = _table;
-		for (int i = 0; i < (int)_capacity; i++)
-			for (Entry *e = tab[i]; e != null;
-					e = e->next)
-				if (e->value == null)
-					return true;
-		return false;
-	}
-
-	/**
-	 * Auto free.
-	 */
 	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
 	}
 
 	boolean getAutoFreeKey() {
-		return false;
-	}
-
-public:
-	/**
-	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
-	 * (16) and the default load factor (0.75).
-	 */
-	EHashMap() {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, true);
-	}
-	explicit
-	EHashMap(boolean autoFreeValue) {
-		init(HM_DEFAULT_INITIAL_CAPACITY, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
-	}
-
-	/**
-	 * Constructs an empty <tt>HashMap</tt> with the specified initial
-	 * capacity and the default load factor (0.75).
-	 *
-	 * @param  initialCapacity the initial capacity.
-	 * @throws IllegalArgumentException if the initial capacity is negative.
-	 */
-	explicit
-	EHashMap(uint initialCapacity, boolean autoFreeValue) {
-		init(initialCapacity, HM_DEFAULT_LOAD_FACTOR, autoFreeValue);
-	}
-
-	/**
-	 * Constructs an empty <tt>HashMap</tt> with the specified initial
-	 * capacity and load factor.
-	 *
-	 * @param  initialCapacity the initial capacity
-	 * @param  loadFactor      the load factor
-	 * @throws IllegalArgumentException if the initial capacity is negative
-	 *         or the load factor is nonpositive
-	 */
-	EHashMap(uint initialCapacity, float loadFactor, boolean autoFreeValue) {
-		init(initialCapacity, loadFactor, autoFreeValue);
-	}
-
-	virtual ~EHashMap() {
-		clear();
-
-		delete[] _table;
-		delete _entrySet;
-	}
-
-	EHashMap(const EHashMap<llong, V>& that) {
-		EHashMap<llong, V>* t = (EHashMap<llong, V>*)&that;
-
-		_table = new Entry*[t->_capacity]();
-		Entry **tab = t->_table;
-		Entry* last = null;
-		for (int i = 0; i < (int)t->_capacity; i++) {
-			for (Entry *e = tab[i]; e != null; e = e->next) {
-				Entry* e2 = new Entry(*e);
-				e2->next = null;
-				e2->map = this;
-
-				if (last == null) {
-					_table[i] = e2;
-				}
-				else {
-					last->next = e2;
-				}
-
-				last = e2;
-			}
-			last = null;
-		}
-
-		_autoFreeValue = t->_autoFreeValue;
-		t->setAutoFree(false);
-		_size = t->_size;
-		_capacity = t->_capacity;
-		_loadFactor = t->_loadFactor;
-		_threshold = t->_threshold;
-		_entrySet = null;
-	}
-
-	EHashMap<llong, V>& operator= (const EHashMap<llong, V>& that) {
-		if (this == &that) return *this;
-
-		EHashMap<llong, V>* t = (EHashMap<llong, V>*)&that;
-
-		//1.
-		clear();
-
-		delete[] _table;
-		delete _entrySet;
-
-		//2.
-		_table = new Entry*[t->_capacity]();
-		Entry **tab = t->_table;
-		Entry* last = null;
-		for (int i = 0; i < (int)t->_capacity; i++) {
-			for (Entry *e = tab[i]; e != null; e = e->next) {
-				Entry* e2 = new Entry(*e);
-				e2->next = null;
-				e2->map = this;
-
-				if (last == null) {
-					_table[i] = e2;
-				}
-				else {
-					last->next = e2;
-				}
-
-				last = e2;
-			}
-			last = null;
-		}
-
-		_autoFreeValue = t->_autoFreeValue;
-		t->setAutoFree(false);
-		_size = t->_size;
-		_capacity = t->_capacity;
-		_loadFactor = t->_loadFactor;
-		_threshold = t->_threshold;
-		_entrySet = null;
-
-		return *this;
-	}
-
-	// internal utilities
-
-	/**
-	 * Applies a supplemental hash function to a given hashCode, which
-	 * defends against poor quality hash functions.  This is critical
-	 * because HashMap uses power-of-two length hash tables, that
-	 * otherwise encounter collisions for hashCodes that do not differ
-	 * in lower bits. Note: Null keys always map to hash 0, thus index 0.
-	 */
-	static int hashIt(llong lh) {
-		ullong v = (ullong)lh;
-		int h = (int)(v ^ (v >> 32));
-
-		// This function ensures that hashCodes that differ only by
-		// constant multiples at each bit position have a bounded
-		// number of collisions (approximately 8 at default load factor).
-		unsigned int uh = (unsigned int) h;
-		uh ^= (uh >> 20) ^ (uh >> 12);
-		return uh ^ (uh >> 7) ^ (uh >> 4);
-	}
-
-	/**
-	 * Returns index for hash code h.
-	 */
-	static int indexFor(int h, int length) {
-		return h & (length - 1);
-	}
-
-	/**
-	 * Returns the number of key-value mappings in this map.
-	 *
-	 * @return the number of key-value mappings in this map
-	 */
-	int size() {
-		return _size;
-	}
-
-	/**
-	 * Returns <tt>true</tt> if this map contains no key-value mappings.
-	 *
-	 * @return <tt>true</tt> if this map contains no key-value mappings
-	 */
-	boolean isEmpty() {
-		return _size == 0;
-	}
-
-	/**
-	 * Returns the value to which the specified key is mapped,
-	 * or {@code null} if this map contains no mapping for the key.
-	 *
-	 * <p>More formally, if this map contains a mapping from a key
-	 * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
-	 * key.equals(k))}, then this method returns {@code v}; otherwise
-	 * it returns {@code null}.  (There can be at most one such mapping.)
-	 *
-	 * <p>A return value of {@code null} does not <i>necessarily</i>
-	 * indicate that the map contains no mapping for the key; it's also
-	 * possible that the map explicitly maps the key to {@code null}.
-	 * The {@link #containsKey containsKey} operation may be used to
-	 * distinguish these two cases.
-	 *
-	 * @see #put(Object, Object)
-	 */
-	V get(llong key) {
-		int hash = hashIt(key);
-		for (Entry *e = _table[indexFor(hash,
-				_capacity)]; e != null; e = e->next) {
-			if (e->hash == hash && (e->key == key))
-				return e->value;
-		}
-		return null;
-	}
-
-	/**
-	 * Returns <tt>true</tt> if this map contains a mapping for the
-	 * specified key.
-	 *
-	 * @param   key   The key whose presence in this map is to be tested
-	 * @return <tt>true</tt> if this map contains a mapping for the specified
-	 * key.
-	 */
-	boolean containsKey(llong key) {
-		return getEntry(key) != null;
-	}
-
-	/**
-	 * Returns the entry associated with the specified key in the
-	 * HashMap.  Returns null if the HashMap contains no mapping
-	 * for the key.
-	 */
-	Entry* getEntry(llong key) {
-		int hash = hashIt(key);
-		for (Entry *e = _table[indexFor(hash,
-				_capacity)]; e != null; e = e->next) {
-			if (e->hash == hash
-					&& (e->key == key))
-				return e;
-		}
-		return null;
-	}
-
-	/**
-	 * Associates the specified value with the specified key in this map.
-	 * If the map previously contained a mapping for the key, the old
-	 * value is replaced.
-	 *
-	 * @param key key with which the specified value is to be associated
-	 * @param value value to be associated with the specified key
-	 * @param absent test key is not exist
-	 * @return the previous value associated with <tt>key</tt>, or
-	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
-	 *         (A <tt>null</tt> return can also indicate that the map
-	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
-	 */
-	V put(llong key, V value, boolean *absent=null) {
-		int hash = hashIt(key);
-		int i = indexFor(hash, _capacity);
-		for (Entry *e = _table[i]; e != null;
-				e = e->next) {
-			if (e->hash == hash && (e->key == key)) {
-				if (absent) {
-					*absent = false;
-				}
-
-				V oldValue = e->value;
-				e->value = value;
-				e->recordAccess(this);
-				return oldValue;
-			}
-		}
-
-		if (absent) {
-			*absent = true;
-		}
-		addEntry(hash, key, value, i);
-		return null;
-	}
-
-	/**
-	 * Rehashes the contents of this map into a new array with a
-	 * larger capacity.  This method is called automatically when the
-	 * number of keys in this map reaches its _threshold.
-	 *
-	 * If current capacity is MAXIMUM_CAPACITY, this method does not
-	 * resize the map, but sets _threshold to Integer.MAX_VALUE.
-	 * This has the effect of preventing future calls.
-	 *
-	 * @param newCapacity the new capacity, MUST be a power of two;
-	 *        must be greater than current capacity unless current
-	 *        capacity is MAXIMUM_CAPACITY (in which case value
-	 *        is irrelevant).
-	 */
-	void resize(int newCapacity) {
-		int oldCapacity = _capacity;
-		if (oldCapacity == HM_MAXIMUM_CAPACITY) {
-			_threshold = EInteger::MAX_VALUE;
-			return;
-		}
-
-		Entry **newTable = new Entry*[newCapacity]();
-		transfer(newTable, newCapacity);
-		delete[] _table; //!
-		_table = newTable;
-		_capacity = newCapacity;
-		_threshold = (int) (newCapacity * _loadFactor);
-	}
-
-	/**
-	 * Transfers all entries from current table to newTable.
-	 */
-	void transfer(Entry *newTable[],
-			int newCapacity) {
-		Entry **src = _table;
-		for (int j = 0; j < (int)_capacity; j++) {
-			Entry *e = src[j];
-			if (e != null) {
-				do {
-					Entry *next = e->next;
-					int i = indexFor(e->hash, newCapacity);
-					e->next = newTable[i];
-					newTable[i] = e;
-					e = next;
-				} while (e != null);
-			}
-		}
-	}
-
-	/**
-	 * Removes the mapping for the specified key from this map if present.
-	 *
-	 * @param  key key whose mapping is to be removed from the map
-	 * @return the previous value associated with <tt>key</tt>, or
-	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>.
-	 *         (A <tt>null</tt> return can also indicate that the map
-	 *         previously associated <tt>null</tt> with <tt>key</tt>.)
-	 */
-	V remove(llong key) {
-		Entry *e = removeEntryForKey(key);
-		if (e) {
-			V v = e->value;
-			e->value = null;
-			delete e;
-			return v;
-		}
-		return null;
-	}
-
-	/**
-	 * Removes and returns the entry associated with the specified key
-	 * in the HashMap.  Returns null if the HashMap contains no mapping
-	 * for this key.
-	 */
-	Entry* removeEntryForKey(llong key) {
-		int hash = hashIt(key);
-		int i = indexFor(hash, _capacity);
-		Entry *prev = _table[i];
-		Entry *e = prev;
-
-		while (e != null) {
-			Entry *next = e->next;
-			if (e->hash == hash
-					&& (e->key == key)) {
-				_size--;
-				if (prev == e)
-					_table[i] = next;
-				else
-					prev->next = next;
-				e->recordRemoval(this);
-				e->next = null;
-				return e;
-			}
-			prev = e;
-			e = next;
-		}
-
-		return e;
-	}
-
-	/**
-	 * Special version of remove for EntrySet.
-	 */
-	Entry* removeMapping(EMapEntry<llong,V> *entry) {
-		llong key = entry->getKey();
-		int hash = hashIt(key);
-		int i = indexFor(hash, _capacity);
-		Entry *prev = _table[i];
-		Entry *e = prev;
-
-		while (e != null) {
-			Entry *next = e->next;
-			if (e->hash == hash && e->equals(entry)) {
-				_size--;
-				if (prev == e)
-					_table[i] = next;
-				else
-					prev->next = next;
-				e->recordRemoval(this);
-				return e;
-			}
-			prev = e;
-			e = next;
-		}
-
-		return e;
-	}
-
-	/**
-	 * Removes all of the mappings from this map.
-	 * The map will be empty after this call returns.
-	 */
-	void clear() {
-		Entry **tab = _table;
-		for (int i = 0; i < (int)_capacity; i++)
-			if (tab[i] != null) {
-				delete tab[i];
-				tab[i] = null;
-			}
-		_size = 0;
-	}
-
-	/**
-	 * Returns <tt>true</tt> if this map maps one or more keys to the
-	 * specified value.
-	 *
-	 * @param value value whose presence in this map is to be tested
-	 * @return <tt>true</tt> if this map maps one or more keys to the
-	 *         specified value
-	 */
-	boolean containsValue(V value) {
-		if (value == null)
-			return containsNullValue();
-
-		Entry **tab = _table;
-		for (int i = 0; i < (int)_capacity; i++)
-			for (Entry *e = tab[i]; e != null;
-					e = e->next)
-				if (value->equals(e->value))
-					return true;
-		return false;
-	}
-
-	/**
-	 * Adds a new entry with the specified key, value and hash code to
-	 * the specified bucket.  It is the responsibility of this
-	 * method to resize the table if appropriate.
-	 *
-	 * Subclass overrides this to alter the behavior of put method.
-	 */
-	void addEntry(int hash, llong key, V value,
-			int bucketIndex) {
-		Entry *e = _table[bucketIndex];
-		_table[bucketIndex] = new Entry(hash, key,
-				value, e, this);
-		if (_size++ >= _threshold)
-			resize(2 * _capacity);
-	}
-
-	// Views
-
-	/**
-	 * Returns a {@link Set} view of the keys contained in this map.
-	 * The set is backed by the map, so changes to the map are
-	 * reflected in the set, and vice-versa.  If the map is modified
-	 * while an iteration over the set is in progress (except through
-	 * the iterator's own <tt>remove</tt> operation), the results of
-	 * the iteration are undefined.  The set supports element removal,
-	 * which removes the corresponding mapping from the map, via the
-	 * <tt>Iterator.remove</tt>, <tt>Set.remove</tt>,
-	 * <tt>removeAll</tt>, <tt>retainAll</tt>, and <tt>clear</tt>
-	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
-	 * operations.
-	 */
-	ESet<llong>* keySet() {
-		if (!EAbstractMap<llong,V>::_keySet) {
-			EAbstractMap<llong,V>::_keySet = new Keys(this);
-		}
-		return EAbstractMap<llong,V>::_keySet;
-	}
-
-	/**
-	 * Returns a {@link Collection} view of the values contained in this map.
-	 * The collection is backed by the map, so changes to the map are
-	 * reflected in the collection, and vice-versa.  If the map is
-	 * modified while an iteration over the collection is in progress
-	 * (except through the iterator's own <tt>remove</tt> operation),
-	 * the results of the iteration are undefined.  The collection
-	 * supports element removal, which removes the corresponding
-	 * mapping from the map, via the <tt>Iterator.remove</tt>,
-	 * <tt>Collection.remove</tt>, <tt>removeAll</tt>,
-	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
-	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
-	 */
-	ECollection<V>* values() {
-		if (!EAbstractMap<llong,V>::_values) {
-			EAbstractMap<llong,V>::_values = new Values(this);
-		}
-		return EAbstractMap<llong,V>::_values;
-	}
-
-	/**
-	 * Returns a {@link Set} view of the mappings contained in this map.
-	 * The set is backed by the map, so changes to the map are
-	 * reflected in the set, and vice-versa.  If the map is modified
-	 * while an iteration over the set is in progress (except through
-	 * the iterator's own <tt>remove</tt> operation, or through the
-	 * <tt>setValue</tt> operation on a map entry returned by the
-	 * iterator) the results of the iteration are undefined.  The set
-	 * supports element removal, which removes the corresponding
-	 * mapping from the map, via the <tt>Iterator.remove</tt>,
-	 * <tt>Set.remove</tt>, <tt>removeAll</tt>, <tt>retainAll</tt> and
-	 * <tt>clear</tt> operations.  It does not support the
-	 * <tt>add</tt> or <tt>addAll</tt> operations.
-	 *
-	 * @return a set view of the mappings contained in this map
-	 */
-	ESet<EMapEntry<llong, V>*>* entrySet() {
-		if (!_entrySet) {
-			_entrySet = new EntrySet(this);
-		}
-		return _entrySet;
-	}
-
-	// These methods are used when serializing HashSets
-	int capacity() {
-		return _capacity;
-	}
-	float loadFactor() {
-		return _loadFactor;
-	}
-
-	void setAutoFree(boolean autoFreeValue = true) {
-		_autoFreeValue = autoFreeValue;
+		return true;
 	}
 
 	boolean getAutoFreeValue() {
-		return _autoFreeValue;
+		return true;
 	}
 };
 

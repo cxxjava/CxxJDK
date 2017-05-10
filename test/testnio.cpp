@@ -101,9 +101,9 @@ static void test_nioserver() {
 //	while (ccc < 100) {
 	while (true) {
 		int readyChannels = selector->select();
-		if(readyChannels == 0) continue;
+		if (readyChannels == 0) continue;
 //		LOG("readyChannels=%d", readyChannels);
-		ESet < ESelectionKey* >* selectionKeys = selector->selectedKeys();
+		ESet< ESelectionKey* >* selectionKeys = selector->selectedKeys();
 		sp<EIterator < ESelectionKey* > > iterator = selectionKeys->iterator();
 		while (iterator->hasNext()) {
 			ESelectionKey* selectionKey = iterator->next();
@@ -367,7 +367,7 @@ static void test_filechannel() {
 }
 
 static void sendFile(EDatagramChannel* ch, EInetSocketAddress* remote) {
-	EFileChannel* fc = EFileChannel::open("xxx.txt", true, false, false);
+	EFileChannel* fc = EFileChannel::open("/tmp/b11.cpp", true, false, false);
 
 	// if not connect then read or write, channel will throw NotYetConnectedException.
 	ch->connect(remote);
@@ -442,10 +442,10 @@ MAIN_IMPL(testnio) {
 		do {
 
 //		test_bytebuffer();
+//		test_nioserver();
 //		test_nioclient();
 //		test_nioserversocket();
 //		test_filechannel();
-
 		test_nioudpserver();
 //		test_nioudpclient();
 

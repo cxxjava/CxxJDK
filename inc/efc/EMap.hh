@@ -3,6 +3,7 @@
 
 #include "EBase.hh"
 #include "ESet.hh"
+#include "ESharedPtr.hh"
 
 namespace efc {
 
@@ -110,7 +111,7 @@ namespace efc {
  * @since 1.2
  */
 
-template<typename EK, typename EV>
+template<typename K, typename V>
 interface EMapEntry : virtual public EObject {
 	virtual ~EMapEntry() {
 	}
@@ -123,7 +124,7 @@ interface EMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual EK getKey() = 0;
+	virtual K getKey() = 0;
 
 	/**
 	 * Returns the value corresponding to this entry.  If the mapping
@@ -135,7 +136,7 @@ interface EMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual EV getValue() = 0;
+	virtual V getValue() = 0;
 
 	/**
 	 * Replaces the value corresponding to this entry with the specified
@@ -157,7 +158,7 @@ interface EMapEntry : virtual public EObject {
 	 *         required to, throw this exception if the entry has been
 	 *         removed from the backing map.
 	 */
-	virtual EV setValue(EV value) = 0;
+	virtual V setValue(V value) = 0;
 
 	/**
 	 * Compares the specified object with this entry for equality.
@@ -177,7 +178,7 @@ interface EMapEntry : virtual public EObject {
 	 * @return <tt>true</tt> if the specified object is equal to this map
 	 *         entry
 	 */
-	virtual boolean equals(EMapEntry<EK,EV> *o) = 0;
+	virtual boolean equals(EMapEntry<K,V> *o) = 0;
 
 	/**
 	 * Returns the hash code value for this map entry.  The hash code
@@ -200,6 +201,9 @@ interface EMapEntry : virtual public EObject {
 
 template<typename K, typename V>
 interface EMap : virtual public EObject {
+	typedef typename ETraits<K>::indexType idxK;
+	typedef typename ETraits<V>::indexType idxV;
+
 	virtual ~EMap() {
 	}
 
@@ -236,7 +240,7 @@ interface EMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this map
 	 *         does not permit null keys (optional)
 	 */
-	virtual boolean containsKey(K key) = 0;
+	virtual boolean containsKey(idxK key) = 0;
 
 	/**
 	 * Returns <tt>true</tt> if this map maps one or more keys to the
@@ -254,7 +258,7 @@ interface EMap : virtual public EObject {
 	 * @throws NullPointerException if the specified value is null and this
 	 *         map does not permit null values (optional)
 	 */
-	virtual boolean containsValue(V value) = 0;
+	virtual boolean containsValue(idxV value) = 0;
 
 	/**
 	 * Returns the value to which the specified key is mapped,
@@ -279,7 +283,7 @@ interface EMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this map
 	 *         does not permit null keys (optional)
 	 */
-	virtual V get(K key) = 0;
+	virtual V get(idxK key) = 0;
 
 	// Modification Operations
 
@@ -337,7 +341,7 @@ interface EMap : virtual public EObject {
 	 * @throws NullPointerException if the specified key is null and this
 	 *         map does not permit null keys (optional)
 	 */
-	virtual V remove(K key) = 0;
+	virtual V remove(idxK key) = 0;
 
 	/**
 	 * Removes all of the mappings from this map (optional operation).
@@ -365,7 +369,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a set view of the keys contained in this map
 	 */
-	virtual ESet<K>* keySet() = 0;
+	virtual sp<ESet<K> > keySet() = 0;
 
 	/**
 	 * Returns a {@link Collection} view of the values contained in this map.
@@ -382,7 +386,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a collection view of the values contained in this map
 	 */
-	virtual ECollection<V>* values() = 0;
+	virtual sp<ECollection<V> > values() = 0;
 
 	/**
 	 * Returns a {@link Set} view of the mappings contained in this map.
@@ -400,14 +404,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
-
-	/**
-	 * Auto free
-	 */
-	virtual void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) = 0;
-	virtual boolean getAutoFreeKey() = 0;
-	virtual boolean getAutoFreeValue() = 0;
+	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
 };
 
 } /* namespace efc */

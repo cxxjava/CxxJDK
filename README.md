@@ -352,8 +352,6 @@ Total Number of Cores:	2
 | Set*                                      |   EConcurrentSet                       |
 | SortedMap*                                |   EConcurrentSortedMap                 |
 | SortedSet*                                |   EConcurrentSortedSet                 |
-| Object[]*                                 |   ESharedArr                           |
-| ArrayList*                                |   ESharedArrLst                        |
 
 
 ######nio:
@@ -419,6 +417,8 @@ Total Number of Cores:	2
 | EAtomic               | C++ wrapper for atomic operation |
 | EThreadX              | C++11 wrapper for EThread |
 | EScopeGuard           | C++11 assistant for scope guards |
+| EAtomicDouble         | double atomic operation          |
+| ENetWrapper           | Foundation for native socket     |
 
    
 ####Manual

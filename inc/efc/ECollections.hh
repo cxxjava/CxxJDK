@@ -13,6 +13,7 @@
 #include "ERandom.hh"
 #include "EIterator.hh"
 #include "ECollection.hh"
+#include "ETraits.hh"
 #include "EList.hh"
 #include "ESortedMap.hh"
 #include "ENullPointerException.hh"
@@ -173,7 +174,8 @@ public:
 				for (int i = off; i < len + off; i++) {
 					for (int j = i;
 							j > off
-									&& ((EComparable<E>*) list->getAt(j - 1))->compareTo(list->getAt(j)) > 0;
+//							&& (list->getAt(j - 1))->compareTo(list->getAt(j)) > 0;
+							&& compare((list->getAt(j - 1)), list->getAt(j)) > 0;
 							j--)
 						swap(list, j, j - 1);
                 }
@@ -199,13 +201,15 @@ public:
 			int a = off, b = a, c = off + len - 1, d = c;
 			int rbv, rcv;
 			while (true ) {
-				while (b <= c && (rbv = ((EComparable<E>*)list->getAt(b))->compareTo(v)) <= 0) {
+//				while (b <= c && (rbv = (list->getAt(b))->compareTo(v)) <= 0) {
+				while (b <= c && (rbv = compare((list->getAt(b)), v)) <= 0) {
 					if (rbv == 0)
 						swap(list, a++, b);
 					b++;
 				}
 
-				while (c >= b && (rcv = ((EComparable<E>*)list->getAt(c))->compareTo(v)) >= 0) {
+//				while (c >= b && (rcv = (list->getAt(c))->compareTo(v)) >= 0) {
+				while (c >= b && (rcv = compare((list->getAt(c)), v)) >= 0) {
 					if (rcv == 0)
 						swap(list, c, d--);
 					c--;
@@ -699,9 +703,9 @@ public:
 		boolean needFreeLock;
 		boolean autoFree;
 
-		ESet<K>* keySet_;// = null;
-		ESet<EMapEntry<K,V>*>* entrySet_;// = null;
-		ECollection<V>* values_;// = null;
+		sp<ESet<K> > keySet_;// = null;
+		sp<ESet<EMapEntry<K,V>*> > entrySet_;// = null;
+		sp<ECollection<V> > values_;// = null;
 
 	public:
 		SynchronizedMap(EMap<K, V>* m, ELock* mutex = null,
@@ -726,9 +730,6 @@ public:
 			if (autoFree) {
 				delete m;
 			}
-			delete keySet_;
-			delete entrySet_;
-			delete values_;
 		}
 
 		int size() {
@@ -756,26 +757,26 @@ public:
             SYNCBLOCK(mutex) {m->clear();}}
 		}
 
-		ESet<K>* keySet() {
+		sp<ESet<K> > keySet() {
 			SYNCBLOCK(mutex) {
 				if (keySet_==null)
-					keySet_ = new SynchronizedSet<K>(m->keySet(), mutex, false);
+					keySet_ = new SynchronizedSet<K>(m->keySet().get(), mutex, false);
 				return keySet_;
             }}
 		}
 
-		ESet<EMapEntry<K,V>*>* entrySet() {
+		sp<ESet<EMapEntry<K,V>*> > entrySet() {
 			SYNCBLOCK(mutex) {
 				if (entrySet_==null)
-					entrySet_ = new SynchronizedSet<EMapEntry<K,V>*>(m->entrySet(), mutex, false);
+					entrySet_ = new SynchronizedSet<EMapEntry<K,V>*>(m->entrySet().get(), mutex, false);
 				return entrySet_;
             }}
 		}
 
-		ECollection<V>* values() {
+		sp<ECollection<V> > values() {
 			SYNCBLOCK(mutex) {
 				if (values_==null)
-					values_ = new SynchronizedCollection<V>(m->values(), mutex, false);
+					values_ = new SynchronizedCollection<V>(m->values().get(), mutex, false);
 				return values_;
             }}
 		}
@@ -988,9 +989,9 @@ public:
 	private:
 		EMap<K,V>* m;
 
-		ESet<K>* keySet_;// = null;
-		ESet<EMapEntry<K,V>*>* entrySet_;// = null;
-		ECollection<V>* values_;// = null;
+		sp<ESet<K> > keySet_;// = null;
+		sp<ESet<EMapEntry<K,V>*> > entrySet_;// = null;
+		sp<ECollection<V> > values_;// = null;
 
 		/**
 		 * We need this class in addition to UnmodifiableSet as
@@ -1086,9 +1087,7 @@ public:
 			values_ = null;
 		}
 		~UnmodifiableMap() {
-			delete keySet_;
-			delete entrySet_;
-			delete values_;
+			//
 		}
 
 	public:
@@ -1111,12 +1110,12 @@ public:
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
-		ESet<K>* keySet() {
+		sp<ESet<K> > keySet() {
 			if (keySet_==null)
-				keySet_ = unmodifiableSet(m->keySet());
+				keySet_ = unmodifiableSet(m->keySet().get());
 			return keySet_;
 		}
-		ESet<EMapEntry<K,V>*>* entrySet() {
+		sp<ESet<EMapEntry<K,V>*> > entrySet() {
 			/** TODO:
 			 if (entrySet_==null)
 				entrySet_ = new UnmodifiableEntrySet<K,V>(m.entrySet());
@@ -1124,9 +1123,9 @@ public:
 			 */
 			return m->entrySet();
 		}
-		ECollection<V>* values() {
+		sp<ECollection<V> > values() {
 			if (values_==null)
-				values_ = unmodifiableCollection(m->values());
+				values_ = unmodifiableCollection(m->values().get());
 			return values_;
 		}
 
@@ -1222,9 +1221,15 @@ private:
 		E _b = list->getAt(b);
 		E _c = list->getAt(c);
 
-		return (((EComparable<E>*)_a)->compareTo(_b) < 0 ?
-				(((EComparable<E>*)_b)->compareTo(_c) < 0 ? b : ((EComparable<E>*)_a)->compareTo(_c) < 0 ? c : a) :
-				(((EComparable<E>*)_b)->compareTo(_c) > 0 ? b : ((EComparable<E>*)_a)->compareTo(_c) > 0 ? c : a));
+		#if 0
+		return (_a->compareTo(_b) < 0 ?
+				(_b->compareTo(_c) < 0 ? b : _a->compareTo(_c) < 0 ? c : a) :
+				(_b->compareTo(_c) > 0 ? b : _a->compareTo(_c) > 0 ? c : a));
+		#else
+		return (compare(_a, _b) < 0 ?
+				(compare(_b, _c) < 0 ? b : compare(_a, _c) < 0 ? c : a) :
+				(compare(_b, _c) > 0 ? b : compare(_a, _c) > 0 ? c : a));
+		#endif
 	}
 
 	template<typename E>
@@ -1239,6 +1244,15 @@ private:
 					comp->compare(_a, _c) < 0 ? c : a) :
 				(comp->compare(_b, _c) > 0 ? b :
 					comp->compare(_a, _c) > 0 ? c : a));
+	}
+
+	template<typename E>
+	static int compare(E o1, E o2) {
+		return o1->compareTo(o2);
+	}
+	template<typename E>
+	static int compare(sp<E> o1, sp<E> o2) {
+		return o1->compareTo(o2.get());
 	}
 };
 

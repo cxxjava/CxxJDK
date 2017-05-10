@@ -81,6 +81,9 @@ namespace efc {
  * @param <E> the type of elements held in this collection
  */
 
+//=============================================================================
+//Primitive Types.
+
 template<typename E>
 class ELinkedList : public EAbstractList<E>,
 		virtual public EList<E>,
@@ -94,7 +97,7 @@ public:
 	/**
 	 * Constructs an empty list.
 	 */
-	ELinkedList(boolean autoFree = true) : _autoFree(autoFree), listSize(0) {
+	ELinkedList() : listSize(0) {
 		header = new Entry(0, null, null);
 		header->next = header->prev = header;
 	}
@@ -110,7 +113,720 @@ public:
 			add(e->elem);
 			e = e->next;
 		}
-		
+	}
+
+    ELinkedList<E>& operator= (const ELinkedList<E>& that) {
+    	if (this == &that) return *this;
+
+		ELinkedList<E>* t = (ELinkedList<E>*)&that;
+
+		//1.
+		clear();
+		delete header;
+
+		//2.
+		header = new Entry(0, null, null);
+		header->next = header->prev = header;
+
+		Entry *e = t->header->next;
+		while (e != t->header) {
+			add(e->elem);
+			e = e->next;
+		}
+
+		return *this;
+	}
+
+	/**
+	 * Returns the first element in this list.
+	 *
+	 * @return the first element in this list
+	 * @throws NoSuchElementException if this list is empty
+	 */
+	virtual E getFirst() THROWS(ENoSuchElementException) {
+		if (listSize == 0)
+			throw ENoSuchElementException(__FILE__, __LINE__);
+		return header->next->elem;
+	}
+
+	/**
+	 * Returns the last element in this list.
+	 *
+	 * @return the last element in this list
+	 * @throws NoSuchElementException if this list is empty
+	 */
+	virtual E getLast() THROWS(ENoSuchElementException) {
+		if (listSize == 0)
+			throw ENoSuchElementException(__FILE__, __LINE__);
+		return header->prev->elem;
+	}
+
+	/**
+	 * Removes and returns the first element from this list.
+	 *
+	 * @return the first element from this list
+	 * @throws NoSuchElementException if this list is empty
+	 */
+	virtual E removeFirst() THROWS(ENoSuchElementException) {
+		return remove(header->next);
+	}
+
+	/**
+	 * Removes and returns the last element from this list.
+	 *
+	 * @return the last element from this list
+	 * @throws NoSuchElementException if this list is empty
+	 */
+	virtual E removeLast() THROWS(ENoSuchElementException) {
+		return remove(header->prev);
+	}
+
+	/**
+	 * Inserts the specified element at the beginning of this list.
+	 *
+	 * @param e the element to add
+	 */
+	virtual void addFirst(E e) {
+		addBefore(e, header->next);
+	}
+
+	/**
+	 * Appends the specified element to the end of this list.
+	 *
+	 * <p>This method is equivalent to {@link #add}.
+	 *
+	 * @param e the element to add
+	 */
+	virtual void addLast(E e) {
+		addBefore(e, header);
+	}
+
+	/**
+	 * Returns <tt>true</tt> if this list contains the specified element.
+	 * More formally, returns <tt>true</tt> if and only if this list contains
+	 * at least one element <tt>e</tt> such that
+	 * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+	 *
+	 * @param o element whose presence in this list is to be tested
+	 * @return <tt>true</tt> if this list contains the specified element
+	 */
+	virtual boolean contains(E o) {
+		return indexOf(o) != -1;
+	}
+
+	/**
+	 * Returns the number of elements in this list.
+	 *
+	 * @return the number of elements in this list
+	 */
+	virtual int size() {
+		return listSize;
+	}
+
+	/**
+	 * Appends the specified element to the end of this list.
+	 *
+	 * <p>This method is equivalent to {@link #addLast}.
+	 *
+	 * @param e element to be appended to this list
+	 * @return <tt>true</tt> (as specified by {@link Collection#add})
+	 */
+	virtual boolean add(E e) {
+		addBefore(e, header);
+		return true;
+	}
+
+	/**
+	 * Removes the first occurrence of the specified element from this list,
+	 * if it is present.  If this list does not contain the element, it is
+	 * unchanged.  More formally, removes the element with the lowest index
+	 * <tt>i</tt> such that
+	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
+	 * (if such an element exists).  Returns <tt>true</tt> if this list
+	 * contained the specified element (or equivalently, if this list
+	 * changed as a result of the call).
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @return <tt>true</tt> if this list contained the specified element
+	 */
+	virtual boolean remove(E o) {
+		for (Entry *e = header->next; e != header; e = e->next) {
+			if (e->elem == (o)) {
+				E v = remove(e);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Removes all of the elements from this list.
+	 */
+	virtual void clear() {
+		Entry *e = header->next;
+		while (e != header) {
+			Entry *next = e->next;
+			delete e;
+			e = next;
+		}
+        header->next = header->prev = header;
+        listSize = 0;
+	}
+
+	// Positional Access Operations
+
+	/**
+	 * Returns the element at the specified position in this list.
+	 *
+	 * @param index index of the element to return
+	 * @return the element at the specified position in this list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	virtual E getAt(int index) THROWS(EIndexOutOfBoundsException) {
+        return entry(index)->elem;
+	}
+
+	/**
+	 * Replaces the element at the specified position in this list with the
+	 * specified element.
+	 *
+	 * @param index index of the element to replace
+	 * @param element element to be stored at the specified position
+	 * @return the element previously at the specified position
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	virtual E setAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
+		Entry *e = entry(index);
+        E oldVal = e->elem;
+        e->elem = element;
+        return oldVal;
+	}
+
+	/**
+	 * Inserts the specified element at the specified position in this list.
+	 * Shifts the element currently at that position (if any) and any
+	 * subsequent elements to the right (adds one to their indices).
+	 *
+	 * @param index index at which the specified element is to be inserted
+	 * @param element element to be inserted
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	virtual void addAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
+        addBefore(element, (index==listSize ? header : entry(index)));
+	}
+
+	/**
+	 * Removes the element at the specified position in this list.  Shifts any
+	 * subsequent elements to the left (subtracts one from their indices).
+	 * Returns the element that was removed from the list.
+	 *
+	 * @param index the index of the element to be removed
+	 * @return the element previously at the specified position
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	virtual E removeAt(int index) THROWS(EIndexOutOfBoundsException) {
+        return remove(entry(index));
+	}
+
+	// Search Operations
+
+	/**
+	 * Returns the index of the first occurrence of the specified element
+	 * in this list, or -1 if this list does not contain the element.
+	 * More formally, returns the lowest index <tt>i</tt> such that
+	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+	 * or -1 if there is no such index.
+	 *
+	 * @param o element to search for
+	 * @return the index of the first occurrence of the specified element in
+	 *         this list, or -1 if this list does not contain the element
+	 */
+	virtual int indexOf(E o) {
+		int index = 0;
+		for (Entry *e = header->next; e != header; e = e->next) {
+			if (o == (e->elem))
+				return index;
+			index++;
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns the index of the last occurrence of the specified element
+	 * in this list, or -1 if this list does not contain the element.
+	 * More formally, returns the highest index <tt>i</tt> such that
+	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+	 * or -1 if there is no such index.
+	 *
+	 * @param o element to search for
+	 * @return the index of the last occurrence of the specified element in
+	 *         this list, or -1 if this list does not contain the element
+	 */
+	virtual int lastIndexOf(E o) {
+		int index = listSize;
+		for (Entry *e = header->prev; e != header; e = e->prev) {
+			index--;
+			if (o == (e->elem))
+				return index;
+		}
+		return -1;
+	}
+
+	// Queue operations.
+
+	/**
+	 * Retrieves, but does not remove, the head (first element) of this list.
+	 * @return the head of this list, or <tt>null</tt> if this list is empty
+	 * @since 1.5
+	 */
+	virtual E peek() THROWS(ENoSuchElementException) {
+		return getFirst();
+	}
+
+	/**
+	 * Retrieves, but does not remove, the head (first element) of this list.
+	 * @return the head of this list
+	 * @throws NoSuchElementException if this list is empty
+	 * @since 1.5
+	 */
+	virtual E element() THROWS(ENoSuchElementException) {
+		return getFirst();
+	}
+
+	/**
+	 * Retrieves and removes the head (first element) of this list
+	 * @return the head of this list, or <tt>null</tt> if this list is empty
+	 * @since 1.5
+	 */
+	virtual E poll() THROWS(ENoSuchElementException) {
+		if (listSize == 0)
+			throw ENOSUCHELEMENTEXCEPTION;
+		return removeFirst();
+	}
+
+	/**
+	 * Retrieves and removes the head (first element) of this list.
+	 *
+	 * @return the head of this list
+	 * @throws NoSuchElementException if this list is empty
+	 * @since 1.5
+	 */
+	virtual E remove() THROWS(ENoSuchElementException) {
+		return removeFirst();
+	}
+
+	/**
+	 * Adds the specified element as the tail (last element) of this list.
+	 *
+	 * @param e the element to add
+	 * @return <tt>true</tt> (as specified by {@link Queue#offer})
+	 * @since 1.5
+	 */
+	virtual boolean offer(E e) {
+		return add(e);
+	}
+
+	// Deque operations
+	/**
+	 * Inserts the specified element at the front of this list.
+	 *
+	 * @param e the element to insert
+	 * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
+	 * @since 1.6
+	 */
+	virtual boolean offerFirst(E e) {
+		addFirst(e);
+		return true;
+	}
+
+	/**
+	 * Inserts the specified element at the end of this list.
+	 *
+	 * @param e the element to insert
+	 * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
+	 * @since 1.6
+	 */
+	virtual boolean offerLast(E e) {
+		addLast(e);
+		return true;
+	}
+
+	/**
+	 * Retrieves, but does not remove, the first element of this list,
+	 * or returns <tt>null</tt> if this list is empty.
+	 *
+	 * @return the first element of this list, or <tt>null</tt>
+	 *         if this list is empty
+	 * @since 1.6
+	 */
+	virtual E peekFirst() {
+		return getFirst();
+	}
+
+	/**
+	 * Retrieves, but does not remove, the last element of this list,
+	 * or returns <tt>null</tt> if this list is empty.
+	 *
+	 * @return the last element of this list, or <tt>null</tt>
+	 *         if this list is empty
+	 * @since 1.6
+	 */
+	virtual E peekLast() {
+		return getLast();
+	}
+
+	/**
+	 * Retrieves and removes the first element of this list,
+	 * or returns <tt>null</tt> if this list is empty.
+	 *
+	 * @return the first element of this list, or <tt>null</tt> if
+	 *     this list is empty
+	 * @since 1.6
+	 */
+	virtual E pollFirst() {
+		return removeFirst();
+	}
+
+	/**
+	 * Retrieves and removes the last element of this list,
+	 * or returns <tt>null</tt> if this list is empty.
+	 *
+	 * @return the last element of this list, or <tt>null</tt> if
+	 *     this list is empty
+	 * @since 1.6
+	 */
+	virtual E pollLast() {
+		return removeLast();
+	}
+
+	/**
+	 * Pushes an element onto the stack represented by this list.  In other
+	 * words, inserts the element at the front of this list.
+	 *
+	 * <p>This method is equivalent to {@link #addFirst}.
+	 *
+	 * @param e the element to push
+	 * @since 1.6
+	 */
+	virtual void push(E e) {
+		addFirst(e);
+	}
+
+	/**
+	 * Pops an element from the stack represented by this list.  In other
+	 * words, removes and returns the first element of this list.
+	 *
+	 * <p>This method is equivalent to {@link #removeFirst()}.
+	 *
+	 * @return the element at the front of this list (which is the top
+	 *         of the stack represented by this list)
+	 * @throws NoSuchElementException if this list is empty
+	 * @since 1.6
+	 */
+	virtual E pop() {
+		return removeFirst();
+	}
+
+	/**
+	 * Removes the first occurrence of the specified element in this
+	 * list (when traversing the list from head to tail).  If the list
+	 * does not contain the element, it is unchanged.
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @return <tt>true</tt> if the list contained the specified element
+	 * @since 1.6
+	 */
+	virtual boolean removeFirstOccurrence(E o) {
+		return remove(o);
+	}
+
+	/**
+	 * Removes the last occurrence of the specified element in this
+	 * list (when traversing the list from head to tail).  If the list
+	 * does not contain the element, it is unchanged.
+	 *
+	 * @param o element to be removed from this list, if present
+	 * @return <tt>true</tt> if the list contained the specified element
+	 * @since 1.6
+	 */
+	virtual boolean removeLastOccurrence(E o) {
+		for (Entry *e = header->prev; e != header; e = e->prev) {
+			if (o == (e->elem)) {
+				remove(e);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns a list-iterator of the elements in this list (in proper
+	 * sequence), starting at the specified position in the list.
+	 * Obeys the general contract of <tt>List.listIterator(int)</tt>.<p>
+	 *
+	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
+	 * modified at any time after the Iterator is created, in any way except
+	 * through the list-iterator's own <tt>remove</tt> or <tt>add</tt>
+	 * methods, the list-iterator will throw a
+	 * <tt>ConcurrentModificationException</tt>.  Thus, in the face of
+	 * concurrent modification, the iterator fails quickly and cleanly, rather
+	 * than risking arbitrary, non-deterministic behavior at an undetermined
+	 * time in the future.
+	 *
+	 * @param index index of the first element to be returned from the
+	 *              list-iterator (by a call to <tt>next</tt>)
+	 * @return a ListIterator of the elements in this list (in proper
+	 *         sequence), starting at the specified position in the list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 * @see List#listIterator(int)
+	 */
+	virtual sp<EIterator<E> > iterator(int index = 0) {
+		return new ListItr(this, index);
+	}
+
+	/**
+	 * Returns a list-iterator of the elements in this list (in proper
+	 * sequence), starting at the specified position in the list.
+	 * Obeys the general contract of {@code List.listIterator(int)}.<p>
+	 *
+	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
+	 * modified at any time after the Iterator is created, in any way except
+	 * through the list-iterator's own {@code remove} or {@code add}
+	 * methods, the list-iterator will throw a
+	 * {@code ConcurrentModificationException}.  Thus, in the face of
+	 * concurrent modification, the iterator fails quickly and cleanly, rather
+	 * than risking arbitrary, non-deterministic behavior at an undetermined
+	 * time in the future.
+	 *
+	 * @param index index of the first element to be returned from the
+	 *              list-iterator (by a call to {@code next})
+	 * @return a ListIterator of the elements in this list (in proper
+	 *         sequence), starting at the specified position in the list
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 * @see List#listIterator(int)
+	 */
+	virtual sp<EListIterator<E> > listIterator(int index = 0) {
+		return new ListItr(this, index);
+	}
+
+	virtual sp<EIterator<E> > descendingIterator() {
+		return null;
+	}
+
+	virtual boolean isEmpty() {
+		return listSize==0;
+	}
+
+	/**
+	 * Returns a shallow copy of this {@code LinkedList}. (The elements
+	 * themselves are not cloned.)
+	 *
+	 * @return a shallow copy of this {@code LinkedList} instance
+	 */
+	virtual ELinkedList<E>* clone() {
+		ELinkedList<E>* ll = new ELinkedList<E>();
+
+		// Initialize clone with our elements
+		for (Entry* x = header->next; x != header; x = x->next)
+			ll->add(x->elem);
+
+		return ll;
+	}
+
+private:
+	class Entry {
+	public:
+		E elem;
+		Entry *next;
+		Entry *prev;
+
+		Entry(E element, Entry *next,
+				Entry *previous) {
+			this->elem = element;
+			this->next = next;
+			this->prev = previous;
+		}
+
+		~Entry() {
+		}
+	};
+
+	class ListItr : public EListIterator<E> {
+	private:
+		ELinkedList<E>* self;
+
+		Entry* lastReturned;
+		Entry* next_;
+        int nextIndex_;
+	public:
+        ListItr(ELinkedList<E>* list, int index) : self(list), lastReturned(null), next_(null) {
+            // assert isPositionIndex(index);
+        	if (index < 0 || index > self->listSize)
+				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
+
+        	next_ = (index == self->listSize) ? null : self->entry(index);
+        	nextIndex_ = index;
+        }
+
+        boolean hasNext() {
+            return nextIndex_ < self->listSize;
+        }
+
+        E next() {
+            if (!hasNext())
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            lastReturned = next_;
+            next_ = next_->next;
+            nextIndex_++;
+            return lastReturned->elem;
+        }
+
+        boolean hasPrevious() {
+            return nextIndex_ > 0;
+        }
+
+        E previous() {
+            if (!hasPrevious())
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
+            nextIndex_--;
+            return lastReturned->elem;
+        }
+
+        int nextIndex() {
+            return nextIndex_;
+        }
+
+        int previousIndex() {
+            return nextIndex_ - 1;
+        }
+
+        void remove() {
+            if (lastReturned == null)
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            Entry* lastNext = lastReturned->next;
+            E v = self->remove(lastReturned);
+            if (next_ == lastReturned)
+            	next_ = lastNext;
+            else
+            	nextIndex_--;
+            lastReturned = null;
+        }
+
+        E moveOut() {
+        	if (lastReturned == null)
+				throw ENoSuchElementException(__FILE__, __LINE__);
+
+			Entry* lastNext = lastReturned->next;
+			E v = self->remove(lastReturned);
+			if (next_ == lastReturned)
+				next_ = lastNext;
+			else
+				nextIndex_--;
+			lastReturned = null;
+			return v;
+		}
+
+        void set(E e) {
+            if (lastReturned == null)
+                throw EIllegalStateException(__FILE__, __LINE__);
+            E v = lastReturned->elem;
+            lastReturned->elem = e;
+        }
+
+        void add(E e) {
+            lastReturned = null;
+            if (next_ == null)
+            	self->addLast(e);
+            else
+            	self->addBefore(e, next_);
+            nextIndex_++;
+        }
+    };
+
+	Entry *header;
+	int listSize;
+
+	Entry* addBefore(E e,
+			Entry *entry) {
+		Entry *newEntry = new Entry(e, entry,
+				entry->prev);
+		newEntry->prev->next = newEntry;
+		newEntry->next->prev = newEntry;
+		listSize++;
+		return newEntry;
+	}
+
+	E remove(Entry *e) {
+		if (e == header)
+			throw ENoSuchElementException(__FILE__, __LINE__);
+
+		E result = e->elem;
+		e->prev->next = e->next;
+		e->next->prev = e->prev;
+		delete e; //!
+		listSize--;
+		return result;
+	}
+
+	/**
+	 * Returns the indexed entry.
+	 */
+	Entry* entry(int index) {
+		if (index < 0 || index >= listSize)
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
+					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str());
+		Entry *e = header;
+		if (index < (listSize >> 1)) {
+			for (int i = 0; i <= index; i++)
+				e = e->next;
+		} else {
+			for (int i = listSize; i > index; i--)
+				e = e->prev;
+		}
+		return e;
+	}
+};
+
+//=============================================================================
+//Native pointer Types.
+
+template<typename T>
+class ELinkedList<T*> : public EAbstractList<T*>,
+		virtual public EList<T*>,
+		virtual public EDeque<T*> {
+public:
+	typedef T* E;
+
+	virtual ~ELinkedList() {
+		clear();
+		delete header;
+	}
+
+	/**
+	 * Constructs an empty list.
+	 */
+	ELinkedList(boolean autoFree = true) : _autoFree(autoFree), listSize(0) {
+		header = new Entry(null, null, null);
+		header->next = header->prev = header;
+	}
+
+    ELinkedList(const ELinkedList<E>& that) : listSize(0) {
+    	ELinkedList<E>* t = (ELinkedList<E>*)&that;
+
+		header = new Entry(null, null, null);
+		header->next = header->prev = header;
+
+		Entry *e = t->header->next;
+		while (e != t->header) {
+			add(e->elem);
+			e = e->next;
+		}
+
 		this->setAutoFree(t->getAutoFree());
 		t->setAutoFree(false);
 	}
@@ -125,7 +841,7 @@ public:
 		delete header;
 
 		//2.
-		header = new Entry(0, null, null);
+		header = new Entry(null, null, null);
 		header->next = header->prev = header;
 
 		Entry *e = t->header->next;
@@ -223,16 +939,6 @@ public:
 	 */
 	virtual boolean contains(E o) {
 		return indexOf(o) != -1;
-	}
-
-	virtual boolean removeAll(ECollection<E> *c) {
-		//TODO...
-		return false;
-	}
-
-	virtual boolean retainAll(ECollection<E> *c) {
-		//TODO...
-		return false;
 	}
 
 	/**
@@ -828,12 +1534,15 @@ private:
 };
 
 //=============================================================================
+//Shared pointer Types.
 
-template<>
-class ELinkedList<int> : public EAbstractList<int>,
-		virtual public EList<int>,
-		virtual public EDeque<int> {
+template<typename T>
+class ELinkedList<sp<T> > : public EAbstractList<sp<T> >,
+		virtual public EList<sp<T> >,
+		virtual public EDeque<sp<T> > {
 public:
+	typedef sp<T> E;
+
 	virtual ~ELinkedList() {
 		clear();
 		delete header;
@@ -843,14 +1552,14 @@ public:
 	 * Constructs an empty list.
 	 */
 	ELinkedList() : listSize(0) {
-		header = new Entry(0, null, null);
+		header = new Entry(null, null, null);
 		header->next = header->prev = header;
 	}
 
-    ELinkedList(const ELinkedList<int>& that) : listSize(0) {
-    	ELinkedList<int>* t = (ELinkedList<int>*)&that;
+    ELinkedList(const ELinkedList<E>& that) : listSize(0) {
+    	ELinkedList<E>* t = (ELinkedList<E>*)&that;
 
-		header = new Entry(0, null, null);
+		header = new Entry(null, null, null);
 		header->next = header->prev = header;
 
 		Entry *e = t->header->next;
@@ -860,17 +1569,17 @@ public:
 		}
 	}
 
-    ELinkedList<int>& operator= (const ELinkedList<int>& that) {
+    ELinkedList<E>& operator= (const ELinkedList<E>& that) {
     	if (this == &that) return *this;
 
-		ELinkedList<int>* t = (ELinkedList<int>*)&that;
+		ELinkedList<E>* t = (ELinkedList<E>*)&that;
 
 		//1.
 		clear();
 		delete header;
 
 		//2.
-		header = new Entry(0, null, null);
+		header = new Entry(null, null, null);
 		header->next = header->prev = header;
 
 		Entry *e = t->header->next;
@@ -888,7 +1597,7 @@ public:
 	 * @return the first element in this list
 	 * @throws NoSuchElementException if this list is empty
 	 */
-	virtual int getFirst() THROWS(ENoSuchElementException) {
+	virtual E getFirst() THROWS(ENoSuchElementException) {
 		if (listSize == 0)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 		return header->next->elem;
@@ -900,7 +1609,7 @@ public:
 	 * @return the last element in this list
 	 * @throws NoSuchElementException if this list is empty
 	 */
-	virtual int getLast() THROWS(ENoSuchElementException) {
+	virtual E getLast() THROWS(ENoSuchElementException) {
 		if (listSize == 0)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 		return header->prev->elem;
@@ -912,7 +1621,7 @@ public:
 	 * @return the first element from this list
 	 * @throws NoSuchElementException if this list is empty
 	 */
-	virtual int removeFirst() THROWS(ENoSuchElementException) {
+	virtual E removeFirst() THROWS(ENoSuchElementException) {
 		return remove(header->next);
 	}
 
@@ -922,7 +1631,7 @@ public:
 	 * @return the last element from this list
 	 * @throws NoSuchElementException if this list is empty
 	 */
-	virtual int removeLast() THROWS(ENoSuchElementException) {
+	virtual E removeLast() THROWS(ENoSuchElementException) {
 		return remove(header->prev);
 	}
 
@@ -931,7 +1640,7 @@ public:
 	 *
 	 * @param e the element to add
 	 */
-	virtual void addFirst(int e) {
+	virtual void addFirst(E e) {
 		addBefore(e, header->next);
 	}
 
@@ -942,7 +1651,7 @@ public:
 	 *
 	 * @param e the element to add
 	 */
-	virtual void addLast(int e) {
+	virtual void addLast(E e) {
 		addBefore(e, header);
 	}
 
@@ -955,18 +1664,8 @@ public:
 	 * @param o element whose presence in this list is to be tested
 	 * @return <tt>true</tt> if this list contains the specified element
 	 */
-	virtual boolean contains(int o) {
+	virtual boolean contains(T* o) {
 		return indexOf(o) != -1;
-	}
-
-	virtual boolean removeAll(ECollection<int> *c) {
-		//TODO...
-		return false;
-	}
-
-	virtual boolean retainAll(ECollection<int> *c) {
-		//TODO...
-		return false;
 	}
 
 	/**
@@ -986,7 +1685,7 @@ public:
 	 * @param e element to be appended to this list
 	 * @return <tt>true</tt> (as specified by {@link Collection#add})
 	 */
-	virtual boolean add(int e) {
+	virtual boolean add(E e) {
 		addBefore(e, header);
 		return true;
 	}
@@ -1004,10 +1703,10 @@ public:
 	 * @param o element to be removed from this list, if present
 	 * @return <tt>true</tt> if this list contained the specified element
 	 */
-	virtual boolean remove(int o) {
+	virtual boolean remove(T* o) {
 		for (Entry *e = header->next; e != header; e = e->next) {
-			if (e->elem == (o)) {
-				remove(e);
+			if (e->elem->equals(o)) {
+				E v = remove(e);
 				return true;
 			}
 		}
@@ -1037,7 +1736,7 @@ public:
 	 * @return the element at the specified position in this list
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	virtual int getAt(int index) THROWS(EIndexOutOfBoundsException) {
+	virtual E getAt(int index) THROWS(EIndexOutOfBoundsException) {
         return entry(index)->elem;
 	}
 
@@ -1050,9 +1749,9 @@ public:
 	 * @return the element previously at the specified position
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	virtual int setAt(int index, int element) THROWS(EIndexOutOfBoundsException) {
+	virtual E setAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
 		Entry *e = entry(index);
-        int oldVal = e->elem;
+        E oldVal = e->elem;
         e->elem = element;
         return oldVal;
 	}
@@ -1066,7 +1765,7 @@ public:
 	 * @param element element to be inserted
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	virtual void addAt(int index, int element) THROWS(EIndexOutOfBoundsException) {
+	virtual void addAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
         addBefore(element, (index==listSize ? header : entry(index)));
 	}
 
@@ -1079,7 +1778,7 @@ public:
 	 * @return the element previously at the specified position
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	virtual int removeAt(int index) THROWS(EIndexOutOfBoundsException) {
+	virtual E removeAt(int index) THROWS(EIndexOutOfBoundsException) {
         return remove(entry(index));
 	}
 
@@ -1096,10 +1795,10 @@ public:
 	 * @return the index of the first occurrence of the specified element in
 	 *         this list, or -1 if this list does not contain the element
 	 */
-	virtual int indexOf(int o) {
+	virtual int indexOf(T* o) {
 		int index = 0;
 		for (Entry *e = header->next; e != header; e = e->next) {
-			if (o == (e->elem))
+			if (e->elem->equals(o))
 				return index;
 			index++;
 		}
@@ -1117,11 +1816,11 @@ public:
 	 * @return the index of the last occurrence of the specified element in
 	 *         this list, or -1 if this list does not contain the element
 	 */
-	virtual int lastIndexOf(int o) {
+	virtual int lastIndexOf(T* o) {
 		int index = listSize;
 		for (Entry *e = header->prev; e != header; e = e->prev) {
 			index--;
-			if (o == (e->elem))
+			if (e->elem->equals(o))
 				return index;
 		}
 		return -1;
@@ -1134,7 +1833,7 @@ public:
 	 * @return the head of this list, or <tt>null</tt> if this list is empty
 	 * @since 1.5
 	 */
-	virtual int peek() THROWS(ENoSuchElementException) {
+	virtual E peek() THROWS(ENoSuchElementException) {
 		return getFirst();
 	}
 
@@ -1144,7 +1843,7 @@ public:
 	 * @throws NoSuchElementException if this list is empty
 	 * @since 1.5
 	 */
-	virtual int element() THROWS(ENoSuchElementException) {
+	virtual E element() THROWS(ENoSuchElementException) {
 		return getFirst();
 	}
 
@@ -1153,9 +1852,9 @@ public:
 	 * @return the head of this list, or <tt>null</tt> if this list is empty
 	 * @since 1.5
 	 */
-	virtual int poll() THROWS(ENoSuchElementException) {
+	virtual E poll() THROWS(ENoSuchElementException) {
 		if (listSize == 0)
-			throw ENoSuchElementException(__FILE__, __LINE__);
+			return null;
 		return removeFirst();
 	}
 
@@ -1166,7 +1865,7 @@ public:
 	 * @throws NoSuchElementException if this list is empty
 	 * @since 1.5
 	 */
-	virtual int remove() THROWS(ENoSuchElementException) {
+	virtual E remove() THROWS(ENoSuchElementException) {
 		return removeFirst();
 	}
 
@@ -1177,7 +1876,7 @@ public:
 	 * @return <tt>true</tt> (as specified by {@link Queue#offer})
 	 * @since 1.5
 	 */
-	virtual boolean offer(int e) {
+	virtual boolean offer(E e) {
 		return add(e);
 	}
 
@@ -1189,7 +1888,7 @@ public:
 	 * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
 	 * @since 1.6
 	 */
-	virtual boolean offerFirst(int e) {
+	virtual boolean offerFirst(E e) {
 		addFirst(e);
 		return true;
 	}
@@ -1201,7 +1900,7 @@ public:
 	 * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
 	 * @since 1.6
 	 */
-	virtual boolean offerLast(int e) {
+	virtual boolean offerLast(E e) {
 		addLast(e);
 		return true;
 	}
@@ -1214,7 +1913,7 @@ public:
 	 *         if this list is empty
 	 * @since 1.6
 	 */
-	virtual int peekFirst() {
+	virtual E peekFirst() {
 		return getFirst();
 	}
 
@@ -1226,7 +1925,7 @@ public:
 	 *         if this list is empty
 	 * @since 1.6
 	 */
-	virtual int peekLast() {
+	virtual E peekLast() {
 		return getLast();
 	}
 
@@ -1238,7 +1937,7 @@ public:
 	 *     this list is empty
 	 * @since 1.6
 	 */
-	virtual int pollFirst() {
+	virtual E pollFirst() {
 		return removeFirst();
 	}
 
@@ -1250,7 +1949,7 @@ public:
 	 *     this list is empty
 	 * @since 1.6
 	 */
-	virtual int pollLast() {
+	virtual E pollLast() {
 		return removeLast();
 	}
 
@@ -1263,7 +1962,7 @@ public:
 	 * @param e the element to push
 	 * @since 1.6
 	 */
-	virtual void push(int e) {
+	virtual void push(E e) {
 		addFirst(e);
 	}
 
@@ -1278,7 +1977,7 @@ public:
 	 * @throws NoSuchElementException if this list is empty
 	 * @since 1.6
 	 */
-	virtual int pop() {
+	virtual E pop() {
 		return removeFirst();
 	}
 
@@ -1291,7 +1990,7 @@ public:
 	 * @return <tt>true</tt> if the list contained the specified element
 	 * @since 1.6
 	 */
-	virtual boolean removeFirstOccurrence(int o) {
+	virtual boolean removeFirstOccurrence(T* o) {
 		return remove(o);
 	}
 
@@ -1304,9 +2003,9 @@ public:
 	 * @return <tt>true</tt> if the list contained the specified element
 	 * @since 1.6
 	 */
-	virtual boolean removeLastOccurrence(int o) {
+	virtual boolean removeLastOccurrence(T* o) {
 		for (Entry *e = header->prev; e != header; e = e->prev) {
-			if (o == (e->elem)) {
+			if (e->elem->equals(o)) {
 				remove(e);
 				return true;
 			}
@@ -1335,7 +2034,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual sp<EIterator<int> > iterator(int index = 0) {
+	virtual sp<EIterator<E> > iterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
@@ -1360,11 +2059,11 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 * @see List#listIterator(int)
 	 */
-	virtual sp<EListIterator<int> > listIterator(int index = 0) {
+	virtual sp<EListIterator<E> > listIterator(int index = 0) {
 		return new ListItr(this, index);
 	}
 
-	virtual sp<EIterator<int> > descendingIterator() {
+	virtual sp<EIterator<E> > descendingIterator() {
 		return null;
 	}
 
@@ -1378,8 +2077,8 @@ public:
 	 *
 	 * @return a shallow copy of this {@code LinkedList} instance
 	 */
-	virtual ELinkedList<int>* clone() {
-		ELinkedList<int>* ll = new ELinkedList<int>();
+	virtual ELinkedList<E>* clone() {
+		ELinkedList<E>* ll = new ELinkedList<E>();
 
 		// Initialize clone with our elements
 		for (Entry* x = header->next; x != header; x = x->next)
@@ -1391,11 +2090,11 @@ public:
 private:
 	class Entry {
 	public:
-		int elem;
+		E elem;
 		Entry *next;
 		Entry *prev;
 
-		Entry(int element, Entry *next,
+		Entry(E element, Entry *next,
 				Entry *previous) {
 			this->elem = element;
 			this->next = next;
@@ -1406,78 +2105,78 @@ private:
 		}
 	};
 
-	class ListItr : public EListIterator<int> {
+	class ListItr : public EListIterator<E> {
 	private:
-		ELinkedList<int>* self;
+		ELinkedList<E>* self;
 
 		Entry* lastReturned;
 		Entry* next_;
-		int nextIndex_;
+        int nextIndex_;
 	public:
-		ListItr(ELinkedList<int>* list, int index) : self(list), lastReturned(null), next_(null) {
-			// assert isPositionIndex(index);
-			if (index < 0 || index > self->listSize)
+        ListItr(ELinkedList<E>* list, int index) : self(list), lastReturned(null), next_(null) {
+            // assert isPositionIndex(index);
+        	if (index < 0 || index > self->listSize)
 				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
 						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
 
-			next_ = (index == self->listSize) ? null : self->entry(index);
-			nextIndex_ = index;
-		}
+        	next_ = (index == self->listSize) ? null : self->entry(index);
+        	nextIndex_ = index;
+        }
 
-		boolean hasNext() {
-			return nextIndex_ < self->listSize;
-		}
+        boolean hasNext() {
+            return nextIndex_ < self->listSize;
+        }
 
-		int next() {
-			if (!hasNext())
-				throw ENoSuchElementException(__FILE__, __LINE__);
+        E next() {
+            if (!hasNext())
+                throw ENoSuchElementException(__FILE__, __LINE__);
 
-			lastReturned = next_;
-			next_ = next_->next;
-			nextIndex_++;
-			return lastReturned->elem;
-		}
+            lastReturned = next_;
+            next_ = next_->next;
+            nextIndex_++;
+            return lastReturned->elem;
+        }
 
-		boolean hasPrevious() {
-			return nextIndex_ > 0;
-		}
+        boolean hasPrevious() {
+            return nextIndex_ > 0;
+        }
 
-		int previous() {
-			if (!hasPrevious())
-				throw ENoSuchElementException(__FILE__, __LINE__);
+        E previous() {
+            if (!hasPrevious())
+                throw ENoSuchElementException(__FILE__, __LINE__);
 
-			lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
-			nextIndex_--;
-			return lastReturned->elem;
-		}
+            lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
+            nextIndex_--;
+            return lastReturned->elem;
+        }
 
-		int nextIndex() {
-			return nextIndex_;
-		}
+        int nextIndex() {
+            return nextIndex_;
+        }
 
-		int previousIndex() {
-			return nextIndex_ - 1;
-		}
+        int previousIndex() {
+            return nextIndex_ - 1;
+        }
 
-		void remove() {
-			if (lastReturned == null)
+        void remove() {
+            if (lastReturned == null)
+                throw ENoSuchElementException(__FILE__, __LINE__);
+
+            Entry* lastNext = lastReturned->next;
+            E v = self->remove(lastReturned);
+            if (next_ == lastReturned)
+            	next_ = lastNext;
+            else
+            	nextIndex_--;
+            lastReturned = null;
+        }
+
+        E moveOut() {
+        	if (lastReturned == null)
 				throw ENoSuchElementException(__FILE__, __LINE__);
 
 			Entry* lastNext = lastReturned->next;
-			self->remove(lastReturned);
-			if (next_ == lastReturned)
-				next_ = lastNext;
-			else
-				nextIndex_--;
-			lastReturned = null;
-		}
-
-		int moveOut() {
-			if (lastReturned == null)
-				throw ENoSuchElementException(__FILE__, __LINE__);
-
-			Entry* lastNext = lastReturned->next;
-			int v = self->remove(lastReturned);
+			E v = self->remove(lastReturned);
 			if (next_ == lastReturned)
 				next_ = lastNext;
 			else
@@ -1486,26 +2185,27 @@ private:
 			return v;
 		}
 
-		void set(int e) {
-			if (lastReturned == null)
-				throw EIllegalStateException(__FILE__, __LINE__);
-			lastReturned->elem = e;
-		}
+        void set(E e) {
+            if (lastReturned == null)
+                throw EIllegalStateException(__FILE__, __LINE__);
+            E v = lastReturned->elem;
+            lastReturned->elem = e;
+        }
 
-		void add(int e) {
-			lastReturned = null;
-			if (next_ == null)
-				self->addLast(e);
-			else
-				self->addBefore(e, next_);
-			nextIndex_++;
-		}
-	};
+        void add(E e) {
+            lastReturned = null;
+            if (next_ == null)
+            	self->addLast(e);
+            else
+            	self->addBefore(e, next_);
+            nextIndex_++;
+        }
+    };
 
 	Entry *header;
 	int listSize;
 
-	Entry* addBefore(int e,
+	Entry* addBefore(E e,
 			Entry *entry) {
 		Entry *newEntry = new Entry(e, entry,
 				entry->prev);
@@ -1515,734 +2215,14 @@ private:
 		return newEntry;
 	}
 
-	int remove(Entry *e) {
+	E remove(Entry *e) {
 		if (e == header)
 			throw ENoSuchElementException(__FILE__, __LINE__);
 
-		int result = e->elem;
+		E result = e->elem;
 		e->prev->next = e->next;
 		e->next->prev = e->prev;
-		e->elem = 0; //!
-		delete e; //!
-		listSize--;
-		return result;
-	}
-
-	/**
-	 * Returns the indexed entry.
-	 */
-	Entry* entry(int index) {
-		if (index < 0 || index >= listSize)
-			throw EIndexOutOfBoundsException(__FILE__, __LINE__,
-					EString::formatOf("Index: %d , Size: %d", index, listSize).c_str());
-		Entry *e = header;
-		if (index < (listSize >> 1)) {
-			for (int i = 0; i <= index; i++)
-				e = e->next;
-		} else {
-			for (int i = listSize; i > index; i--)
-				e = e->prev;
-		}
-		return e;
-	}
-};
-
-//=============================================================================
-
-template<>
-class ELinkedList<llong> : public EAbstractList<llong>,
-		virtual public EList<llong>,
-		virtual public EDeque<llong> {
-public:
-	virtual ~ELinkedList() {
-		clear();
-		delete header;
-	}
-
-	/**
-	 * Constructs an empty list.
-	 */
-	ELinkedList() : listSize(0) {
-		header = new Entry(0, null, null);
-		header->next = header->prev = header;
-	}
-
-    ELinkedList(const ELinkedList<llong>& that) : listSize(0) {
-		ELinkedList<llong>* t = (ELinkedList<llong>*)&that;
-
-		header = new Entry(0, null, null);
-		header->next = header->prev = header;
-
-		Entry *e = t->header->next;
-		while (e != t->header) {
-			add(e->elem);
-			e = e->next;
-		}
-	}
-
-    ELinkedList<llong>& operator= (const ELinkedList<llong>& that) {
-    	if (this == &that) return *this;
-
-		ELinkedList<llong>* t = (ELinkedList<llong>*)&that;
-
-		//1.
-		clear();
-		delete header;
-
-		//2.
-		header = new Entry(0, null, null);
-		header->next = header->prev = header;
-
-		Entry *e = t->header->next;
-		while (e != t->header) {
-			add(e->elem);
-			e = e->next;
-		}
-
-		return *this;
-	}
-
-	/**
-	 * Returns the first element in this list.
-	 *
-	 * @return the first element in this list
-	 * @throws NoSuchElementException if this list is empty
-	 */
-	virtual llong getFirst() THROWS(ENoSuchElementException) {
-		if (listSize == 0)
-			throw ENoSuchElementException(__FILE__, __LINE__);
-		return header->next->elem;
-	}
-
-	/**
-	 * Returns the last element in this list.
-	 *
-	 * @return the last element in this list
-	 * @throws NoSuchElementException if this list is empty
-	 */
-	virtual llong getLast() THROWS(ENoSuchElementException) {
-		if (listSize == 0)
-			throw ENoSuchElementException(__FILE__, __LINE__);
-		return header->prev->elem;
-	}
-
-	/**
-	 * Removes and returns the first element from this list.
-	 *
-	 * @return the first element from this list
-	 * @throws NoSuchElementException if this list is empty
-	 */
-	virtual llong removeFirst() THROWS(ENoSuchElementException) {
-		return remove(header->next);
-	}
-
-	/**
-	 * Removes and returns the last element from this list.
-	 *
-	 * @return the last element from this list
-	 * @throws NoSuchElementException if this list is empty
-	 */
-	virtual llong removeLast() THROWS(ENoSuchElementException) {
-		return remove(header->prev);
-	}
-
-	/**
-	 * Inserts the specified element at the beginning of this list.
-	 *
-	 * @param e the element to add
-	 */
-	virtual void addFirst(llong e) {
-		addBefore(e, header->next);
-	}
-
-	/**
-	 * Appends the specified element to the end of this list.
-	 *
-	 * <p>This method is equivalent to {@link #add}.
-	 *
-	 * @param e the element to add
-	 */
-	virtual void addLast(llong e) {
-		addBefore(e, header);
-	}
-
-	/**
-	 * Returns <tt>true</tt> if this list contains the specified element.
-	 * More formally, returns <tt>true</tt> if and only if this list contains
-	 * at least one element <tt>e</tt> such that
-	 * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
-	 *
-	 * @param o element whose presence in this list is to be tested
-	 * @return <tt>true</tt> if this list contains the specified element
-	 */
-	virtual boolean contains(llong o) {
-		return indexOf(o) != -1;
-	}
-
-	virtual boolean removeAll(ECollection<llong> *c) {
-		//TODO...
-		return false;
-	}
-
-	virtual boolean retainAll(ECollection<llong> *c) {
-		//TODO...
-		return false;
-	}
-
-	/**
-	 * Returns the number of elements in this list.
-	 *
-	 * @return the number of elements in this list
-	 */
-	virtual int size() {
-		return listSize;
-	}
-
-	/**
-	 * Appends the specified element to the end of this list.
-	 *
-	 * <p>This method is equivalent to {@link #addLast}.
-	 *
-	 * @param e element to be appended to this list
-	 * @return <tt>true</tt> (as specified by {@link Collection#add})
-	 */
-	virtual boolean add(llong e) {
-		addBefore(e, header);
-		return true;
-	}
-
-	/**
-	 * Removes the first occurrence of the specified element from this list,
-	 * if it is present.  If this list does not contain the element, it is
-	 * unchanged.  More formally, removes the element with the lowest index
-	 * <tt>i</tt> such that
-	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
-	 * (if such an element exists).  Returns <tt>true</tt> if this list
-	 * contained the specified element (or equivalently, if this list
-	 * changed as a result of the call).
-	 *
-	 * @param o element to be removed from this list, if present
-	 * @return <tt>true</tt> if this list contained the specified element
-	 */
-	virtual boolean remove(llong o) {
-		for (Entry *e = header->next; e != header; e = e->next) {
-			if (e->elem == (o)) {
-				remove(e);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Removes all of the elements from this list.
-	 */
-	virtual void clear() {
-		Entry *e = header->next;
-		while (e != header) {
-			Entry *next = e->next;
-			delete e;
-			e = next;
-		}
-        header->next = header->prev = header;
-        listSize = 0;
-	}
-
-	// Positional Access Operations
-
-	/**
-	 * Returns the element at the specified position in this list.
-	 *
-	 * @param index index of the element to return
-	 * @return the element at the specified position in this list
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 */
-	virtual llong getAt(int index) THROWS(EIndexOutOfBoundsException) {
-        return entry(index)->elem;
-	}
-
-	/**
-	 * Replaces the element at the specified position in this list with the
-	 * specified element.
-	 *
-	 * @param index index of the element to replace
-	 * @param element element to be stored at the specified position
-	 * @return the element previously at the specified position
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 */
-	virtual llong setAt(int index, llong element) THROWS(EIndexOutOfBoundsException) {
-        Entry *e = entry(index);
-        llong oldVal = e->elem;
-        e->elem = element;
-        return oldVal;
-	}
-
-	/**
-	 * Inserts the specified element at the specified position in this list.
-	 * Shifts the element currently at that position (if any) and any
-	 * subsequent elements to the right (adds one to their indices).
-	 *
-	 * @param index index at which the specified element is to be inserted
-	 * @param element element to be inserted
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 */
-	virtual void addAt(int index, llong element) THROWS(EIndexOutOfBoundsException) {
-        addBefore(element, (index==listSize ? header : entry(index)));
-	}
-
-	/**
-	 * Removes the element at the specified position in this list.  Shifts any
-	 * subsequent elements to the left (subtracts one from their indices).
-	 * Returns the element that was removed from the list.
-	 *
-	 * @param index the index of the element to be removed
-	 * @return the element previously at the specified position
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 */
-	virtual llong removeAt(int index) THROWS(EIndexOutOfBoundsException) {
-        return remove(entry(index));
-	}
-
-	// Search Operations
-
-	/**
-	 * Returns the index of the first occurrence of the specified element
-	 * in this list, or -1 if this list does not contain the element.
-	 * More formally, returns the lowest index <tt>i</tt> such that
-	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
-	 * or -1 if there is no such index.
-	 *
-	 * @param o element to search for
-	 * @return the index of the first occurrence of the specified element in
-	 *         this list, or -1 if this list does not contain the element
-	 */
-	virtual int indexOf(llong o) {
-		int index = 0;
-		for (Entry *e = header->next; e != header; e = e->next) {
-			if (o == (e->elem))
-				return index;
-			index++;
-		}
-		return -1;
-	}
-
-	/**
-	 * Returns the index of the last occurrence of the specified element
-	 * in this list, or -1 if this list does not contain the element.
-	 * More formally, returns the highest index <tt>i</tt> such that
-	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
-	 * or -1 if there is no such index.
-	 *
-	 * @param o element to search for
-	 * @return the index of the last occurrence of the specified element in
-	 *         this list, or -1 if this list does not contain the element
-	 */
-	virtual int lastIndexOf(llong o) {
-		int index = listSize;
-		for (Entry *e = header->prev; e != header; e = e->prev) {
-			index--;
-			if (o == (e->elem))
-				return index;
-		}
-		return -1;
-	}
-
-	// Queue operations.
-
-	/**
-	 * Retrieves, but does not remove, the head (first element) of this list.
-	 * @return the head of this list, or <tt>null</tt> if this list is empty
-	 * @since 1.5
-	 */
-	virtual llong peek() THROWS(ENoSuchElementException) {
-		return getFirst();
-	}
-
-	/**
-	 * Retrieves, but does not remove, the head (first element) of this list.
-	 * @return the head of this list
-	 * @throws NoSuchElementException if this list is empty
-	 * @since 1.5
-	 */
-	virtual llong element() THROWS(ENoSuchElementException) {
-		return getFirst();
-	}
-
-	/**
-	 * Retrieves and removes the head (first element) of this list
-	 * @return the head of this list, or <tt>null</tt> if this list is empty
-	 * @since 1.5
-	 */
-	virtual llong poll() THROWS(ENoSuchElementException) {
-		if (listSize == 0)
-			throw ENoSuchElementException(__FILE__, __LINE__);
-		return removeFirst();
-	}
-
-	/**
-	 * Retrieves and removes the head (first element) of this list.
-	 *
-	 * @return the head of this list
-	 * @throws NoSuchElementException if this list is empty
-	 * @since 1.5
-	 */
-	virtual llong remove() THROWS(ENoSuchElementException) {
-		return removeFirst();
-	}
-
-	/**
-	 * Adds the specified element as the tail (last element) of this list.
-	 *
-	 * @param e the element to add
-	 * @return <tt>true</tt> (as specified by {@link Queue#offer})
-	 * @since 1.5
-	 */
-	virtual boolean offer(llong e) {
-		return add(e);
-	}
-
-	// Deque operations
-	/**
-	 * Inserts the specified element at the front of this list.
-	 *
-	 * @param e the element to insert
-	 * @return <tt>true</tt> (as specified by {@link Deque#offerFirst})
-	 * @since 1.6
-	 */
-	virtual boolean offerFirst(llong e) {
-		addFirst(e);
-		return true;
-	}
-
-	/**
-	 * Inserts the specified element at the end of this list.
-	 *
-	 * @param e the element to insert
-	 * @return <tt>true</tt> (as specified by {@link Deque#offerLast})
-	 * @since 1.6
-	 */
-	virtual boolean offerLast(llong e) {
-		addLast(e);
-		return true;
-	}
-
-	/**
-	 * Retrieves, but does not remove, the first element of this list,
-	 * or returns <tt>null</tt> if this list is empty.
-	 *
-	 * @return the first element of this list, or <tt>null</tt>
-	 *         if this list is empty
-	 * @since 1.6
-	 */
-	virtual llong peekFirst() {
-		return getFirst();
-	}
-
-	/**
-	 * Retrieves, but does not remove, the last element of this list,
-	 * or returns <tt>null</tt> if this list is empty.
-	 *
-	 * @return the last element of this list, or <tt>null</tt>
-	 *         if this list is empty
-	 * @since 1.6
-	 */
-	virtual llong peekLast() {
-		return getLast();
-	}
-
-	/**
-	 * Retrieves and removes the first element of this list,
-	 * or returns <tt>null</tt> if this list is empty.
-	 *
-	 * @return the first element of this list, or <tt>null</tt> if
-	 *     this list is empty
-	 * @since 1.6
-	 */
-	virtual llong pollFirst() {
-		return removeFirst();
-	}
-
-	/**
-	 * Retrieves and removes the last element of this list,
-	 * or returns <tt>null</tt> if this list is empty.
-	 *
-	 * @return the last element of this list, or <tt>null</tt> if
-	 *     this list is empty
-	 * @since 1.6
-	 */
-	virtual llong pollLast() {
-		return removeLast();
-	}
-
-	/**
-	 * Pushes an element onto the stack represented by this list.  In other
-	 * words, inserts the element at the front of this list.
-	 *
-	 * <p>This method is equivalent to {@link #addFirst}.
-	 *
-	 * @param e the element to push
-	 * @since 1.6
-	 */
-	virtual void push(llong e) {
-		addFirst(e);
-	}
-
-	/**
-	 * Pops an element from the stack represented by this list.  In other
-	 * words, removes and returns the first element of this list.
-	 *
-	 * <p>This method is equivalent to {@link #removeFirst()}.
-	 *
-	 * @return the element at the front of this list (which is the top
-	 *         of the stack represented by this list)
-	 * @throws NoSuchElementException if this list is empty
-	 * @since 1.6
-	 */
-	virtual llong pop() {
-		return removeFirst();
-	}
-
-	/**
-	 * Removes the first occurrence of the specified element in this
-	 * list (when traversing the list from head to tail).  If the list
-	 * does not contain the element, it is unchanged.
-	 *
-	 * @param o element to be removed from this list, if present
-	 * @return <tt>true</tt> if the list contained the specified element
-	 * @since 1.6
-	 */
-	virtual boolean removeFirstOccurrence(llong o) {
-		return remove(o);
-	}
-
-	/**
-	 * Removes the last occurrence of the specified element in this
-	 * list (when traversing the list from head to tail).  If the list
-	 * does not contain the element, it is unchanged.
-	 *
-	 * @param o element to be removed from this list, if present
-	 * @return <tt>true</tt> if the list contained the specified element
-	 * @since 1.6
-	 */
-	virtual boolean removeLastOccurrence(llong o) {
-		for (Entry *e = header->prev; e != header; e = e->prev) {
-			if (o == (e->elem)) {
-				remove(e);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Returns a list-iterator of the elements in this list (in proper
-	 * sequence), starting at the specified position in the list.
-	 * Obeys the general contract of <tt>List.listIterator(int)</tt>.<p>
-	 *
-	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
-	 * modified at any time after the Iterator is created, in any way except
-	 * through the list-iterator's own <tt>remove</tt> or <tt>add</tt>
-	 * methods, the list-iterator will throw a
-	 * <tt>ConcurrentModificationException</tt>.  Thus, in the face of
-	 * concurrent modification, the iterator fails quickly and cleanly, rather
-	 * than risking arbitrary, non-deterministic behavior at an undetermined
-	 * time in the future.
-	 *
-	 * @param index index of the first element to be returned from the
-	 *              list-iterator (by a call to <tt>next</tt>)
-	 * @return a ListIterator of the elements in this list (in proper
-	 *         sequence), starting at the specified position in the list
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 * @see List#listIterator(int)
-	 */
-	virtual sp<EIterator<llong> > iterator(int index = 0) {
-		return new ListItr(this, index);
-	}
-
-	/**
-	 * Returns a list-iterator of the elements in this list (in proper
-	 * sequence), starting at the specified position in the list.
-	 * Obeys the general contract of {@code List.listIterator(int)}.<p>
-	 *
-	 * The list-iterator is <i>fail-fast</i>: if the list is structurally
-	 * modified at any time after the Iterator is created, in any way except
-	 * through the list-iterator's own {@code remove} or {@code add}
-	 * methods, the list-iterator will throw a
-	 * {@code ConcurrentModificationException}.  Thus, in the face of
-	 * concurrent modification, the iterator fails quickly and cleanly, rather
-	 * than risking arbitrary, non-deterministic behavior at an undetermined
-	 * time in the future.
-	 *
-	 * @param index index of the first element to be returned from the
-	 *              list-iterator (by a call to {@code next})
-	 * @return a ListIterator of the elements in this list (in proper
-	 *         sequence), starting at the specified position in the list
-	 * @throws IndexOutOfBoundsException {@inheritDoc}
-	 * @see List#listIterator(int)
-	 */
-	virtual sp<EListIterator<llong> > listIterator(int index = 0) {
-		return new ListItr(this, index);
-	}
-
-	virtual sp<EIterator<llong> > descendingIterator() {
-		return null;
-	}
-
-	virtual boolean isEmpty() {
-		return listSize==0;
-	}
-
-	/**
-	 * Returns a shallow copy of this {@code LinkedList}. (The elements
-	 * themselves are not cloned.)
-	 *
-	 * @return a shallow copy of this {@code LinkedList} instance
-	 */
-	virtual ELinkedList<llong>* clone() {
-		ELinkedList<llong>* ll = new ELinkedList<llong>();
-
-		// Initialize clone with our elements
-		for (Entry* x = header->next; x != header; x = x->next)
-			ll->add(x->elem);
-
-		return ll;
-	}
-
-private:
-	class Entry {
-	public:
-		llong elem;
-		Entry *next;
-		Entry *prev;
-
-		Entry(llong element, Entry *next,
-				Entry *previous) {
-			this->elem = element;
-			this->next = next;
-			this->prev = previous;
-		}
-
-		~Entry() {
-		}
-	};
-
-	class ListItr : public EListIterator<llong> {
-	private:
-		ELinkedList<llong>* self;
-
-		Entry* lastReturned;
-		Entry* next_;
-		int nextIndex_;
-	public:
-		ListItr(ELinkedList<llong>* list, int index) : self(list), lastReturned(null), next_(null) {
-			// assert isPositionIndex(index);
-			if (index < 0 || index > self->listSize)
-				throw EIndexOutOfBoundsException(__FILE__, __LINE__,
-						EString::formatOf("Index: %d , Size: %d", index, self->listSize).c_str());
-
-			next_ = (index == self->listSize) ? null : self->entry(index);
-			nextIndex_ = index;
-		}
-
-		boolean hasNext() {
-			return nextIndex_ < self->listSize;
-		}
-
-		llong next() {
-			if (!hasNext())
-				throw ENoSuchElementException(__FILE__, __LINE__);
-
-			lastReturned = next_;
-			next_ = next_->next;
-			nextIndex_++;
-			return lastReturned->elem;
-		}
-
-		boolean hasPrevious() {
-			return nextIndex_ > 0;
-		}
-
-		llong previous() {
-			if (!hasPrevious())
-				throw ENoSuchElementException(__FILE__, __LINE__);
-
-			lastReturned = next_ = (next_ == null) ? self->header->prev : next_->prev;
-			nextIndex_--;
-			return lastReturned->elem;
-		}
-
-		int nextIndex() {
-			return nextIndex_;
-		}
-
-		int previousIndex() {
-			return nextIndex_ - 1;
-		}
-
-		void remove() {
-			if (lastReturned == null)
-				throw ENoSuchElementException(__FILE__, __LINE__);
-
-			Entry* lastNext = lastReturned->next;
-			self->remove(lastReturned);
-			if (next_ == lastReturned)
-				next_ = lastNext;
-			else
-				nextIndex_--;
-			lastReturned = null;
-		}
-
-		llong moveOut() {
-			if (lastReturned == null)
-				throw ENoSuchElementException(__FILE__, __LINE__);
-
-			Entry* lastNext = lastReturned->next;
-			llong v = self->remove(lastReturned);
-			if (next_ == lastReturned)
-				next_ = lastNext;
-			else
-				nextIndex_--;
-			lastReturned = null;
-			return v;
-		}
-
-		void set(llong e) {
-			if (lastReturned == null)
-				throw EIllegalStateException(__FILE__, __LINE__);
-			lastReturned->elem = e;
-		}
-
-		void add(llong e) {
-			lastReturned = null;
-			if (next_ == null)
-				self->addLast(e);
-			else
-				self->addBefore(e, next_);
-			nextIndex_++;
-		}
-	};
-
-	Entry *header;
-	int listSize;
-
-	Entry* addBefore(llong e,
-			Entry *entry) {
-		Entry *newEntry = new Entry(e, entry,
-				entry->prev);
-		newEntry->prev->next = newEntry;
-		newEntry->next->prev = newEntry;
-		listSize++;
-		return newEntry;
-	}
-
-	llong remove(Entry *e) {
-		if (e == header)
-			throw ENoSuchElementException(__FILE__, __LINE__);
-
-		llong result = e->elem;
-		e->prev->next = e->next;
-		e->next->prev = e->prev;
-		e->elem = 0; //!
+		e->elem = null; //!
 		delete e; //!
 		listSize--;
 		return result;

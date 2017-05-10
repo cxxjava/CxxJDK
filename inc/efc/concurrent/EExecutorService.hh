@@ -16,7 +16,7 @@
 #include "ETimeUnit.hh"
 #include "ERunnableFuture.hh"
 #include "EFutureTask.hh"
-#include "ESharedArrLst.hh"
+#include "EArrayList.hh"
 #include "EExecutorCompletionService.hh"
 #include "EInterruptedException.hh"
 #include "EExecutionException.hh"
@@ -160,7 +160,7 @@ interface EExecutorService : virtual public EExecutor {
      *         or the security manager's <tt>checkAccess</tt> method
      *         denies access.
      */
-	virtual eal<ERunnable> shutdownNow() = 0;
+	virtual EArrayList<sp<ERunnable> > shutdownNow() = 0;
 
     /**
      * Returns <tt>true</tt> if this executor has been shut down.
@@ -284,13 +284,13 @@ interface EExecutorService : virtual public EExecutor {
      *         scheduled for execution
      */
 	template<typename T>
-    eal<EFuture<T> > invokeAll(EConcurrentCollection<ECallable<T> >* tasks)
+	EArrayList<sp<EFuture<T> > > invokeAll(ECollection<sp<ECallable<T> > >* tasks)
                                          THROWS(EInterruptedException) {
 		if (tasks == null)
 			throw ENullPointerException(__FILE__, __LINE__);
-		eal<EFuture<T> > futures(tasks->size());
+		EArrayList<sp<EFuture<T> > > futures(tasks->size());
 		boolean done = false;
-		sp<EConcurrentIterator<ECallable<T> > > iter;
+		sp<EIterator<sp<ECallable<T> > > > iter;
 		try {
 			iter = tasks->iterator();
 			while (iter->hasNext()) {
@@ -356,16 +356,16 @@ interface EExecutorService : virtual public EExecutor {
      *         for execution
      */
 	template<typename T>
-	eal<EFuture<T> > invokeAll(EConcurrentCollection<ECallable<T> >* tasks,
+	EArrayList<sp<EFuture<T> > > invokeAll(ECollection<sp<ECallable<T> > >* tasks,
                                   llong timeout, ETimeUnit* unit)
                                   THROWS(EInterruptedException) {
 		if (tasks == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		llong nanos = unit->toNanos(timeout);
-		eal<EFuture<T> > futures(tasks->size());
-		eal<ERunnableFuture<T> > futures_(tasks->size()); //FIXME?
+		EArrayList<sp<EFuture<T> > > futures(tasks->size());
+		EArrayList<sp<ERunnableFuture<T> > > futures_(tasks->size()); //FIXME?
 		boolean done = false;
-		sp<EConcurrentIterator<ECallable<T> > > iter;
+		sp<EIterator<sp<ECallable<T> > > > iter;
 		try {
 			iter = tasks->iterator();
 			while (iter->hasNext()) {
@@ -381,7 +381,7 @@ interface EExecutorService : virtual public EExecutor {
 			// Interleave time checks and calls to execute in case
 			// executor doesn't have any/much parallelism.
 			for (int i = 0; i < size; i++) {
-				execute(futures_.get(i));
+				execute(futures_.getAt(i));
 				nanos = deadline - ESystem::nanoTime();
 				if (nanos <= 0L) {
 					goto FINALLY;
@@ -389,7 +389,7 @@ interface EExecutorService : virtual public EExecutor {
 			}
 
 			for (int i = 0; i < size; i++) {
-				sp<EFuture<T> > f = futures.get(i);
+				sp<EFuture<T> > f = futures.getAt(i);
 				if (!f->isDone()) {
 					if (nanos <= 0L)
 						goto FINALLY;
@@ -409,7 +409,7 @@ interface EExecutorService : virtual public EExecutor {
 			finally {
 				if (!done)
 					for (int i = 0, size = futures.size(); i < size; i++)
-						futures.get(i)->cancel(true);
+						futures.getAt(i)->cancel(true);
 			}
 			throw; //!
 		}
@@ -417,7 +417,7 @@ interface EExecutorService : virtual public EExecutor {
 		finally {
 			if (!done)
 				for (int i = 0, size = futures.size(); i < size; i++)
-					futures.get(i)->cancel(true);
+					futures.getAt(i)->cancel(true);
 		}
 		return futures;
 	}
@@ -441,7 +441,7 @@ interface EExecutorService : virtual public EExecutor {
      *         for execution
      */
 	template<typename T>
-    sp<T> invokeAny(EConcurrentCollection<ECallable<T> >* tasks)
+    sp<T> invokeAny(ECollection<sp<ECallable<T> > >* tasks)
 	                   THROWS2(EInterruptedException, EExecutionException) {
 		try {
 			return doInvokeAny(tasks, false, 0);
@@ -474,7 +474,7 @@ interface EExecutorService : virtual public EExecutor {
      *         for execution
      */
 	template<typename T>
-	sp<T> invokeAny(EConcurrentCollection<ECallable<T> >* tasks,
+	sp<T> invokeAny(ECollection<sp<ECallable<T> > >* tasks,
                        llong timeout, ETimeUnit* unit)
 	                   THROWS3(EInterruptedException, EExecutionException, ETimeoutException) {
 		return doInvokeAny(tasks, true, unit->toNanos(timeout));
@@ -519,14 +519,14 @@ private:
 	 * the main mechanics of invokeAny.
 	 */
 	template<typename T>
-	sp<T> doInvokeAny(EConcurrentCollection<ECallable<T> >* tasks, boolean timed,
+	sp<T> doInvokeAny(ECollection<sp<ECallable<T> > >* tasks, boolean timed,
 			llong nanos) THROWS3(EInterruptedException, EExecutionException, ETimeoutException) {
 		if (tasks == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		int ntasks = tasks->size();
 		if (ntasks == 0)
 			throw EIllegalArgumentException(__FILE__, __LINE__);
-		eal<EFuture<T> > futures(ntasks);
+		EArrayList<sp<EFuture<T> > > futures(ntasks);
 		sp<EExecutorCompletionService<T> > ecs =
 			new EExecutorCompletionService<T>(this);
 
@@ -537,7 +537,7 @@ private:
 		// loop.
 
 		sp<T> result = null;
-		sp<EConcurrentIterator<ECallable<T> > > it;
+		sp<EIterator<sp<ECallable<T> > > > it;
 		try {
 			// Record exceptions so that if we fail to obtain any
 			// result, we can throw the last exception we got.
@@ -586,14 +586,14 @@ private:
 		} catch (...) {
 			finally {
 				for (int i = 0, size = futures.size(); i < size; i++)
-					futures.get(i)->cancel(true);
+					futures.getAt(i)->cancel(true);
 			}
 			throw; //!
 		}
 		FINALLY:
 		finally {
 			for (int i = 0, size = futures.size(); i < size; i++)
-				futures.get(i)->cancel(true);
+				futures.getAt(i)->cancel(true);
 		}
 		return result;
 	}

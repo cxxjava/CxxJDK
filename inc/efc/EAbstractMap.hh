@@ -48,295 +48,13 @@ namespace efc {
  */
 
 //=============================================================================
-
-// Implementation Note: SimpleEntry and SimpleImmutableEntry
-// are distinct unrelated classes, even though they share
-// some code. Since you can't add or subtract final-ness
-// of a field in a subclass, they can't share representations,
-// and the amount of duplicated code is too small to warrant
-// exposing a common abstract class.
-
-/**
- * An Entry maintaining a key and a value.  The value may be
- * changed using the <tt>setValue</tt> method.  This class
- * facilitates the process of building custom map
- * implementations. For example, it may be convenient to return
- * arrays of <tt>SimpleEntry</tt> instances in method
- * <tt>Map.entrySet().toArray</tt>.
- *
- * @since 1.6
- */
-
-template<typename EK, typename EV>
-class ESimpleEntry: virtual public EMapEntry<EK,
-		EV> {
-private:
-	EK key;
-	EV value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
-public:
-	virtual ~ESimpleEntry(){}
-
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleEntry(EK key, EV value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleEntry(
-			EMapEntry<EK, EV> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual EK getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual EV getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return the old value corresponding to the entry
-	 */
-	virtual EV setValue(EV value) {
-		EV oldValue = this->value;
-		this->value = value;
-		return oldValue;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<EK, EV>* e) {
-		return eq(key, e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<EK, EV>* e = dynamic_cast<EMapEntry<EK, EV>*>(obj);
-		if (!e) return false;
-        return eq(key, e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key   == null ? 0 : key->hashCode()) ^
-			   (value == null ? 0 : value->hashCode());
-	}
-
-	/**
-	 * Returns a String representation of this map entry.  This
-	 * implementation returns the string representation of this
-	 * entry's key followed by the equals character ("<tt>=</tt>")
-	 * followed by the string representation of this entry's value.
-	 *
-	 * @return a String representation of this map entry
-	 */
-	virtual EStringBase toString() {
-		return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
-	}
-};
-
-/**
- * An Entry maintaining an immutable key and value.  This class
- * does not support method <tt>setValue</tt>.  This class may be
- * convenient in methods that return thread-safe snapshots of
- * key-value mappings.
- *
- * @since 1.6
- */
-template<typename K, typename V>
-class ESimpleImmutableEntry: virtual public EMapEntry<K,
-		V> {
-private:
-	K key;
-	V value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
-public:
-	virtual ~ESimpleImmutableEntry(){}
-
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleImmutableEntry(K key,
-			V value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleImmutableEntry(
-			EMapEntry<K, V> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual K getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual V getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value (optional operation).  This implementation simply throws
-	 * <tt>UnsupportedOperationException</tt>, as this class implements
-	 * an <i>immutable</i> map entry.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return (Does not return)
-	 * @throws UnsupportedOperationException always
-	 */
-	virtual V setValue(V value) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<K, V>* e) {
-		return eq(key, e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<K, V>* e = dynamic_cast<EMapEntry<K, V>*>(obj);
-		if (!e) return false;
-        return eq(key, e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key == null ? 0 : key->hashCode())
-				^ (value == null ? 0 : value->hashCode());
-	}
-
-	/**
-	 * Returns a String representation of this map entry.  This
-	 * implementation returns the string representation of this
-	 * entry's key followed by the equals character ("<tt>=</tt>")
-	 * followed by the string representation of this entry's value.
-	 *
-	 * @return a String representation of this map entry
-	 */
-	virtual EStringBase toString() {
-		return EStringBase::formatOf("%s=%s", key->toString().c_str(), value->toString().c_str());
-	}
-};
+//Primitive Key && (Native pointer Value | Shared pointer Value).
 
 template<typename K, typename V>
-abstract class EAbstractMap: virtual public EMap<K, V> {
+abstract class EAbstractMap : virtual public EMap<K, V> {
+public:
+	typedef typename ETraits<V>::indexType idxV;
+
 protected:
 	/**
 	 * Sole constructor.  (For invocation by subclass constructors, typically
@@ -347,11 +65,9 @@ protected:
 		_values = null;
 	}
 
-	template<typename _K>
-	class KeySet: public EAbstractSet<_K> {
+	class KeySet: public EAbstractSet<K> {
 	private:
-		template<typename _KI>
-		class KSListIterator: public EIterator<_KI> {
+		class KSListIterator: public EIterator<K> {
 		private:
 			sp<EIterator<EMapEntry<K,V>*> > i;
 
@@ -364,7 +80,7 @@ protected:
 				return i->hasNext();
 			}
 
-			_KI next() {
+			K next() {
 				return i->next()->getKey();
 			}
 
@@ -372,9 +88,9 @@ protected:
 				i->remove();
 			}
 
-			_KI moveOut() {
+			K moveOut() {
 				EMapEntry<K,V>* e = i->moveOut();
-				_KI o = e->getKey();
+				K o = e->getKey();
 				delete e;
 				return o;
 			}
@@ -387,24 +103,22 @@ protected:
 			_map = map;
 		}
 
-		sp<EIterator<_K> > iterator(int index=0) {
-			return new KSListIterator<_K>(_map);
+		sp<EIterator<K> > iterator(int index=0) {
+			return new KSListIterator(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(_K k) {
+		boolean contains(K k) {
 			return _map->containsKey(k);
 		}
 	};
 
-	template<typename _V>
-	class ValueCollection: public EAbstractCollection<_V> {
+	class ValueCollection: public EAbstractCollection<V> {
 	private:
-		template<typename _VI>
-		class VCListIterator: public EIterator<_VI> {
+		class VCListIterator: public EIterator<V> {
 		private:
 			sp<EIterator<EMapEntry<K,V>*> > i;
 
@@ -417,7 +131,7 @@ protected:
 				return i->hasNext();
 			}
 
-			_VI next() {
+			V next() {
 				return i->next()->getValue();
 			}
 
@@ -425,9 +139,9 @@ protected:
 				i->remove();
 			}
 
-			_VI moveOut() {
+			V moveOut() {
 				EMapEntry<K,V>* e = i->moveOut();
-				_VI o = e->getValue();
+				V o = e->getValue();
 				delete e;
 				return o;
 			}
@@ -440,27 +154,22 @@ protected:
 			_map = map;
 		}
 
-		sp<EIterator<_V> > iterator(int index=0) {
-			return new VCListIterator<_V>(_map);
+		sp<EIterator<V> > iterator(int index=0) {
+			return new VCListIterator(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(K v) {
-			return _map->containsKey(v);
+		boolean contains(idxV v) {
+			return _map->containsValue(v);
 		}
 	};
 
 public:
 	virtual ~EAbstractMap() {
-		if (_keySet) {
-			delete _keySet;
-		}
-		if (_values) {
-			delete _values;
-		}
+		//
 	}
 
 	// Query Operations
@@ -495,12 +204,13 @@ public:
 	 * @throws ClassCastException   {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual boolean containsValue(V value) {
+	virtual boolean containsValue(idxV value) {
 		sp<EIterator<EMapEntry<K, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
-			if (value->equals(e->getValue())) {
+			V v = e->getValue();
+			if ((v != null && v->equals(value)) || (v == null && value == null)) {
 				return true;
 			}
 		}
@@ -525,7 +235,7 @@ public:
 				entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
-			if (key->equals(e->getKey())) {
+			if (key == (e->getKey())) {
 				return true;
 			}
 		}
@@ -550,7 +260,7 @@ public:
 						entrySet()->iterator();
 		while (i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
-			if (key->equals(e->getKey())) {
+			if (key == (e->getKey())) {
 				return e->getValue();
 			}
 		}
@@ -601,7 +311,7 @@ public:
 		EMapEntry<K, V> *correctEntry = null;
 		while (correctEntry == null && i->hasNext()) {
 			EMapEntry<K, V> *e = i->next();
-			if (key->equals(e->getKey()))
+			if (key == (e->getKey()))
 				correctEntry = e;
 		}
 
@@ -646,9 +356,9 @@ public:
 	 * is performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same set.
 	 */
-	virtual ESet<K>* keySet() {
+	virtual sp<ESet<K> > keySet() {
 		if (_keySet == null) {
-			_keySet = new KeySet<K>(this);
+			_keySet = new KeySet(this);
 		}
 		return _keySet;
 	}
@@ -668,9 +378,424 @@ public:
 	 * performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same collection.
 	 */
-	virtual ECollection<V>* values() {
+	virtual sp<ECollection<V> > values() {
 		if (_values == null) {
-			_values = new ValueCollection<V>(this);
+			_values = new ValueCollection(this);
+		}
+		return _values;
+	}
+
+	/**
+	 * Returns the hash code value for this map.  The hash code of a map is
+	 * defined to be the sum of the hash codes of each entry in the map's
+	 * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
+	 * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
+	 * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
+	 * {@link Object#hashCode}.
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt>, calling
+	 * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
+	 * set, and adding up the results.
+	 *
+	 * @return the hash code value for this map
+	 * @see Map.Entry#hashCode()
+	 * @see Object#equals(Object)
+	 * @see Set#equals(Object)
+	 */
+	virtual int hashCode() {
+		int h = 0;
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
+		while (i->hasNext())
+			h += i->next()->hashCode();
+		return h;
+	}
+
+	/**
+	 * Returns a string representation of this map.  The string representation
+	 * consists of a list of key-value mappings in the order returned by the
+	 * map's <tt>entrySet</tt> view's iterator, enclosed in braces
+	 * (<tt>"{}"</tt>).  Adjacent mappings are separated by the characters
+	 * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
+	 * the key followed by an equals sign (<tt>"="</tt>) followed by the
+	 * associated value.  Keys and values are converted to strings as by
+	 * {@link String#valueOf(Object)}.
+	 *
+	 * @return a string representation of this map
+	 */
+	virtual EStringBase toString() {
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
+		if (! i->hasNext()) {
+			return "{}";
+		}
+
+		EStringBase sb;
+		sb.append('{');
+		for (;;) {
+			EMapEntry<K,V>* e = i->next();
+			K key = e->getKey();
+			V value = e->getValue();
+			sb.append(key);
+			sb.append('=');
+			sb.append(value->toString().c_str());
+			if (! i->hasNext()) {
+				return sb.append('}');
+			}
+			sb.append(',').append(' ');
+		}
+		return sb;
+	}
+
+	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
+
+protected:
+	/**
+	 * Each of these fields are initialized to contain an instance of the
+	 * appropriate view the first time this view is requested.  The views are
+	 * stateless, so there's no reason to create more than one of each.
+	 */
+	sp<ESet<K> > _keySet;
+	sp<ECollection<V> > _values;
+};
+
+//=============================================================================
+//Native poiner Types.
+
+template<typename _K, typename _V>
+abstract class EAbstractMap<_K*, _V*>: virtual public EMap<_K*, _V*> {
+public:
+	typedef _K* K;
+	typedef _V* V;
+
+protected:
+	/**
+	 * Sole constructor.  (For invocation by subclass constructors, typically
+	 * implicit.)
+	 */
+	EAbstractMap() {
+		_keySet = null;
+		_values = null;
+	}
+
+	class KeySet: public EAbstractSet<K> {
+	private:
+		class KSListIterator: public EIterator<K> {
+		private:
+			sp<EIterator<EMapEntry<K,V>*> > i;
+
+		public:
+			KSListIterator(EAbstractMap<K,V> *map) {
+				 i = map->entrySet()->iterator();
+			}
+
+			boolean hasNext() {
+				return i->hasNext();
+			}
+
+			K next() {
+				return i->next()->getKey();
+			}
+
+			void remove() {
+				i->remove();
+			}
+
+			K moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				K o = e->getKey();
+				delete e;
+				return o;
+			}
+		};
+
+		EAbstractMap<K,V> *_map;
+
+	public:
+		KeySet(EAbstractMap<K,V> *map) {
+			_map = map;
+		}
+
+		sp<EIterator<K> > iterator(int index=0) {
+			return new KSListIterator(_map);
+		}
+
+		int size() {
+			return _map->size();
+		}
+
+		boolean contains(_K* k) {
+			return _map->containsKey(k);
+		}
+	};
+
+	class ValueCollection: public EAbstractCollection<V> {
+	private:
+		class VCListIterator: public EIterator<V> {
+		private:
+			sp<EIterator<EMapEntry<K,V>*> > i;
+
+		public:
+			VCListIterator(EAbstractMap<K,V> *map) {
+				 i = map->entrySet()->iterator();
+			}
+
+			boolean hasNext() {
+				return i->hasNext();
+			}
+
+			V next() {
+				return i->next()->getValue();
+			}
+
+			void remove() {
+				i->remove();
+			}
+
+			V moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				V o = e->getValue();
+				delete e;
+				return o;
+			}
+		};
+
+		EAbstractMap<K,V> *_map;
+
+	public:
+		ValueCollection(EAbstractMap<K,V> *map) {
+			_map = map;
+		}
+
+		sp<EIterator<V> > iterator(int index=0) {
+			return new VCListIterator(_map);
+		}
+
+		int size() {
+			return _map->size();
+		}
+
+		boolean contains(_V* v) {
+			return _map->containsValue(v);
+		}
+	};
+
+public:
+	virtual ~EAbstractMap() {
+		//
+	}
+
+	// Query Operations
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns <tt>entrySet().size()</tt>.
+	 */
+	virtual int size() {
+		return entrySet()->size();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns <tt>size() == 0</tt>.
+	 */
+	virtual boolean isEmpty() {
+		return size() == 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
+	 * for an entry with the specified value.  If such an entry is found,
+	 * <tt>true</tt> is returned.  If the iteration terminates without
+	 * finding such an entry, <tt>false</tt> is returned.  Note that this
+	 * implementation requires linear time in the size of the map.
+	 *
+	 * @throws ClassCastException   {@inheritDoc}
+	 * @throws NullPointerException {@inheritDoc}
+	 */
+	virtual boolean containsValue(_V* value) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
+				entrySet()->iterator();
+		while (i->hasNext()) {
+			EMapEntry<K, V> *e = i->next();
+			V v = e->getValue();
+			if ((v != null && v->equals(value)) || (v == null && value == null)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
+	 * for an entry with the specified key.  If such an entry is found,
+	 * <tt>true</tt> is returned.  If the iteration terminates without
+	 * finding such an entry, <tt>false</tt> is returned.  Note that this
+	 * implementation requires linear time in the size of the map; many
+	 * implementations will override this method.
+	 *
+	 * @throws ClassCastException   {@inheritDoc}
+	 * @throws NullPointerException {@inheritDoc}
+	 */
+	virtual boolean containsKey(_K* key) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
+				entrySet()->iterator();
+		while (i->hasNext()) {
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
+	 * for an entry with the specified key.  If such an entry is found,
+	 * the entry's value is returned.  If the iteration terminates without
+	 * finding such an entry, <tt>null</tt> is returned.  Note that this
+	 * implementation requires linear time in the size of the map; many
+	 * implementations will override this method.
+	 *
+	 * @throws ClassCastException            {@inheritDoc}
+	 * @throws NullPointerException          {@inheritDoc}
+	 */
+	virtual V get(_K* key) THROWS(ENoSuchElementException) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
+						entrySet()->iterator();
+		while (i->hasNext()) {
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
+				return e->getValue();
+			}
+		}
+		throw ENOSUCHELEMENTEXCEPTION;
+	}
+
+	// Modification Operations
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation always throws an
+	 * <tt>UnsupportedOperationException</tt>.
+	 *
+	 * @throws UnsupportedOperationException {@inheritDoc}
+	 * @throws ClassCastException            {@inheritDoc}
+	 * @throws NullPointerException          {@inheritDoc}
+	 * @throws IllegalArgumentException      {@inheritDoc}
+	 */
+	virtual V put(K key, V value, boolean *absent=null) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation iterates over <tt>entrySet()</tt> searching for an
+	 * entry with the specified key.  If such an entry is found, its value is
+	 * obtained with its <tt>getValue</tt> operation, the entry is removed
+	 * from the collection (and the backing map) with the iterator's
+	 * <tt>remove</tt> operation, and the saved value is returned.  If the
+	 * iteration terminates without finding such an entry, <tt>null</tt> is
+	 * returned.  Note that this implementation requires linear time in the
+	 * size of the map; many implementations will override this method.
+	 *
+	 * <p>Note that this implementation throws an
+	 * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
+	 * iterator does not support the <tt>remove</tt> method and this map
+	 * contains a mapping for the specified key.
+	 *
+	 * @throws UnsupportedOperationException {@inheritDoc}
+	 * @throws ClassCastException            {@inheritDoc}
+	 * @throws NullPointerException          {@inheritDoc}
+	 */
+	virtual V remove(_K* key) THROWS(ENoSuchElementException) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
+								entrySet()->iterator();
+		EMapEntry<K, V> *correctEntry = null;
+		while (correctEntry == null && i->hasNext()) {
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
+				correctEntry = e;
+			}
+		}
+
+		V oldValue;
+		if (correctEntry != null) {
+			oldValue = correctEntry->getValue();
+			i->remove();
+			return oldValue;
+		}
+		throw ENOSUCHELEMENTEXCEPTION;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation calls <tt>entrySet().clear()</tt>.
+	 *
+	 * <p>Note that this implementation throws an
+	 * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
+	 * does not support the <tt>clear</tt> operation.
+	 *
+	 * @throws UnsupportedOperationException {@inheritDoc}
+	 */
+	virtual void clear() {
+		entrySet()->clear();
+	}
+
+	// Views
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns a set that subclasses {@link AbstractSet}.
+	 * The subclass's iterator method returns a "wrapper object" over this
+	 * map's <tt>entrySet()</tt> iterator.  The <tt>size</tt> method
+	 * delegates to this map's <tt>size</tt> method and the
+	 * <tt>contains</tt> method delegates to this map's
+	 * <tt>containsKey</tt> method.
+	 *
+	 * <p>The set is created the first time this method is called,
+	 * and returned in response to all subsequent calls.  No synchronization
+	 * is performed, so there is a slight chance that multiple calls to this
+	 * method will not all return the same set.
+	 */
+	virtual sp<ESet<K> > keySet() {
+		if (_keySet == null) {
+			_keySet = new KeySet(this);
+		}
+		return _keySet;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>This implementation returns a collection that subclasses {@link
+	 * AbstractCollection}.  The subclass's iterator method returns a
+	 * "wrapper object" over this map's <tt>entrySet()</tt> iterator.
+	 * The <tt>size</tt> method delegates to this map's <tt>size</tt>
+	 * method and the <tt>contains</tt> method delegates to this map's
+	 * <tt>containsValue</tt> method.
+	 *
+	 * <p>The collection is created the first time this method is called, and
+	 * returned in response to all subsequent calls.  No synchronization is
+	 * performed, so there is a slight chance that multiple calls to this
+	 * method will not all return the same collection.
+	 */
+	virtual sp<ECollection<V> > values() {
+		if (_values == null) {
+			_values = new ValueCollection(this);
 		}
 		return _values;
 	}
@@ -732,9 +857,10 @@ public:
 			}
 			sb.append(',').append(' ');
 		}
+		return sb;
 	}
 
-	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
+	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
 
 protected:
 	/**
@@ -742,278 +868,19 @@ protected:
 	 * appropriate view the first time this view is requested.  The views are
 	 * stateless, so there's no reason to create more than one of each.
 	 */
-	ESet<K> *_keySet;
-	ECollection<V> *_values;
+	sp<ESet<K> > _keySet;
+	sp<ECollection<V> > _values;
 };
 
 //=============================================================================
+//Shared poiner Types.
 
-#if !(defined(_MSC_VER) && (_MSC_VER<=1200))
-
-
-// Implementation Note: SimpleEntry and SimpleImmutableEntry
-// are distinct unrelated classes, even though they share
-// some code. Since you can't add or subtract final-ness
-// of a field in a subclass, they can't share representations,
-// and the amount of duplicated code is too small to warrant
-// exposing a common abstract class.
-
-/**
- * An Entry maintaining a key and a value.  The value may be
- * changed using the <tt>setValue</tt> method.  This class
- * facilitates the process of building custom map
- * implementations. For example, it may be convenient to return
- * arrays of <tt>SimpleEntry</tt> instances in method
- * <tt>Map.entrySet().toArray</tt>.
- *
- * @since 1.6
- */
-template<typename EV>
-class ESimpleEntry<int, EV> : virtual public EMapEntry<int,
-		EV> {
-private:
-	int key;
-	EV value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
+template<typename _K, typename _V>
+abstract class EAbstractMap<sp<_K>, sp<_V> >: virtual public EMap<sp<_K>, sp<_V> > {
 public:
-	virtual ~ESimpleEntry(){}
+	typedef sp<_K> K;
+	typedef sp<_V> V;
 
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleEntry(int key, EV value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleEntry(
-			EMapEntry<int, EV> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual int getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual EV getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return the old value corresponding to the entry
-	 */
-	virtual EV setValue(EV value) {
-		EV oldValue = this->value;
-		this->value = value;
-		return oldValue;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<int, EV>* e) {
-		return (key == e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<int, EV>* e = dynamic_cast<EMapEntry<int, EV>*>(obj);
-		if (!e) return false;
-        return (key == e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key) ^
-			   (value == null ? 0 : value->hashCode());
-	}
-};
-
-/**
- * An Entry maintaining an immutable key and value.  This class
- * does not support method <tt>setValue</tt>.  This class may be
- * convenient in methods that return thread-safe snapshots of
- * key-value mappings.
- *
- * @since 1.6
- */
-template<typename V>
-class ESimpleImmutableEntry<int, V>: virtual public EMapEntry<int,
-		V> {
-private:
-	int key;
-	V value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
-public:
-	virtual ~ESimpleImmutableEntry(){}
-
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleImmutableEntry(int key,
-			V value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleImmutableEntry(
-			EMapEntry<int, V> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual int getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual V getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value (optional operation).  This implementation simply throws
-	 * <tt>UnsupportedOperationException</tt>, as this class implements
-	 * an <i>immutable</i> map entry.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return (Does not return)
-	 * @throws UnsupportedOperationException always
-	 */
-	virtual V setValue(V value) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<int, V>* e) {
-		return (key == e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<int, V>* e = dynamic_cast<EMapEntry<int, V>*>(obj);
-		if (!e) return false;
-        return (key == e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key)
-				^ (value == null ? 0 : value->hashCode());
-	}
-};
-
-template<typename V>
-abstract class EAbstractMap<int, V>: virtual public EMap<int, V> {
 protected:
 	/**
 	 * Sole constructor.  (For invocation by subclass constructors, typically
@@ -1024,16 +891,14 @@ protected:
 		_values = null;
 	}
 
-	template<typename _K>
-	class KeySet: public EAbstractSet<_K> {
+	class KeySet: public EAbstractSet<K> {
 	private:
-		template<typename _KI>
-		class KSListIterator: public EIterator<_KI> {
+		class KSListIterator: public EIterator<K> {
 		private:
-			sp<EIterator<EMapEntry<int,V>*> > i;
+			sp<EIterator<EMapEntry<K,V>*> > i;
 
 		public:
-			KSListIterator(EAbstractMap<int,V> *map) {
+			KSListIterator(EAbstractMap<K,V> *map) {
 				 i = map->entrySet()->iterator();
 			}
 
@@ -1041,7 +906,7 @@ protected:
 				return i->hasNext();
 			}
 
-			_KI next() {
+			K next() {
 				return i->next()->getKey();
 			}
 
@@ -1049,86 +914,84 @@ protected:
 				i->remove();
 			}
 
-			_KI moveOut() {
-				EMapEntry<int,V>* e = i->moveOut();
-				_KI o = e->getKey();
+			K moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				K o = e->getKey();
 				delete e;
 				return o;
 			}
 		};
 
-		EAbstractMap<int,V> *_map;
+		EAbstractMap<K,V> *_map;
 
 	public:
-		KeySet(EAbstractMap<int,V> *map) {
+		KeySet(EAbstractMap<K,V> *map) {
 			_map = map;
 		}
 
-		sp<EIterator<_K> > iterator(int index=0) {
-			return new KSListIterator<_K>(_map);
+		sp<EIterator<K> > iterator(int index=0) {
+			return new KSListIterator(_map);
 		}
 
 		int size() {
 			return _map->size();
 		}
 
-		boolean contains(_K k) {
+		boolean contains(_K* k) {
 			return _map->containsKey(k);
 		}
 	};
 
-	template<typename _V>
-		class ValueCollection: public EAbstractCollection<_V> {
+	class ValueCollection: public EAbstractCollection<V> {
+	private:
+		class VCListIterator: public EIterator<V> {
 		private:
-			template<typename _VI>
-			class VCListIterator: public EIterator<_VI> {
-			private:
-				sp<EIterator<EMapEntry<int,V>*> > i;
-
-			public:
-				VCListIterator(EAbstractMap<int,V> *map) {
-					 i = map->entrySet()->iterator();
-				}
-
-				boolean hasNext() {
-					return i->hasNext();
-				}
-
-				_VI next() {
-					return i->next()->getValue();
-				}
-
-				void remove() {
-					i->remove();
-				}
-
-				_VI moveOut() {
-					EMapEntry<int,V>* e = i->moveOut();
-					_VI o = e->getValue();
-					delete e;
-					return o;
-				}
-			};
-
-			EAbstractMap<int,V> *_map;
+			sp<EIterator<EMapEntry<K,V>*> > i;
 
 		public:
-			ValueCollection(EAbstractMap<int,V> *map) {
-				_map = map;
+			VCListIterator(EAbstractMap<K,V> *map) {
+				 i = map->entrySet()->iterator();
 			}
 
-			sp<EIterator<_V> > iterator(int index=0) {
-				return new VCListIterator<_V>(_map);
+			boolean hasNext() {
+				return i->hasNext();
 			}
 
-			int size() {
-				return _map->size();
+			V next() {
+				return i->next()->getValue();
 			}
 
-			boolean contains(int v) {
-				return _map->containsKey(v);
+			void remove() {
+				i->remove();
+			}
+
+			V moveOut() {
+				EMapEntry<K,V>* e = i->moveOut();
+				V o = e->getValue();
+				delete e;
+				return o;
 			}
 		};
+
+		EAbstractMap<K,V> *_map;
+
+	public:
+		ValueCollection(EAbstractMap<K,V> *map) {
+			_map = map;
+		}
+
+		sp<EIterator<V> > iterator(int index=0) {
+			return new VCListIterator(_map);
+		}
+
+		int size() {
+			return _map->size();
+		}
+
+		boolean contains(_V* v) {
+			return _map->containsValue(v);
+		}
+	};
 
 public:
 	virtual ~EAbstractMap() {
@@ -1172,12 +1035,13 @@ public:
 	 * @throws ClassCastException   {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual boolean containsValue(V value) {
-		sp<EIterator<EMapEntry<int, V>*> > i =
+	virtual boolean containsValue(_V* value) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
-			EMapEntry<int, V> *e = i->next();
-			if (value->equals(e->getValue())) {
+			EMapEntry<K, V> *e = i->next();
+			V v = e->getValue();
+			if ((v != null && v->equals(value)) || (v == null && value == null)) {
 				return true;
 			}
 		}
@@ -1197,12 +1061,13 @@ public:
 	 * @throws ClassCastException   {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual boolean containsKey(int key) {
-		sp<EIterator<EMapEntry<int, V>*> > i =
+	virtual boolean containsKey(_K* key) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
 				entrySet()->iterator();
 		while (i->hasNext()) {
-			EMapEntry<int, V> *e = i->next();
-			if (key == (e->getKey())) {
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
 				return true;
 			}
 		}
@@ -1222,12 +1087,13 @@ public:
 	 * @throws ClassCastException            {@inheritDoc}
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
-	virtual V get(int key) THROWS(ENoSuchElementException) {
-		sp<EIterator<EMapEntry<int, V>*> > i =
+	virtual V get(_K* key) THROWS(ENoSuchElementException) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
 						entrySet()->iterator();
 		while (i->hasNext()) {
-			EMapEntry<int, V> *e = i->next();
-			if (key == (e->getKey())) {
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
 				return e->getValue();
 			}
 		}
@@ -1247,7 +1113,7 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
-	virtual V put(int key, V value) {
+	virtual V put(K key, V value, boolean *absent=null) {
 		throw EUNSUPPORTEDOPERATIONEXCEPTION;
 	}
 
@@ -1272,14 +1138,16 @@ public:
 	 * @throws ClassCastException            {@inheritDoc}
 	 * @throws NullPointerException          {@inheritDoc}
 	 */
-	virtual V remove(int key) THROWS(ENoSuchElementException) {
-		sp<EIterator<EMapEntry<int, V>*> > i =
+	virtual V remove(_K* key) THROWS(ENoSuchElementException) {
+		sp<EIterator<EMapEntry<K, V>*> > i =
 								entrySet()->iterator();
-		EMapEntry<int, V> *correctEntry = null;
+		EMapEntry<K, V> *correctEntry = null;
 		while (correctEntry == null && i->hasNext()) {
-			EMapEntry<int, V> *e = i->next();
-			if (key == (e->getKey()))
+			EMapEntry<K, V> *e = i->next();
+			K k = e->getKey();
+			if ((k != null && k->equals(key)) || (k == null && key == null)) {
 				correctEntry = e;
+			}
 		}
 
 		V oldValue;
@@ -1323,9 +1191,9 @@ public:
 	 * is performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same set.
 	 */
-	virtual ESet<int>* keySet() {
+	virtual sp<ESet<K> > keySet() {
 		if (_keySet == null) {
-			_keySet = new KeySet<int>(this);
+			_keySet = new KeySet(this);
 		}
 		return _keySet;
 	}
@@ -1345,9 +1213,9 @@ public:
 	 * performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same collection.
 	 */
-	virtual ECollection<V>* values() {
+	virtual sp<ECollection<V> > values() {
 		if (_values == null) {
-			_values = new ValueCollection<V>(this);
+			_values = new ValueCollection(this);
 		}
 		return _values;
 	}
@@ -1371,7 +1239,7 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		sp<EIterator<EMapEntry<int,V>*> > i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		while (i->hasNext())
 			h += i->next()->hashCode();
 		return h;
@@ -1390,7 +1258,7 @@ public:
 	 * @return a string representation of this map
 	 */
 	virtual EStringBase toString() {
-		sp<EIterator<EMapEntry<int,V>*> > i = entrySet()->iterator();
+		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
 			return "{}";
 		}
@@ -1398,20 +1266,21 @@ public:
 		EStringBase sb;
 		sb.append('{');
 		for (;;) {
-			EMapEntry<int,V>* e = i->next();
-			int key = e->getKey();
+			EMapEntry<K,V>* e = i->next();
+			K key = e->getKey();
 			V value = e->getValue();
-			sb.append(key);
+			sb.append(key->toString().c_str());
 			sb.append('=');
-			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
+			sb.append(value->toString().c_str());
 			if (! i->hasNext()) {
 				return sb.append('}');
 			}
 			sb.append(',').append(' ');
 		}
+		return sb;
 	}
 
-	virtual ESet<EMapEntry<int, V>*>* entrySet() = 0;
+	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
 
 protected:
 	/**
@@ -1419,686 +1288,9 @@ protected:
 	 * appropriate view the first time this view is requested.  The views are
 	 * stateless, so there's no reason to create more than one of each.
 	 */
-	ESet<int> *_keySet;
-	ECollection<V> *_values;
+	sp<ESet<K> > _keySet;
+	sp<ECollection<V> > _values;
 };
-
-//=============================================================================
-
-
-// Implementation Note: SimpleEntry and SimpleImmutableEntry
-// are distinct unrelated classes, even though they share
-// some code. Since you can't add or subtract final-ness
-// of a field in a subclass, they can't share representations,
-// and the amount of duplicated code is too small to warrant
-// exposing a common abstract class.
-
-/**
- * An Entry maintaining a key and a value.  The value may be
- * changed using the <tt>setValue</tt> method.  This class
- * facilitates the process of building custom map
- * implementations. For example, it may be convenient to return
- * arrays of <tt>SimpleEntry</tt> instances in method
- * <tt>Map.entrySet().toArray</tt>.
- *
- * @since 1.6
- */
-template<typename EV>
-class ESimpleEntry<llong, EV>: virtual public EMapEntry<llong,
-		EV> {
-private:
-	llong key;
-	EV value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
-public:
-	virtual ~ESimpleEntry(){}
-
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleEntry(llong key, EV value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleEntry(
-			EMapEntry<llong, EV> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual llong getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual EV getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return the old value corresponding to the entry
-	 */
-	virtual EV setValue(EV value) {
-		EV oldValue = this->value;
-		this->value = value;
-		return oldValue;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<llong, EV>* e) {
-		return (key == e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<llong, EV>* e = dynamic_cast<EMapEntry<llong, EV>*>(obj);
-		if (!e) return false;
-        return (key == e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key) ^
-			   (value == null ? 0 : value->hashCode());
-	}
-};
-
-/**
- * An Entry maintaining an immutable key and value.  This class
- * does not support method <tt>setValue</tt>.  This class may be
- * convenient in methods that return thread-safe snapshots of
- * key-value mappings.
- *
- * @since 1.6
- */
-template<typename V>
-class ESimpleImmutableEntry<llong, V>: virtual public EMapEntry<llong,
-		V> {
-private:
-	llong key;
-	V value;
-
-	static boolean eq(EObject* o1, EObject* o2) {
-		return o1 == null ? o2 == null : o1->equals(o2);
-	}
-public:
-	virtual ~ESimpleImmutableEntry(){}
-
-	/**
-	 * Creates an entry representing a mapping from the specified
-	 * key to the specified value.
-	 *
-	 * @param key the key represented by this entry
-	 * @param value the value represented by this entry
-	 */
-	ESimpleImmutableEntry(llong key,
-			V value) {
-		this->key = key;
-		this->value = value;
-	}
-
-	/**
-	 * Creates an entry representing the same mapping as the
-	 * specified entry.
-	 *
-	 * @param entry the entry to copy
-	 */
-	ESimpleImmutableEntry(
-			EMapEntry<llong, V> *entry) {
-		this->key = entry->getKey();
-		this->value = entry->getValue();
-	}
-
-	/**
-	 * Returns the key corresponding to this entry.
-	 *
-	 * @return the key corresponding to this entry
-	 */
-	virtual llong getKey() {
-		return key;
-	}
-
-	/**
-	 * Returns the value corresponding to this entry.
-	 *
-	 * @return the value corresponding to this entry
-	 */
-	virtual V getValue() {
-		return value;
-	}
-
-	/**
-	 * Replaces the value corresponding to this entry with the specified
-	 * value (optional operation).  This implementation simply throws
-	 * <tt>UnsupportedOperationException</tt>, as this class implements
-	 * an <i>immutable</i> map entry.
-	 *
-	 * @param value new value to be stored in this entry
-	 * @return (Does not return)
-	 * @throws UnsupportedOperationException always
-	 */
-	virtual V setValue(V value) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	/**
-	 * Compares the specified object with this entry for equality.
-	 * Returns {@code true} if the given object is also a map entry and
-	 * the two entries represent the same mapping.  More formally, two
-	 * entries {@code e1} and {@code e2} represent the same mapping
-	 * if<pre>
-	 *   (e1.getKey()==null ?
-	 *    e2.getKey()==null :
-	 *    e1.getKey().equals(e2.getKey()))
-	 *   &amp;&amp;
-	 *   (e1.getValue()==null ?
-	 *    e2.getValue()==null :
-	 *    e1.getValue().equals(e2.getValue()))</pre>
-	 * This ensures that the {@code equals} method works properly across
-	 * different implementations of the {@code Map.Entry} interface.
-	 *
-	 * @param o object to be compared for equality with this map entry
-	 * @return {@code true} if the specified object is equal to this map
-	 *         entry
-	 * @see    #hashCode
-	 */
-	virtual boolean equals(EMapEntry<llong, V>* e) {
-		return (key == e->getKey()) && eq(value, e->getValue());
-	}
-	virtual boolean equals(EObject* obj) {
-		EMapEntry<llong, V>* e = dynamic_cast<EMapEntry<llong, V>*>(obj);
-		if (!e) return false;
-        return (key == e->getKey()) && eq(value, e->getValue());
-	}
-
-	/**
-	 * Returns the hash code value for this map entry.  The hash code
-	 * of a map entry {@code e} is defined to be: <pre>
-	 *   (e.getKey()==null   ? 0 : e.getKey().hashCode()) ^
-	 *   (e.getValue()==null ? 0 : e.getValue().hashCode())</pre>
-	 * This ensures that {@code e1.equals(e2)} implies that
-	 * {@code e1.hashCode()==e2.hashCode()} for any two Entries
-	 * {@code e1} and {@code e2}, as required by the general
-	 * contract of {@link Object#hashCode}.
-	 *
-	 * @return the hash code value for this map entry
-	 * @see    #equals
-	 */
-	virtual int hashCode() {
-		return (key)
-				^ (value == null ? 0 : value->hashCode());
-	}
-};
-
-template<typename V>
-abstract class EAbstractMap<llong, V>: virtual public EMap<llong, V> {
-protected:
-	/**
-	 * Sole constructor.  (For invocation by subclass constructors, typically
-	 * implicit.)
-	 */
-	EAbstractMap() {
-		_keySet = null;
-		_values = null;
-	}
-
-	template<typename _K>
-	class KeySet: public EAbstractSet<_K> {
-	private:
-		template<typename _KI>
-		class KSListIterator: public EIterator<_KI> {
-		private:
-			sp<EIterator<EMapEntry<llong,V>*> > i;
-
-		public:
-			KSListIterator(EAbstractMap<llong,V> *map) {
-				 i = map->entrySet()->iterator();
-			}
-
-			boolean hasNext() {
-				return i->hasNext();
-			}
-
-			_KI next() {
-				return i->next()->getKey();
-			}
-
-			void remove() {
-				i->remove();
-			}
-
-			_KI moveOut() {
-				EMapEntry<llong,V>* e = i->moveOut();
-				_KI o = e->getKey();
-				delete e;
-				return o;
-			}
-		};
-
-		EAbstractMap<llong,V> *_map;
-
-	public:
-		KeySet(EAbstractMap<llong,V> *map) {
-			_map = map;
-		}
-
-		sp<EIterator<_K> > iterator(int index=0) {
-			return new KSListIterator<_K>(_map);
-		}
-
-		int size() {
-			return _map->size();
-		}
-
-		boolean contains(_K k) {
-			return _map->containsKey(k);
-		}
-	};
-
-	template<typename _V>
-		class ValueCollection: public EAbstractCollection<_V> {
-		private:
-			template<typename _VI>
-			class VCListIterator: public EIterator<_VI> {
-			private:
-				sp<EIterator<EMapEntry<llong,V>*> > i;
-
-			public:
-				VCListIterator(EAbstractMap<llong,V> *map) {
-					 i = map->entrySet()->iterator();
-				}
-
-				boolean hasNext() {
-					return i->hasNext();
-				}
-
-				_VI next() {
-					return i->next()->getValue();
-				}
-
-				void remove() {
-					i->remove();
-				}
-
-				_VI moveOut() {
-					EMapEntry<llong,V>* e = i->moveOut();
-					_VI o = e->getValue();
-					delete e;
-					return o;
-				}
-			};
-
-			EAbstractMap<llong,V> *_map;
-
-		public:
-			ValueCollection(EAbstractMap<llong,V> *map) {
-				_map = map;
-			}
-
-			sp<EIterator<_V> > iterator(int index=0) {
-				return new VCListIterator<_V>(_map);
-			}
-
-			int size() {
-				return _map->size();
-			}
-
-			boolean contains(llong v) {
-				return _map->containsKey(v);
-			}
-		};
-
-public:
-	virtual ~EAbstractMap() {
-		if (_keySet) {
-			delete _keySet;
-		}
-		if (_values) {
-			delete _values;
-		}
-	}
-
-	// Query Operations
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation returns <tt>entrySet().size()</tt>.
-	 */
-	virtual int size() {
-		return entrySet()->size();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation returns <tt>size() == 0</tt>.
-	 */
-	virtual boolean isEmpty() {
-		return size() == 0;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
-	 * for an entry with the specified value.  If such an entry is found,
-	 * <tt>true</tt> is returned.  If the iteration terminates without
-	 * finding such an entry, <tt>false</tt> is returned.  Note that this
-	 * implementation requires linear time in the size of the map.
-	 *
-	 * @throws ClassCastException   {@inheritDoc}
-	 * @throws NullPointerException {@inheritDoc}
-	 */
-	virtual boolean containsValue(V value) {
-		sp<EIterator<EMapEntry<llong, V>*> > i =
-				entrySet()->iterator();
-		while (i->hasNext()) {
-			EMapEntry<llong, V> *e = i->next();
-			if (value->equals(e->getValue())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
-	 * for an entry with the specified key.  If such an entry is found,
-	 * <tt>true</tt> is returned.  If the iteration terminates without
-	 * finding such an entry, <tt>false</tt> is returned.  Note that this
-	 * implementation requires linear time in the size of the map; many
-	 * implementations will override this method.
-	 *
-	 * @throws ClassCastException   {@inheritDoc}
-	 * @throws NullPointerException {@inheritDoc}
-	 */
-	virtual boolean containsKey(llong key) {
-		sp<EIterator<EMapEntry<llong, V>*> > i =
-				entrySet()->iterator();
-		while (i->hasNext()) {
-			EMapEntry<llong, V> *e = i->next();
-			if (key == (e->getKey())) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation iterates over <tt>entrySet()</tt> searching
-	 * for an entry with the specified key.  If such an entry is found,
-	 * the entry's value is returned.  If the iteration terminates without
-	 * finding such an entry, <tt>null</tt> is returned.  Note that this
-	 * implementation requires linear time in the size of the map; many
-	 * implementations will override this method.
-	 *
-	 * @throws ClassCastException            {@inheritDoc}
-	 * @throws NullPointerException          {@inheritDoc}
-	 */
-	virtual V get(llong key) THROWS(ENoSuchElementException) {
-		sp<EIterator<EMapEntry<llong, V>*> > i =
-						entrySet()->iterator();
-		while (i->hasNext()) {
-			EMapEntry<llong, V> *e = i->next();
-			if (key == (e->getKey())) {
-				return e->getValue();
-			}
-		}
-		throw ENOSUCHELEMENTEXCEPTION;
-	}
-
-	// Modification Operations
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation always throws an
-	 * <tt>UnsupportedOperationException</tt>.
-	 *
-	 * @throws UnsupportedOperationException {@inheritDoc}
-	 * @throws ClassCastException            {@inheritDoc}
-	 * @throws NullPointerException          {@inheritDoc}
-	 * @throws IllegalArgumentException      {@inheritDoc}
-	 */
-	virtual V put(llong key, V value) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation iterates over <tt>entrySet()</tt> searching for an
-	 * entry with the specified key.  If such an entry is found, its value is
-	 * obtained with its <tt>getValue</tt> operation, the entry is removed
-	 * from the collection (and the backing map) with the iterator's
-	 * <tt>remove</tt> operation, and the saved value is returned.  If the
-	 * iteration terminates without finding such an entry, <tt>null</tt> is
-	 * returned.  Note that this implementation requires linear time in the
-	 * size of the map; many implementations will override this method.
-	 *
-	 * <p>Note that this implementation throws an
-	 * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
-	 * iterator does not support the <tt>remove</tt> method and this map
-	 * contains a mapping for the specified key.
-	 *
-	 * @throws UnsupportedOperationException {@inheritDoc}
-	 * @throws ClassCastException            {@inheritDoc}
-	 * @throws NullPointerException          {@inheritDoc}
-	 */
-	virtual V remove(llong key) THROWS(ENoSuchElementException) {
-		sp<EIterator<EMapEntry<llong, V>*> > i =
-								entrySet()->iterator();
-		EMapEntry<llong, V> *correctEntry = null;
-		while (correctEntry == null && i->hasNext()) {
-			EMapEntry<llong, V> *e = i->next();
-			if (key == (e->getKey()))
-				correctEntry = e;
-		}
-
-		V oldValue;
-		if (correctEntry != null) {
-			oldValue = correctEntry->getValue();
-			i->remove();
-			return oldValue;
-		}
-		throw ENOSUCHELEMENTEXCEPTION;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation calls <tt>entrySet().clear()</tt>.
-	 *
-	 * <p>Note that this implementation throws an
-	 * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
-	 * does not support the <tt>clear</tt> operation.
-	 *
-	 * @throws UnsupportedOperationException {@inheritDoc}
-	 */
-	virtual void clear() {
-		entrySet()->clear();
-	}
-
-	// Views
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation returns a set that subclasses {@link AbstractSet}.
-	 * The subclass's iterator method returns a "wrapper object" over this
-	 * map's <tt>entrySet()</tt> iterator.  The <tt>size</tt> method
-	 * delegates to this map's <tt>size</tt> method and the
-	 * <tt>contains</tt> method delegates to this map's
-	 * <tt>containsKey</tt> method.
-	 *
-	 * <p>The set is created the first time this method is called,
-	 * and returned in response to all subsequent calls.  No synchronization
-	 * is performed, so there is a slight chance that multiple calls to this
-	 * method will not all return the same set.
-	 */
-	virtual ESet<llong>* keySet() {
-		if (_keySet == null) {
-			_keySet = new KeySet<llong>(this);
-		}
-		return _keySet;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>This implementation returns a collection that subclasses {@link
-	 * AbstractCollection}.  The subclass's iterator method returns a
-	 * "wrapper object" over this map's <tt>entrySet()</tt> iterator.
-	 * The <tt>size</tt> method delegates to this map's <tt>size</tt>
-	 * method and the <tt>contains</tt> method delegates to this map's
-	 * <tt>containsValue</tt> method.
-	 *
-	 * <p>The collection is created the first time this method is called, and
-	 * returned in response to all subsequent calls.  No synchronization is
-	 * performed, so there is a slight chance that multiple calls to this
-	 * method will not all return the same collection.
-	 */
-	virtual ECollection<V>* values() {
-		if (_values == null) {
-			_values = new ValueCollection<V>(this);
-		}
-		return _values;
-	}
-
-	/**
-	 * Returns the hash code value for this map.  The hash code of a map is
-	 * defined to be the sum of the hash codes of each entry in the map's
-	 * <tt>entrySet()</tt> view.  This ensures that <tt>m1.equals(m2)</tt>
-	 * implies that <tt>m1.hashCode()==m2.hashCode()</tt> for any two maps
-	 * <tt>m1</tt> and <tt>m2</tt>, as required by the general contract of
-	 * {@link Object#hashCode}.
-	 *
-	 * <p>This implementation iterates over <tt>entrySet()</tt>, calling
-	 * {@link Map.Entry#hashCode hashCode()} on each element (entry) in the
-	 * set, and adding up the results.
-	 *
-	 * @return the hash code value for this map
-	 * @see Map.Entry#hashCode()
-	 * @see Object#equals(Object)
-	 * @see Set#equals(Object)
-	 */
-	virtual int hashCode() {
-		int h = 0;
-		sp<EIterator<EMapEntry<llong,V>*> > i = entrySet()->iterator();
-		while (i->hasNext())
-			h += i->next()->hashCode();
-		return h;
-	}
-
-	/**
-	 * Returns a string representation of this map.  The string representation
-	 * consists of a list of key-value mappings in the order returned by the
-	 * map's <tt>entrySet</tt> view's iterator, enclosed in braces
-	 * (<tt>"{}"</tt>).  Adjacent mappings are separated by the characters
-	 * <tt>", "</tt> (comma and space).  Each key-value mapping is rendered as
-	 * the key followed by an equals sign (<tt>"="</tt>) followed by the
-	 * associated value.  Keys and values are converted to strings as by
-	 * {@link String#valueOf(Object)}.
-	 *
-	 * @return a string representation of this map
-	 */
-	virtual EStringBase toString() {
-		sp<EIterator<EMapEntry<llong,V>*> > i = entrySet()->iterator();
-		if (! i->hasNext()) {
-			return "{}";
-		}
-
-		EStringBase sb;
-		sb.append('{');
-		for (;;) {
-			EMapEntry<llong,V>* e = i->next();
-			llong key = e->getKey();
-			V value = e->getValue();
-			sb.append(key);
-			sb.append('=');
-			sb.append((void*)value   == (void*)this ? "(this Map)" : value->toString().c_str());
-			if (! i->hasNext()) {
-				return sb.append('}');
-			}
-			sb.append(',').append(' ');
-		}
-	}
-
-	virtual ESet<EMapEntry<llong, V>*>* entrySet() = 0;
-
-protected:
-	/**
-	 * Each of these fields are initialized to contain an instance of the
-	 * appropriate view the first time this view is requested.  The views are
-	 * stateless, so there's no reason to create more than one of each.
-	 */
-	ESet<llong> *_keySet;
-	ECollection<V> *_values;
-};
-
-#endif //!(defined(_MSC_VER) && (_MSC_VER<=1200))
 
 } /* namespace efc */
 #endif //!__EAbstractMap_H__

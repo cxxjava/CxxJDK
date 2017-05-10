@@ -753,6 +753,11 @@ public:
     virtual void shutdownOutput() THROWS(EIOException);
 
     /**
+     * shutdownInput() && shutdownOutput()
+     */
+    virtual void shutdown() THROWS(EIOException);
+
+    /**
      * Converts this socket to a <code>String</code>.
      *
      * @return  a string representation of this socket.
@@ -845,55 +850,65 @@ public:
 	 */
 	virtual void* getChannel() {return null;}
 
+	/**
+	 * sendfile() copies data between one file descriptor and another. Either or both of these file descriptors may refer to a socket.
+	 * OUT_FD should be a descriptor opened for writing. POFFSET is a pointer to a variable holding the input file pointer position from
+	 * which sendfile() will start reading data. When sendfile() returns, this variable will be set to the offset of the byte following
+	 * the last byte that was read. COUNT is the number of bytes to copy between file descriptors. Because this copying is done within
+	 * the kernel, sendfile() does not need to spend time transferring data to and from user space
+	 */
+	virtual long sendfile(int in_fd, off_t* poffset, long count);
+
 protected:
-    EInputStream *socketInputStream;
-    EOutputStream *socketOutputStream;
+	friend class SocketInputStream;
+	friend class SocketOutputStream;
+	friend class EServerSocket;
 
-    /**
-     * Only for sub class.
-     */
-    ESocket(void* dummy);
+	EInputStream *socketInputStream;
+	EOutputStream *socketOutputStream;
 
-private:
-    friend class SocketInputStream;
-    friend class SocketOutputStream;
-    friend class EServerSocket;
+	/* FileDescriptor */
+	int socket;
 
-    /* FileDescriptor */
-    int socket;
-	
-    /* Socket Address */
+	/* Socket Address */
 	EInetSocketAddress *remoteSocketAddress;
 	EInetSocketAddress *localSocketAddress;
 
-    /**
-     * Various states of this socket.
-     */
-    struct socketStatus {
+	/**
+	 * Various states of this socket.
+	 */
+	struct socketStatus {
 		socketStatus(int z) :
 				bound(0), connected(0), closed(0), reset(0), shutIn(0), shutOut(0) {
 		}
-    	es_uint8_t bound:1;// = 0;
-    	es_uint8_t connected:1;// = 0;
-    	es_uint8_t closed:1;// = 0;
-    	es_uint8_t reset:1; // = 0;
-    	es_uint8_t shutIn:1;// = 0;
-    	es_uint8_t shutOut:1;// = 0;
-    } status;
+		es_uint8_t bound :1; // = 0;
+		es_uint8_t connected :1; // = 0;
+		es_uint8_t closed :1; // = 0;
+		es_uint8_t reset :1; // = 0;
+		es_uint8_t shutIn :1; // = 0;
+		es_uint8_t shutOut :1; // = 0;
+	} status;
 
-    int read(void *b, int len) THROWS(EIOException);
-    void write(const void *b, int len) THROWS(EIOException);
+	virtual int read(void *b, int len) THROWS(EIOException);
+	virtual void write(const void *b, int len) THROWS(EIOException);
 
-#ifndef WIN32
-    static int preCloseFD; // = -1;
-    static void init();
-    void socketPreClose();
-#endif
+	/**
+	 * Only for sub class.
+	 */
+	ESocket(void* dummy);
 
-    /**
+	/**
      * Initializes a new instance of this class from fd
      */
-    ESocket(const int fd, struct ip_addr *raddr, int rport) THROWS(EIOException);
+	ESocket(const int fd, struct ip_addr *raddr, int rport) THROWS(EIOException);
+
+private:
+
+#ifndef WIN32
+	static int preCloseFD; // = -1;
+	static void init();
+	void socketPreClose();
+#endif
 };
 
 } /* namespace efc */

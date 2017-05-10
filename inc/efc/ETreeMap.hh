@@ -488,9 +488,9 @@ private:
 	 * the first time this view is requested.  Views are stateless, so
 	 * there's no reason to create more than one.
 	 */
-	EntrySet* entrySet_;// = null;
-	KeySet* navigableKeySet_;// = null;
-	ENavigableMap<K,V>* descendingMap_;// = null;
+	sp<EntrySet> entrySet_;// = null;
+	sp<KeySet> navigableKeySet_;// = null;
+	sp<ENavigableMap<K,V> > descendingMap_;// = null;
 
 	/**
 	 * Auto free object flag
@@ -733,9 +733,6 @@ private:
 public:
 	virtual ~ETreeMap() {
 		clear();
-		delete entrySet_;
-		delete navigableKeySet_;
-		delete descendingMap_;
 	}
 
 	/**
@@ -1138,16 +1135,16 @@ public:
 
 	// Views
 
-	ESet<K>* keySet() {
+	sp<ESet<K> > keySet() {
 		return navigableKeySet();
 	}
 
-	ENavigableSet<K>* navigableKeySet() {
-		KeySet* nks = navigableKeySet_;
+	sp<ENavigableSet<K> > navigableKeySet() {
+		sp<KeySet> nks = navigableKeySet_;
 		return (nks != null) ? nks : (navigableKeySet_ = new KeySet(this));
 	}
 
-	ENavigableSet<K>* descendingKeySet() {
+	sp<ENavigableSet<K> > descendingKeySet() {
 		throw EToDoException(__FILE__, __LINE__);
 	}
 
@@ -1166,8 +1163,8 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	ECollection<V>* values() {
-		ECollection<V>* vs = EAbstractMap<K,V>::_values;
+	sp<ECollection<V> > values() {
+		sp<ECollection<V> > vs = EAbstractMap<K,V>::_values;
 		return (vs != null) ? vs : (EAbstractMap<K,V>::_values = new Values(this));
 	}
 
@@ -1186,8 +1183,8 @@ public:
 	 * <tt>clear</tt> operations.  It does not support the
 	 * <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	ESet<EMapEntry<K,V>*>* entrySet() {
-		EntrySet* es = entrySet_;
+	sp<ESet<EMapEntry<K,V>*> > entrySet() {
+		sp<EntrySet> es = entrySet_;
 		return (es != null) ? es : (entrySet_ = new EntrySet(this));
 	}
 

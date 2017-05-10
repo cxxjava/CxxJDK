@@ -42,6 +42,9 @@ namespace efc {
  * @since 1.2
  */
 
+//=============================================================================
+//Primitive Types.
+
 template<typename E>
 abstract class EAbstractSet: virtual public EAbstractCollection<E>,
 		virtual public ESet<E> {
@@ -146,9 +149,7 @@ public:
 		int h = 0;
 		sp<EIterator<E> > i = iterator();
 		while (i->hasNext()) {
-			E obj = i->next();
-			if (obj != null)
-				h += obj->hashCode();
+			h += i->next();
 		}
 		return h;
 	}
@@ -209,10 +210,14 @@ public:
 };
 
 //=============================================================================
+//Native pointer type.
 
-template<>
-abstract class EAbstractSet<int>: virtual public EAbstractCollection<int>,
-		virtual public ESet<int> {
+template<typename T>
+abstract class EAbstractSet<T*>: virtual public EAbstractCollection<T*>,
+		virtual public ESet<T*> {
+public:
+	typedef T* E;
+
 protected:
     /**
      * Sole constructor.  (For invocation by subclass constructors, typically
@@ -222,37 +227,37 @@ protected:
     }
 
 public:
-	virtual ~EAbstractSet(){}
+    virtual ~EAbstractSet(){}
 
-	virtual boolean contains(int o) {
-		return EAbstractCollection<int>::contains(o);
+    virtual boolean contains(E o) {
+		return EAbstractCollection<E>::contains(o);
 	}
 
-	virtual boolean containsAll(ECollection<int> *c) {
-		return EAbstractCollection<int>::containsAll(c);
+    virtual boolean containsAll(ECollection<E> *c) {
+		return EAbstractCollection<E>::containsAll(c);
 	}
 
-	virtual boolean retainAll(ECollection<int> *c) {
-		return EAbstractCollection<int>::retainAll(c);
+    virtual boolean retainAll(ECollection<E> *c) {
+		return EAbstractCollection<E>::retainAll(c);
 	}
 
 	virtual boolean isEmpty() {
-		return EAbstractCollection<int>::isEmpty();
+		return EAbstractCollection<E>::isEmpty();
 	}
 
-	virtual boolean add(int e) {
-		return EAbstractCollection<int>::add(e);
+	virtual boolean add(E e) {
+		return EAbstractCollection<E>::add(e);
 	}
 
-	virtual boolean remove(int o) {
-		return EAbstractCollection<int>::remove(o);
+	virtual boolean remove(E o) {
+		return EAbstractCollection<E>::remove(o);
 	}
 
 	virtual void clear() {
-		EAbstractCollection<int>::clear();
+		EAbstractCollection<E>::clear();
 	}
 
-	virtual sp<EIterator<int> > iterator(int index=0) {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -280,20 +285,20 @@ public:
      * @return <tt>true</tt> if the specified object is equal to this set
      */
     virtual boolean equals(EObject* o) {
-    	if (o == this)
+		if (o == this)
 	    	return true;
 
-    	ESet<int>* s = dynamic_cast<ESet<int>*>(o);
+		ESet<E>* s = dynamic_cast<ESet<E>*>(o);
 		if (!s) return false;
 
-		ECollection<int>* c = dynamic_cast<ECollection<int>*>(o);
+		ECollection<E>* c = dynamic_cast<ECollection<E>*>(o);
 		if (!c || c->size() != size())
 	    	return false;
 
 		return containsAll(c);
     }
 
-	/**
+    /**
 	 * Returns the hash code value for this set.  The hash code of a set is
 	 * defined to be the sum of the hash codes of the elements in the set,
 	 * where the hash code of a <tt>null</tt> element is defined to be zero.
@@ -312,9 +317,11 @@ public:
 	 */
 	virtual int hashCode() {
 		int h = 0;
-		sp<EIterator<int> > i = iterator();
+		sp<EIterator<E> > i = iterator();
 		while (i->hasNext()) {
-			h += i->next();
+			E obj = i->next();
+			if (obj != null)
+				h += obj->hashCode();
 		}
 		return h;
 	}
@@ -354,9 +361,9 @@ public:
      * @see #remove(Object)
      * @see #contains(Object)
      */
-    virtual boolean removeAll(ECollection<int> *c) {
+    virtual boolean removeAll(ECollection<E> *c) {
         boolean modified = false;
-		sp<EIterator<int> > i = null;
+		sp<EIterator<E> > i = null;
 
         if (size() > c->size()) {
             for (i = c->iterator(); i->hasNext(); )
@@ -375,10 +382,14 @@ public:
 };
 
 //=============================================================================
+//Shared pointer type.
 
-template<>
-abstract class EAbstractSet<llong>: virtual public EAbstractCollection<llong>,
-		virtual public ESet<llong> {
+template<typename T>
+abstract class EAbstractSet<sp<T> >: virtual public EAbstractCollection<sp<T> >,
+		virtual public ESet<sp<T> > {
+public:
+	typedef sp<T> E;
+
 protected:
     /**
      * Sole constructor.  (For invocation by subclass constructors, typically
@@ -388,37 +399,37 @@ protected:
     }
 
 public:
-	virtual ~EAbstractSet(){}
+    virtual ~EAbstractSet(){}
 
-	virtual boolean contains(llong o) {
-		return EAbstractCollection<llong>::contains(o);
+    virtual boolean contains(T* o) {
+		return EAbstractCollection<E>::contains(o);
 	}
 
-	virtual boolean containsAll(ECollection<llong> *c) {
-		return EAbstractCollection<llong>::containsAll(c);
+    virtual boolean containsAll(ECollection<E> *c) {
+		return EAbstractCollection<E>::containsAll(c);
 	}
 
-	virtual boolean retainAll(ECollection<llong> *c) {
-		return EAbstractCollection<llong>::retainAll(c);
+    virtual boolean retainAll(ECollection<E> *c) {
+		return EAbstractCollection<E>::retainAll(c);
 	}
 
 	virtual boolean isEmpty() {
-		return EAbstractCollection<llong>::isEmpty();
+		return EAbstractCollection<E>::isEmpty();
 	}
 
-	virtual boolean add(llong e) {
-		return EAbstractCollection<llong>::add(e);
+	virtual boolean add(E e) {
+		return EAbstractCollection<E>::add(e);
 	}
 
-	virtual boolean remove(llong o) {
-		return EAbstractCollection<llong>::remove(o);
+	virtual boolean remove(T* o) {
+		return EAbstractCollection<E>::remove(o);
 	}
 
 	virtual void clear() {
-		EAbstractCollection<llong>::clear();
+		EAbstractCollection<E>::clear();
 	}
 
-	virtual sp<EIterator<llong> > iterator(int index=0) {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -449,15 +460,43 @@ public:
 		if (o == this)
 	    	return true;
 
-		ESet<llong>* s = dynamic_cast<ESet<llong>*>(o);
+		ESet<E>* s = dynamic_cast<ESet<E>*>(o);
 		if (!s) return false;
 
-		ECollection<llong>* c = dynamic_cast<ECollection<llong>*>(o);
+		ECollection<E>* c = dynamic_cast<ECollection<E>*>(o);
 		if (!c || c->size() != size())
 	    	return false;
 
 		return containsAll(c);
     }
+
+    /**
+	 * Returns the hash code value for this set.  The hash code of a set is
+	 * defined to be the sum of the hash codes of the elements in the set,
+	 * where the hash code of a <tt>null</tt> element is defined to be zero.
+	 * This ensures that <tt>s1.equals(s2)</tt> implies that
+	 * <tt>s1.hashCode()==s2.hashCode()</tt> for any two sets <tt>s1</tt>
+	 * and <tt>s2</tt>, as required by the general contract of
+	 * {@link Object#hashCode}.
+	 *
+	 * <p>This implementation iterates over the set, calling the
+	 * <tt>hashCode</tt> method on each element in the set, and adding up
+	 * the results.
+	 *
+	 * @return the hash code value for this set
+	 * @see Object#equals(Object)
+	 * @see Set#equals(Object)
+	 */
+	virtual int hashCode() {
+		int h = 0;
+		sp<EIterator<E> > i = iterator();
+		while (i->hasNext()) {
+			E obj = i->next();
+			if (obj != null)
+				h += obj->hashCode();
+		}
+		return h;
+	}
 
     /**
      * Removes from this set all of its elements that are contained in the
@@ -494,16 +533,16 @@ public:
      * @see #remove(Object)
      * @see #contains(Object)
      */
-    virtual boolean removeAll(ECollection<llong> *c) {
+    virtual boolean removeAll(ECollection<E> *c) {
         boolean modified = false;
-		sp<EIterator<llong> > i = null;
+		sp<EIterator<E> > i = null;
 
         if (size() > c->size()) {
             for (i = c->iterator(); i->hasNext(); )
-                modified |= remove(i->next());
+                modified |= remove(i->next().get());
         } else {
             for (i = iterator(); i->hasNext(); ) {
-                if (c->contains(i->next())) {
+                if (c->contains(i->next().get())) {
                     i->remove();
                     modified = true;
                 }
@@ -511,6 +550,7 @@ public:
         }
         return modified;
     }
+
 };
 
 } /* namespace efc */

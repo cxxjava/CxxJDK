@@ -88,37 +88,6 @@ instanceof(T &object)
 
 //=============================================================================
 
-//@see: STL iterator traits && http://blog.csdn.net/xuqingict/article/details/38453929
-
-template<class T>
-struct ETraits
-{
-    typedef typename T::valueType valueType;
-    typedef typename T::differenceType differenceType;
-    typedef typename T::pointer pointer;
-    typedef typename T::reference reference;
-};
-
-template<class T>
-struct ETraits<T*>
-{
-    typedef T valueType;
-    typedef ptrdiff_t differenceType;
-    typedef T* pointer;
-    typedef T & reference;
-};
-
-template<class T>
-struct ETraits<const T*>
-{
-    typedef T valueType;
-    typedef ptrdiff_t differenceType;
-    typedef const T* pointer;
-    typedef const T & reference;
-};
-
-//=============================================================================
-
 class EObject
 {
 public:

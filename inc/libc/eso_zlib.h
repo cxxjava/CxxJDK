@@ -17,15 +17,15 @@ extern "C" {
 // zlib
 //==============================================================================
 
-#define Z_OK            0
-#define Z_STREAM_END    1
-#define Z_NEED_DICT     2
-#define Z_ERRNO        (-1)
-#define Z_STREAM_ERROR (-2)
-#define Z_DATA_ERROR   (-3)
-#define Z_MEM_ERROR    (-4)
-#define Z_BUF_ERROR    (-5)
-#define Z_VERSION_ERROR (-6)
+#define ES_Z_OK            0
+#define ES_Z_STREAM_END    1
+#define ES_Z_NEED_DICT     2
+#define ES_Z_ERRNO        (-1)
+#define ES_Z_STREAM_ERROR (-2)
+#define ES_Z_DATA_ERROR   (-3)
+#define ES_Z_MEM_ERROR    (-4)
+#define ES_Z_BUF_ERROR    (-5)
+#define ES_Z_VERSION_ERROR (-6)
 /* Return codes for the compression/decompression functions. Negative values
  * are errors, positive values are used for special but normal events.
  */

@@ -10,7 +10,6 @@
 
 #include "EA.hh"
 #include "EThread.hh"
-#include "ESharedArr.hh"
 #include "ESynchronizeable.hh"
 
 namespace efc {
@@ -331,7 +330,7 @@ public:
 	 * @see     java.lang.ThreadGroup#checkAccess()
 	 * @since   JDK1.0
 	 */
-	int enumerate(ea<EThreadGroup>* list);
+	int enumerate(EA<sp<EThreadGroup> >* list);
 
 	/**
 	 * Copies into the specified array references to every active
@@ -363,7 +362,7 @@ public:
 	 * @see     java.lang.ThreadGroup#checkAccess()
 	 * @since   JDK1.0
 	 */
-	int enumerate(ea<EThreadGroup>* list, boolean recurse);
+	int enumerate(EA<sp<EThreadGroup> >* list, boolean recurse);
 
 	/**
 	 * Interrupts all threads in this thread group.
@@ -459,7 +458,7 @@ protected:
 	EA<EThread*>* threads;
 
 	int ngroups;
-	ea<EThreadGroup>* groups;
+	EA<sp<EThreadGroup> >* groups;
 
 	/**
 	 * Increments the count of unstarted threads in the thread group.
@@ -488,7 +487,7 @@ private:
 	sp<EThreadGroup> parent;
 
 	int enumerate(EA<EThread*>* list, int n, boolean recurse);
-	int enumerate(ea<EThreadGroup>* list, int n, boolean recurse);
+	int enumerate(EA<sp<EThreadGroup> >* list, int n, boolean recurse);
 
 	/**
 	 * Adds the specified Thread group to this group.

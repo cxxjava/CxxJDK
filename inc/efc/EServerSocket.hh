@@ -384,7 +384,7 @@ protected:
 	  */
      EServerSocket(void* dummy);
 
-private:
+protected:
 	/* FileDescriptor */
     int socket;
     

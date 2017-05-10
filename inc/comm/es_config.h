@@ -40,4 +40,6 @@
 
 #define HAVE_THREADS
 
+#define HAVE_OPENSSL
+
 #endif /* ES_CONFIG_H_ */

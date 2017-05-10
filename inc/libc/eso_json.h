@@ -14,13 +14,13 @@ extern "C" {
 #endif
 
 /* JSON Types: */
-#define JSON_FALSE 0
-#define JSON_TRUE 1
-#define JSON_NULL 2
-#define JSON_NUMBER 3
-#define JSON_STRING 4
-#define JSON_ARRAY 5
-#define JSON_OBJECT 6
+#define ES_JSON_FALSE 0
+#define ES_JSON_TRUE 1
+#define ES_JSON_NULL 2
+#define ES_JSON_NUMBER 3
+#define ES_JSON_STRING 4
+#define ES_JSON_ARRAY 5
+#define ES_JSON_OBJECT 6
 
 
 typedef struct es_json_t es_json_t;
@@ -30,9 +30,9 @@ struct es_json_t {
 
 	int type;					/* The type of the item, as above. */
 
-	char *valuestring;			/* The item's string, if type==JSON_STRING */
-	int valueint;				/* The item's number, if type==JSON_NUMBER */
-	double valuedouble;			/* The item's number, if type==JSON_NUMBER */
+	char *valuestring;			/* The item's string, if type==ES_JSON_STRING */
+	int valueint;				/* The item's number, if type==ES_JSON_NUMBER */
+	double valuedouble;			/* The item's number, if type==ES_JSON_NUMBER */
 
 	char *string;				/* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
 };

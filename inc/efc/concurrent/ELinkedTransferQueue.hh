@@ -558,6 +558,16 @@ public:
 		}
 		return n;
 	}
+	virtual int drainTo(ECollection<sp<E> >* c) {
+		if (c == null)
+			throw ENullPointerException(__FILE__, __LINE__);
+		int n = 0;
+		for (sp<E> e; (e = poll()) != null;) {
+			c->add(e);
+			++n;
+		}
+		return n;
+	}
 
 	/**
 	 * @throws NullPointerException     {@inheritDoc}
@@ -568,6 +578,16 @@ public:
 			throw ENullPointerException(__FILE__, __LINE__);
 		if (c == this)
 			throw EIllegalArgumentException(__FILE__, __LINE__);
+		int n = 0;
+		for (sp<E> e; n < maxElements && (e = poll()) != null;) {
+			c->add(e);
+			++n;
+		}
+		return n;
+	}
+	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
+		if (c == null)
+			throw ENullPointerException(__FILE__, __LINE__);
 		int n = 0;
 		for (sp<E> e; n < maxElements && (e = poll()) != null;) {
 			c->add(e);

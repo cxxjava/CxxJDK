@@ -17,21 +17,21 @@ extern "C" {
 // lzmz
 //==============================================================================
 
-#define SZ_OK 0
-#define SZ_ERROR_DATA 1
-#define SZ_ERROR_MEM 2
-#define SZ_ERROR_CRC 3
-#define SZ_ERROR_UNSUPPORTED 4
-#define SZ_ERROR_PARAM 5
-#define SZ_ERROR_INPUT_EOF 6
-#define SZ_ERROR_OUTPUT_EOF 7
-#define SZ_ERROR_READ 8
-#define SZ_ERROR_WRITE 9
-#define SZ_ERROR_PROGRESS 10
-#define SZ_ERROR_FAIL 11
-#define SZ_ERROR_THREAD 12
-#define SZ_ERROR_ARCHIVE 16
-#define SZ_ERROR_NO_ARCHIVE 17
+#define ES_SZ_OK 0
+#define ES_SZ_ERROR_DATA 1
+#define ES_SZ_ERROR_MEM 2
+#define ES_SZ_ERROR_CRC 3
+#define ES_SZ_ERROR_UNSUPPORTED 4
+#define ES_SZ_ERROR_PARAM 5
+#define ES_SZ_ERROR_INPUT_EOF 6
+#define ES_SZ_ERROR_OUTPUT_EOF 7
+#define ES_SZ_ERROR_READ 8
+#define ES_SZ_ERROR_WRITE 9
+#define ES_SZ_ERROR_PROGRESS 10
+#define ES_SZ_ERROR_FAIL 11
+#define ES_SZ_ERROR_THREAD 12
+#define ES_SZ_ERROR_ARCHIVE 16
+#define ES_SZ_ERROR_NO_ARCHIVE 17
 
 /*
  * LZMA

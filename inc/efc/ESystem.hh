@@ -9,7 +9,6 @@
 #include "ESimpleMap.hh"
 #include "EFileOutputStream.hh"
 #include "ESharedPtr.hh"
-#include "ESharedArr.hh"
 
 namespace efc {
 
@@ -315,30 +314,42 @@ public:
 		if (srcPos + length > src.length() || destPos + length > dest.length()) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__);
 		}
-		eso_memmove(dest.address() + destPos, src.address() + srcPos, length*sizeof(E));
+		int i;
+		if (&src == &dest) { //the same one and overlapping.
+			if (destPos < srcPos) {
+				for (i = 0; i < length; i++) {
+					dest[destPos + i] = src[srcPos + i];
+				}
+			} else {
+				for (i = length; i > 0; i--) {
+					dest[destPos + i - 1] = src[srcPos + i - 1];
+				}
+			}
+		}
+		else {
+			for (i=0; i<length; i++) {
+				dest[destPos + i] = src[srcPos + i];
+			}
+		}
 	}
 
 	template<typename E>
-	static void arraycopy(EA<E>* src, int srcPos,
-						  EA<E>* dest, int destPos,
+	static void arraycopy(EA<E*>& src, int srcPos,
+						  EA<E*>& dest, int destPos,
 						  int length)
 	{
-		ES_ASSERT(src && dest);
-		if ((src == dest) && (destPos == srcPos)) { //only the same one.
+		if ((&src == &dest) && (destPos == srcPos)) { //only the same one.
 			return;
 		}
-		if (srcPos + length > src->length() || destPos + length > dest->length()) {
+		if (srcPos + length > src.length() || destPos + length > dest.length()) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__);
 		}
-		eso_memmove(dest->address() + destPos, src->address() + srcPos, length*sizeof(E));
+		eso_memmove(dest.address() + destPos, src.address() + srcPos, length*sizeof(E*));
 	}
 
-	/**
-	 *
-	 */
 	template<typename E>
-	static void arraycopy(ea<E>& src, int srcPos,
-						  ea<E>& dest, int destPos,
+	static void arraycopy(EA<sp<E> >& src, int srcPos,
+						  EA<sp<E> >& dest, int destPos,
 						  int length)
 	{
 		if ((&src == &dest) && (destPos == srcPos)) { //only the same one.
@@ -367,8 +378,54 @@ public:
 	}
 
 	template<typename E>
-	static void arraycopy(ea<E>* src, int srcPos,
-						  ea<E>* dest, int destPos,
+	static void arraycopy(EA<E>* src, int srcPos,
+						  EA<E>* dest, int destPos,
+						  int length)
+	{
+		ES_ASSERT(src && dest);
+		if ((src == dest) && (destPos == srcPos)) { //only the same one.
+			return;
+		}
+		if (srcPos + length > src->length() || destPos + length > dest->length()) {
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__);
+		}
+		int i;
+		if (src == dest) { //the same one and overlapping.
+			if (destPos < srcPos) {
+				for (i = 0; i < length; i++) {
+					(*dest)[destPos + i] = (*src)[srcPos + i];
+				}
+			} else {
+				for (i = length; i > 0; i--) {
+					(*dest)[destPos + i - 1] = (*src)[srcPos + i - 1];
+				}
+			}
+		}
+		else {
+			for (i=0; i<length; i++) {
+				(*dest)[destPos + i] = (*src)[srcPos + i];
+			}
+		}
+	}
+
+	template<typename E>
+	static void arraycopy(EA<E*>* src, int srcPos,
+						  EA<E*>* dest, int destPos,
+						  int length)
+	{
+		ES_ASSERT(src && dest);
+		if ((src == dest) && (destPos == srcPos)) { //only the same one.
+			return;
+		}
+		if (srcPos + length > src->length() || destPos + length > dest->length()) {
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__);
+		}
+		eso_memmove(dest->address() + destPos, src->address() + srcPos, length*sizeof(E*));
+	}
+
+	template<typename E>
+	static void arraycopy(EA<sp<E> >* src, int srcPos,
+						  EA<sp<E> >* dest, int destPos,
 						  int length)
 	{
 		ES_ASSERT(src && dest);

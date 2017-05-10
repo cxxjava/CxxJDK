@@ -1,6 +1,7 @@
 #ifndef __ESORTEDMAP_HH__
 #define __ESORTEDMAP_HH__
 
+#include "ESharedPtr.hh"
 #include "EComparator.hh"
 #include "ECollection.hh"
 
@@ -223,7 +224,7 @@ interface ESortedMap : virtual public EMap<K,V>
      * @return a set view of the keys contained in this map, sorted in
      *         ascending order
      */
-    virtual ESet<K>* keySet() = 0;
+    virtual sp<ESet<K> > keySet() = 0;
 
     /**
      * Returns a {@link Collection} view of the values contained in this map.
@@ -243,7 +244,7 @@ interface ESortedMap : virtual public EMap<K,V>
      * @return a collection view of the values contained in this map,
      *         sorted in ascending key order
      */
-    virtual ECollection<V>* values() = 0;
+    virtual sp<ECollection<V> > values() = 0;
 
     /**
      * Returns a {@link Set} view of the mappings contained in this map.
@@ -263,7 +264,7 @@ interface ESortedMap : virtual public EMap<K,V>
      * @return a set view of the mappings contained in this map,
      *         sorted in ascending key order
      */
-    virtual ESet<EMapEntry<K,V>*>* entrySet() = 0;
+    virtual sp<ESet<EMapEntry<K,V>*> > entrySet() = 0;
 };
 
 } /* namespace efc */

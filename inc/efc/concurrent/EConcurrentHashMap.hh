@@ -11,7 +11,6 @@
 #include "EMap.hh"
 #include "EMath.hh"
 #include "EInteger.hh"
-#include "ESharedArr.hh"
 #include "EConcurrentSet.hh"
 #include "EConcurrentMap.hh"
 #include "EAbstractConcurrentCollection.hh"
@@ -163,8 +162,8 @@ public:
 			this->value = value;
 		}
 
-		static ea<HashEntry>* newArray(int i) {
-			return NEWRC(ea<HashEntry>)(i);
+		static EA<sp<HashEntry> >* newArray(int i) {
+			return NEWRC(EA<sp<HashEntry> >)(i);
 		}
 	};
 
@@ -237,7 +236,7 @@ public:
 		/**
 		 * The per-segment table.
 		 */
-		ea<HashEntry>* volatile table;
+		EA<sp<HashEntry> >* volatile table;
 
 		/**
 		 * The load factor for the hash table.  Even though this value
@@ -268,9 +267,9 @@ public:
 		 * Sets table to new HashEntry array.
 		 * Call only while holding lock or in constructor.
 		 */
-		void setTable(ea<HashEntry>* newTable) {
+		void setTable(EA<sp<HashEntry> >* newTable) {
 			threshold = (int)(newTable->length() * loadFactor);
-			ea<HashEntry>* oldTable = GETRC(table);
+			EA<sp<HashEntry> >* oldTable = GETRC(table);
 			table = newTable;
 			DELRC(oldTable); //!
 		}
@@ -279,7 +278,7 @@ public:
 		 * Returns properly casted first entry of bin for given hash.
 		 */
 		sp<HashEntry> getFirst(int hash) {
-			ea<HashEntry>* tab = GETRC(table);
+			EA<sp<HashEntry> >* tab = GETRC(table);
 			sp<HashEntry> e = tab->atomicGet(hash & (tab->length() - 1));
 			DELRC(tab);
 			return e;
@@ -332,7 +331,7 @@ public:
 
 		boolean containsValue(V* value) {
 			if (count != 0) { // read-volatile
-				ea<HashEntry>* tab = GETRC(table);
+				EA<sp<HashEntry> >* tab = GETRC(table);
 				int len = tab->length();
 				for (int i = 0 ; i < len; i++) {
 					for (sp<HashEntry> e = tab->atomicGet(i); e != null; e = e->next) {
@@ -393,7 +392,7 @@ public:
 				int c = count;
 				if (c++ > threshold) // ensure capacity
 					rehash();
-				ea<HashEntry>* tab = GETRC(table);
+				EA<sp<HashEntry> >* tab = GETRC(table);
 				int index = hash & (tab->length() - 1);
 				sp<HashEntry> first = tab->atomicGet(index);
 				sp<HashEntry> e = first;
@@ -419,7 +418,7 @@ public:
 		}
 
 		void rehash() {
-			ea<HashEntry>* oldTable = GETRC(table);
+			EA<sp<HashEntry> >* oldTable = GETRC(table);
 			int oldCapacity = oldTable->length();
 			if (oldCapacity >= CHM_MAXIMUM_CAPACITY) {
 				DELRC(oldTable);
@@ -440,7 +439,7 @@ public:
 			 * right now.
 			 */
 
-			ea<HashEntry>* newTable = HashEntry::newArray(oldCapacity<<1);
+			EA<sp<HashEntry> >* newTable = HashEntry::newArray(oldCapacity<<1);
 			threshold = (int)(newTable->length() * loadFactor);
 			int sizeMask = newTable->length() - 1;
 			for (int i = 0; i < oldCapacity ; i++) {
@@ -496,7 +495,7 @@ public:
 
 			SYNCBLOCK(this) {
 				int c = count - 1;
-				ea<HashEntry>* tab = GETRC(table);
+				EA<sp<HashEntry> >* tab = GETRC(table);
 				int index = hash & (tab->length() - 1);
 				sp<HashEntry> first = tab->atomicGet(index);
 				sp<HashEntry> e = first;
@@ -531,7 +530,7 @@ public:
 		void clear() {
 			if (count != 0) {
 				SYNCBLOCK(this) {
-					ea<HashEntry>* tab = GETRC(table);
+					EA<sp<HashEntry> >* tab = GETRC(table);
 					for (int i = 0; i < tab->length() ; i++) {
 						sp<HashEntry> nullPtr;
 						tab->atomicSet(i, nullPtr);
@@ -550,7 +549,7 @@ public:
 		EConcurrentHashMap<K,V>* chm;
 		int nextSegmentIndex;
 		int nextTableIndex;
-		ea<HashEntry>* currentTable;
+		EA<sp<HashEntry> >* currentTable;
 		sp<HashEntry> nextEntry_;
 		sp<HashEntry> lastReturned;
 
@@ -1460,8 +1459,8 @@ public: \
 			this->value = value; \
 		} \
  \
-		static ea<HashEntry>* newArray(int i) { \
-			return NEWRC(ea<HashEntry>)(i); \
+		static EA<sp<HashEntry> >* newArray(int i) { \
+			return NEWRC(EA<sp<HashEntry> >)(i); \
 		} \
 	}; \
  \
@@ -1470,7 +1469,7 @@ public: \
 		volatile int count; \
 		int modCount; \
 		int threshold; \
-		ea<HashEntry>* volatile table; \
+		EA<sp<HashEntry> >* volatile table; \
 		float loadFactor; \
  \
 		EConcurrentHashMap<K,V>* chm; \
@@ -1490,15 +1489,15 @@ public: \
 			return new EA<Segment*>(i); \
 		} \
  \
-		void setTable(ea<HashEntry>* newTable) { \
+		void setTable(EA<sp<HashEntry> >* newTable) { \
 			threshold = (int)(newTable->length() * loadFactor); \
-			ea<HashEntry>* oldTable = GETRC(table); \
+			EA<sp<HashEntry> >* oldTable = GETRC(table); \
 			table = newTable; \
 			DELRC(oldTable); \
 		} \
  \
 		sp<HashEntry> getFirst(int hash) { \
-			ea<HashEntry>* tab = GETRC(table); \
+			EA<sp<HashEntry> >* tab = GETRC(table); \
 			sp<HashEntry> e = tab->atomicGet(hash & (tab->length() - 1)); \
 			DELRC(tab); \
 			return e; \
@@ -1542,7 +1541,7 @@ public: \
  \
 		boolean containsValue(V* value) { \
 			if (count != 0) { \
-				ea<HashEntry>* tab = GETRC(table); \
+				EA<sp<HashEntry> >* tab = GETRC(table); \
 				int len = tab->length(); \
 				for (int i = 0 ; i < len; i++) { \
 					for (sp<HashEntry> e = tab->atomicGet(i); e != null; e = e->next) { \
@@ -1603,7 +1602,7 @@ public: \
 				int c = count; \
 				if (c++ > threshold) \
 					rehash(); \
-				ea<HashEntry>* tab = GETRC(table); \
+				EA<sp<HashEntry> >* tab = GETRC(table); \
 				int index = hash & (tab->length() - 1); \
 				sp<HashEntry> first = tab->atomicGet(index); \
 				sp<HashEntry> e = first; \
@@ -1629,14 +1628,14 @@ public: \
 		} \
  \
 		void rehash() { \
-			ea<HashEntry>* oldTable = GETRC(table); \
+			EA<sp<HashEntry> >* oldTable = GETRC(table); \
 			int oldCapacity = oldTable->length(); \
 			if (oldCapacity >= CHM_MAXIMUM_CAPACITY) { \
 				DELRC(oldTable); \
 				return; \
 			} \
  \
-			ea<HashEntry>* newTable = HashEntry::newArray(oldCapacity<<1); \
+			EA<sp<HashEntry> >* newTable = HashEntry::newArray(oldCapacity<<1); \
 			threshold = (int)(newTable->length() * loadFactor); \
 			int sizeMask = newTable->length() - 1; \
 			for (int i = 0; i < oldCapacity ; i++) { \
@@ -1683,7 +1682,7 @@ public: \
  \
 			SYNCBLOCK(this) { \
 				int c = count - 1; \
-				ea<HashEntry>* tab = GETRC(table); \
+				EA<sp<HashEntry> >* tab = GETRC(table); \
 				int index = hash & (tab->length() - 1); \
 				sp<HashEntry> first = tab->atomicGet(index); \
 				sp<HashEntry> e = first; \
@@ -1715,7 +1714,7 @@ public: \
 		void clear() { \
 			if (count != 0) { \
 				SYNCBLOCK(this) { \
-					ea<HashEntry>* tab = GETRC(table); \
+					EA<sp<HashEntry> >* tab = GETRC(table); \
 					for (int i = 0; i < tab->length() ; i++) { \
 						sp<HashEntry> nullPtr; \
 						tab->atomicSet(i, nullPtr); \
@@ -1732,7 +1731,7 @@ public: \
 		EConcurrentHashMap<K,V>* chm; \
 		int nextSegmentIndex; \
 		int nextTableIndex; \
-		ea<HashEntry>* currentTable; \
+		EA<sp<HashEntry> >* currentTable; \
 		sp<HashEntry> nextEntry_; \
 		sp<HashEntry> lastReturned; \
  \

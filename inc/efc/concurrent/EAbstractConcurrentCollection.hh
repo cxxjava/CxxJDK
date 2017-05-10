@@ -8,7 +8,7 @@
 #ifndef EAbstractConcurrentCollection_HH_
 #define EAbstractConcurrentCollection_HH_
 
-#include "ESharedArrLst.hh"
+#include "EArrayList.hh"
 #include "EConcurrentCollection.hh"
 #include "EUnsupportedOperationException.hh"
 
@@ -118,9 +118,9 @@ public:
 	 * return list.toArray();
 	 * }</pre>
 	 */
-	virtual ea<E> toArray() {
+	virtual EA<sp<E> > toArray() {
 		// Estimate size of array; be prepared to see more or fewer elements
-		eal<E> r(size());
+		EArrayList<sp<E> > r(size());
 		sp<EConcurrentIterator<E> > it = iterator();
 		for (int i = 0; i < r.size(); i++) {
 			if (! it->hasNext()) { // fewer elements than expected
@@ -338,7 +338,7 @@ private:
 	 * @return array containing the elements in the given array, plus any
 	 *         further elements returned by the iterator, trimmed to size
 	 */
-	static ea<E> finishToArray(eal<E>& r, sp<EConcurrentIterator<E> >& it) {
+	static EA<sp<E> > finishToArray(EArrayList<sp<E> >& r, sp<EConcurrentIterator<E> >& it) {
 		while (it->hasNext()) {
 			r.add(it->next());
 		}

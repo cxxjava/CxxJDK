@@ -1,7 +1,7 @@
 #ifndef __EFC_H__
 #define __EFC_H__
 
-#define EFC_VERSION "0.4.0"
+#define EFC_VERSION "0.5.0"
 
 #include "EBase.hh"
 
@@ -22,6 +22,7 @@
 #include "EAtomic.hh"
 #include "EAtomicBoolean.hh"
 #include "EAtomicCounter.hh"
+#include "EAtomicDouble.hh"
 #include "EAtomicInteger.hh"
 #include "EAtomicLLong.hh"
 #include "EAtomicReference.hh"
@@ -44,9 +45,10 @@
 #include "ECharacter.hh"
 #include "ECheckedInputStream.hh"
 #include "EConcurrentHashMap.hh"
+#include "EConcurrentIntrusiveDeque.hh"
 #include "EConcurrentLinkedQueue.hh"
+#include "EConcurrentLiteQueue.hh"
 #include "EConcurrentSkipListMap.hh"
-#include "EConcurrentMap.hh"
 #include "EConnectException.hh"
 #include "ECollection.hh"
 #include "ECollections.hh"
@@ -177,13 +179,14 @@
 #include "ESimpleVector.hh"
 #include "ESequenceInputStream.hh"
 #include "EServerSocket.hh"
-#include "ESharedArr.hh"
 #include "ESharedPtr.hh"
 #include "ESocket.hh"
 #include "ESocketException.hh"
 #include "ESortedMap.hh"
 #include "ESortedSet.hh"
 #include "ESpinLock.hh"
+#include "ESSLServerSocket.hh"
+#include "ESSLSocket.hh"
 #include "EStack.hh"
 #include "EStream.hh"
 #include "EString.hh"
@@ -203,6 +206,7 @@
 #include "ETimerTask.hh"
 #include "ETimeUnit.hh"
 #include "EToDoException.hh"
+#include "ETraits.hh"
 #include "ETreeMap.hh"
 #include "ETreeSet.hh"
 #include "EUnknownHostException.hh"

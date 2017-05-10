@@ -33,9 +33,120 @@ namespace efc {
  * @since   JDK1.0
  */
 
+//=============================================================================
+//Primitive Types.
+
 template<typename E>
 class EStack: public EVector<E> {
 public:
+	virtual ~EStack() {
+	}
+
+	/**
+	 * Creates an empty Stack.
+	 */
+	explicit
+	EStack() : EVector<E>() {
+	}
+
+	/**
+	 * Pushes an item onto the top of this stack. This has exactly
+	 * the same effect as:
+	 * <blockquote><pre>
+	 * addElement(item)</pre></blockquote>
+	 *
+	 * @param   item   the item to be pushed onto this stack.
+	 * @return  the <code>item</code> argument.
+	 * @see     java.util.Vector#addElement
+	 */
+	virtual E push(E item) {
+		EVector<E>::addElement(item);
+
+		return item;
+	}
+
+	/**
+	 * Removes the object at the top of this stack and returns that
+	 * object as the value of this function.
+	 *
+	 * @return  The object at the top of this stack (the last item
+	 *          of the <tt>Vector</tt> object).
+	 * @throws  EmptyStackException  if this stack is empty.
+	 */
+	virtual E pop() {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			E       obj;
+			int     len = EVector<E>::size();
+
+			obj = peek();
+			EVector<E>::removeElementAt(len - 1);
+
+			return obj;
+        }}
+	}
+
+	/**
+	 * Looks at the object at the top of this stack without removing it
+	 * from the stack.
+	 *
+	 * @return  the object at the top of this stack (the last item
+	 *          of the <tt>Vector</tt> object).
+	 * @throws  EmptyStackException  if this stack is empty.
+	 */
+	virtual E peek() {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			int     len = EVector<E>::size();
+
+			if (len == 0)
+				throw EEmptyStackException(__FILE__, __LINE__, "Empty stack.");
+			return EVector<E>::elementAt(len - 1);
+        }}
+	}
+
+	/**
+	 * Tests if this stack is empty.
+	 *
+	 * @return  <code>true</code> if and only if this stack contains
+	 *          no items; <code>false</code> otherwise.
+	 */
+	virtual boolean empty() {
+		return EVector<E>::size() == 0;
+	}
+
+	/**
+	 * Returns the 1-based position where an object is on this stack.
+	 * If the object <tt>o</tt> occurs as an item in this stack, this
+	 * method returns the distance from the top of the stack of the
+	 * occurrence nearest the top of the stack; the topmost item on the
+	 * stack is considered to be at distance <tt>1</tt>. The <tt>equals</tt>
+	 * method is used to compare <tt>o</tt> to the
+	 * items in this stack.
+	 *
+	 * @param   o   the desired object.
+	 * @return  the 1-based position from the top of the stack where
+	 *          the object is located; the return value <code>-1</code>
+	 *          indicates that the object is not on the stack.
+	 */
+	virtual int search(E o) {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			int i = EVector<E>::lastIndexOf(o);
+
+			if (i >= 0) {
+				return EVector<E>::size() - i;
+			}
+			return -1;
+        }}
+	}
+};
+
+//=============================================================================
+//Native pointer type.
+
+template<typename T>
+class EStack<T*>: public EVector<T*> {
+public:
+	typedef T* E;
+
 	virtual ~EStack() {
 	}
 
@@ -125,6 +236,114 @@ public:
 	 *          indicates that the object is not on the stack.
 	 */
 	virtual int search(E o) {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			int i = EVector<E>::lastIndexOf(o);
+
+			if (i >= 0) {
+				return EVector<E>::size() - i;
+			}
+			return -1;
+        }}
+	}
+};
+
+//=============================================================================
+//Shared pointer type.
+
+template<typename T>
+class EStack<sp<T> >: public EVector<sp<T> > {
+public:
+	typedef sp<T> E;
+
+	virtual ~EStack() {
+	}
+
+	/**
+	 * Creates an empty Stack.
+	 */
+	explicit
+	EStack() : EVector<E>() {
+	}
+
+	/**
+	 * Pushes an item onto the top of this stack. This has exactly
+	 * the same effect as:
+	 * <blockquote><pre>
+	 * addElement(item)</pre></blockquote>
+	 *
+	 * @param   item   the item to be pushed onto this stack.
+	 * @return  the <code>item</code> argument.
+	 * @see     java.util.Vector#addElement
+	 */
+	virtual E push(E item) {
+		EVector<E>::addElement(item);
+
+		return item;
+	}
+
+	/**
+	 * Removes the object at the top of this stack and returns that
+	 * object as the value of this function.
+	 *
+	 * @return  The object at the top of this stack (the last item
+	 *          of the <tt>Vector</tt> object).
+	 * @throws  EmptyStackException  if this stack is empty.
+	 */
+	virtual E pop() {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			E       obj;
+			int     len = EVector<E>::size();
+
+			obj = peek();
+			EVector<E>::removeElementAt(len - 1);
+
+			return obj;
+        }}
+	}
+
+	/**
+	 * Looks at the object at the top of this stack without removing it
+	 * from the stack.
+	 *
+	 * @return  the object at the top of this stack (the last item
+	 *          of the <tt>Vector</tt> object).
+	 * @throws  EmptyStackException  if this stack is empty.
+	 */
+	virtual E peek() {
+		SYNC_IF(EVector<E>::_threadSafe) {
+			int     len = EVector<E>::size();
+
+			if (len == 0)
+				throw EEmptyStackException(__FILE__, __LINE__, "Empty stack.");
+			return EVector<E>::elementAt(len - 1);
+        }}
+	}
+
+	/**
+	 * Tests if this stack is empty.
+	 *
+	 * @return  <code>true</code> if and only if this stack contains
+	 *          no items; <code>false</code> otherwise.
+	 */
+	virtual boolean empty() {
+		return EVector<E>::size() == 0;
+	}
+
+	/**
+	 * Returns the 1-based position where an object is on this stack.
+	 * If the object <tt>o</tt> occurs as an item in this stack, this
+	 * method returns the distance from the top of the stack of the
+	 * occurrence nearest the top of the stack; the topmost item on the
+	 * stack is considered to be at distance <tt>1</tt>. The <tt>equals</tt>
+	 * method is used to compare <tt>o</tt> to the
+	 * items in this stack.
+	 *
+	 * @param   o   the desired object.
+	 * @return  the 1-based position from the top of the stack where
+	 *          the object is located; the return value <code>-1</code>
+	 *          indicates that the object is not on the stack.
+	 */
+	virtual int search(T* o) {
 		SYNC_IF(EVector<E>::_threadSafe) {
 			int i = EVector<E>::lastIndexOf(o);
 

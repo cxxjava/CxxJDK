@@ -9,7 +9,7 @@
 #define ECONCURRENTLINKEDQUEUE_HH_
 
 #include "EInteger.hh"
-#include "ESharedArrLst.hh"
+#include "EArrayList.hh"
 #include "EConcurrentQueue.hh"
 #include "ENoSuchElementException.hh"
 #include "ENullPointerException.hh"
@@ -436,9 +436,9 @@ public:
 	 *
 	 * @return an array containing all of the elements in this queue
 	 */
-	ea<E> toArray() {
+	EA<sp<E> > toArray() {
 		// Use ArrayList to deal with resizing.
-		eal<E> al;
+		EArrayList<sp<E> > al;
 		for (sp<Node> p = first(); p != null; p = p->getNext()) {
 			sp<E> item = p->getItem();
 			if (item != null)
