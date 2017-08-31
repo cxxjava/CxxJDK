@@ -35,10 +35,6 @@ public:
 	int length() {
 		return EArrayList<E>::size();
 	}
-
-	E operator[](int index) THROWS(EIndexOutOfBoundsException) {
-		return this->getAt(index);
-	}
 };
 
 //=============================================================================
@@ -69,10 +65,6 @@ public:
 	int length() {
 		return EArrayList<E>::size();
 	}
-
-	E operator[](int index) THROWS(EIndexOutOfBoundsException) {
-		return this->getAt(index);
-	}
 };
 
 //=============================================================================
@@ -94,10 +86,6 @@ public:
 
 	int length() {
 		return EArrayList<E>::size();
-	}
-
-	E operator[](int index) THROWS(EIndexOutOfBoundsException) {
-		return this->getAt(index);
 	}
 };
 

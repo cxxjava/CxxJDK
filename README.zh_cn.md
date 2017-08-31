@@ -4,7 +4,7 @@
 *英文版本: [English](README.md)*
 
 ### 目录
-  - [特点](#特点)
+- [特点](#特点)
   - [示例](#示例)
   - [性能](#性能)
   - [特性](#特性)
@@ -88,9 +88,9 @@ int main(int argc, const char **argv) {
 更多示例：  
 [testefc.cpp](test/testefc.cpp)  
 [testnio.cpp](test/testnio.cpp)  
-[testbon.cpp](test/testbon.cpp)  
-[testc11.cpp](test/testc11.cpp)
-[testssl.cpp](test/testssl.cpp)
+[testbson.cpp](test/testbson.cpp)  
+[testc11.cpp](test/testc11.cpp)  
+[testssl.cpp](test/testssl.cpp)  
 
 ####性能
 EConcurrentHashmap测试: 
@@ -135,6 +135,8 @@ put 20线程 && get 20线程
 | Arrays                          | EArrays                          |
 | AuthenticationException         | EAuthenticationException         |
 | Base64                          | EBase64                          |
+| BigDecimal                      | EBigDecimal                      |
+| BigInteger                      | EBigInteger                      |
 | BindException                   | EBindException                   |
 | BitSet                          | EBitSet                          |
 | Bits                            | EBits                            |
@@ -256,6 +258,7 @@ put 20线程 && get 20线程
 | SequenceInputStream             | ESequenceInputStream             |
 | ServerSocket                    | EServerSocket                    |
 | Set                             | ESet                             |
+| Short                           | EShort                           |
 | Socket                          | ESocket                          |
 | SocketException                 | ESocketException                 |
 | SocketOptions                   | ESocketOptions                   |
@@ -399,14 +402,14 @@ put 20线程 && get 20线程
 
 ######other:
 
-| cxxjdk类            | 类描述                        |
+| cxxjdk类            | 类描述                           |
 | ------------------ | ----------------------------- |
-| EConfig            | 应用配置管理                    |
-| EByteBuffer        | 二进制数据缓存                  |
-| ESharedPtr         | C++智能指针                    |
-| ELockPool          | SpinLock池化管理类             |
-| EOrderAccess       | 内存访问模型辅助类               |
-| EFork              | Unix/Linux系统下的进程创建       |
+| EConfig            | 应用配置管理                        |
+| EByteBuffer        | 二进制数据缓存                       |
+| ESharedPtr         | C++智能指针                       |
+| ELockPool          | SpinLock池化管理类                 |
+| EOrderAccess       | 内存访问模型辅助类                     |
+| EFork              | Unix/Linux系统下的进程创建            |
 | ESimpleCondition   | C++ style condition           |
 | ESimpleLock        | C++ style mutex lock          |
 | ESpinLock          | C++ wrapper for spin lock     |
@@ -417,10 +420,9 @@ put 20线程 && get 20线程
 | EStream            | IO数据流操作类                      |
 | EOS                | 操作系统相关工具类                     |
 | EAtomic            | 原子操作类                         |
-| EThreadX           | C++11风格封装的EThread线程           |
 | EScopeGuard        | C++11风格封装的通过局部变量析构函数来管理资源的辅助类 |
-| EAtomicDouble      | double原子操作类                |
-| ENetWrapper        | socket操作辅助工具类             |
+| EAtomicDouble      | double原子操作类                   |
+| ENetWrapper        | socket操作辅助工具类                 |
 
 
 ####手册

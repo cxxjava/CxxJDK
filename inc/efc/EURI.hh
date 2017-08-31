@@ -8,6 +8,7 @@
 #ifndef EURI_HH_
 #define EURI_HH_
 
+#include "EMap.hh"
 #include "EComparable.hh"
 #include "ESharedPtr.hh"
 #include "EURISyntaxException.hh"
@@ -1342,6 +1343,20 @@ public:
 	 */
 	EString toASCIIString();
 
+	/**
+	 * Return extracted parameters from uri.
+	 *
+	 * @return extracted parameters
+	 */
+	sp<EMap<EString*, EString*> > getParameterMap();
+
+	/**
+	 * Return extracted parameter from uri with a key.
+	 *
+	 * @return extracted parameter
+	 */
+	EString getParameter(const char* key, const char* defVal=null);
+
 public:
     EURI(const EURI& that);
     EURI& operator= (const EURI& that);
@@ -1384,6 +1399,10 @@ private:
 	 */
 	EString* volatile string;             // The only serializable field
 
+	/**
+	 *
+	 */
+	sp<EMap<EString*, EString*> > paramsMap;
 
 
 	// -- Constructors and factories --

@@ -1104,6 +1104,15 @@ private:
 public:
 	/* Thread ID */
 	ulong tid;
+
+#ifdef CPP11_SUPPORT
+public:
+	static sp<EThread> executeX(std::function<void()> func) {
+		sp<EThread> thread = new EThread(new ERunnableTarget(func));
+		thread->start();
+		return thread;
+	}
+#endif
 };
 
 } /* namespace efc */

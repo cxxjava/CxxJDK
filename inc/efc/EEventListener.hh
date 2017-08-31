@@ -8,7 +8,7 @@
 #ifndef EEVENTLISTENER_HH_
 #define EEVENTLISTENER_HH_
 
-#include "EBase.hh"
+#include "EObject.hh"
 
 namespace efc {
 

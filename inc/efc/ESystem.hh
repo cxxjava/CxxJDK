@@ -12,11 +12,6 @@
 
 namespace efc {
 
-/**
- * Default configuration file name for this program.
- */
-#define DEFAUT_PROPERTY_CONFIG_FILENAME "default.conf"
-
 class ESystem : public EObject {
 public:
 	DECLARE_STATIC_INITZZ;
@@ -211,6 +206,11 @@ public:
 	static const char* getProperty(const char* key, const char* defaultValue=null);
 
 	/**
+	 * Get the parsed config object.
+	 */
+	static EConfig* getConfig();
+
+	/**
 	 * Get the program config full path file name.
 	 */
 	static const char* getConfigFilename();
@@ -223,6 +223,11 @@ public:
 	 *             or <code>null</code> if there is no parameter with that key.
 	 */
 	static const char* getConfigParameter(const char* key, const char* defaultValue=null) ;
+
+	/**
+	 *
+	 */
+	static boolean containsProgramArgument(const char* key);
 
 	/**
 	 * Gets the program main argument indicated by the specified key.

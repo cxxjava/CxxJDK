@@ -206,6 +206,14 @@ public:
 	}
 
 	/**
+	 *
+	 */
+	virtual E& operator [](int index) THROWS(EIndexOutOfBoundsException) {
+		RangeCheck(index);
+		return *(E*)eso_array_get(arrayBuffer, index);
+	}
+
+	/**
 	 * Returns the element at the specified position in this list.
 	 *
 	 * @param  index index of the element to return
@@ -227,7 +235,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
 	virtual void addAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
-		RangeCheck(index);
+		RangeCheckForAdd(index);
 		eso_array_insert(arrayBuffer, index, (void*)&element, sizeof(E));
 	}
 
@@ -329,6 +337,17 @@ public:
 		return ac;
 	}
 
+	virtual EA<E> toArray() {
+		int size_ = size();
+		EA<E> result(size_);
+
+		for (int i = 0; i < size_; i++) {
+			result[i] = getAt(i);
+		}
+
+		return result;
+	}
+
 protected:
 	es_array_t* arrayBuffer;
 
@@ -342,6 +361,15 @@ private:
 	void RangeCheck(int index) {
 		int _size = size();
 		if (index >= _size) {
+			EString str;
+			str.format("Index: %d, Size: %d", index, _size);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
+		}
+	}
+
+	void RangeCheckForAdd(int index) {
+		int _size = size();
+		if (index > _size || index < 0) {
 			EString str;
 			str.format("Index: %d, Size: %d", index, _size);
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
@@ -525,6 +553,14 @@ public:
 	}
 
 	/**
+	 *
+	 */
+	virtual E& operator [](int index) THROWS(EIndexOutOfBoundsException) {
+		RangeCheck(index);
+		return *(E*)eso_array_get(arrayBuffer, index);
+	}
+
+	/**
 	 * Returns the element at the specified position in this list.
 	 *
 	 * @param  index index of the element to return
@@ -546,7 +582,7 @@ public:
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
 	virtual void addAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
-		RangeCheck(index);
+		RangeCheckForAdd(index);
 		eso_array_insert(arrayBuffer, index, (void*)&element, sizeof(E));
 	}
 
@@ -688,6 +724,15 @@ private:
 		}
 	}
 
+	void RangeCheckForAdd(int index) {
+		int _size = size();
+		if (index > _size || index < 0) {
+			EString str;
+			str.format("Index: %d, Size: %d", index, _size);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
+		}
+	}
+
 	/**
 	 * Check that fromIndex and toIndex are in range, and throw an
 	 * appropriate exception if they aren't.
@@ -770,8 +815,15 @@ public:
 	 *
 	 * @return the number of elements in this list
 	 */
-	int size() {
+	virtual int size() {
 		return size_;
+	}
+
+	/**
+	 *
+	 */
+	virtual int capacity() {
+		return elementData->length();
 	}
 
 	/**
@@ -779,7 +831,7 @@ public:
 	 *
 	 * @return <tt>true</tt> if this list contains no elements
 	 */
-	boolean isEmpty() {
+	virtual boolean isEmpty() {
 		return size_ == 0;
 	}
 
@@ -792,7 +844,7 @@ public:
 	 * @param o element whose presence in this list is to be tested
 	 * @return <tt>true</tt> if this list contains the specified element
 	 */
-	boolean contains(T* o) {
+	virtual boolean contains(T* o) {
 		return indexOf(o) >= 0;
 	}
 
@@ -803,7 +855,7 @@ public:
 	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
 	 * or -1 if there is no such index.
 	 */
-	int indexOf(T* o) {
+	virtual int indexOf(T* o) {
 		if (o == null) {
 			return -1;
 		} else {
@@ -821,7 +873,7 @@ public:
 	 * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
 	 * or -1 if there is no such index.
 	 */
-	int lastIndexOf(T* o) {
+	virtual int lastIndexOf(T* o) {
 		if (o == null) {
 			return -1;
 		} else {
@@ -846,7 +898,7 @@ public:
 	 * @return an array containing all of the elements in this list in
 	 *         proper sequence
 	 */
-	EA<E> toArray() {
+	virtual EA<E> toArray() {
 		EA<E> result(size_);
 
 		for (int i = 0; i < size_; i++) {
@@ -857,16 +909,42 @@ public:
 	}
 
 	/**
+	 *
+	 */
+	virtual E& operator [](int index) THROWS(EIndexOutOfBoundsException) {
+		RangeCheck(index);
+		return (*elementData)[index];
+	}
+
+	/**
 	 * Returns the element at the specified position in this list.
 	 *
 	 * @param  index index of the element to return
 	 * @return the element at the specified position in this list
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	E getAt(int index) {
-		rangeCheck(index);
-
+	virtual E getAt(int index) {
+		RangeCheck(index);
 		return (*elementData)[index];
+	}
+
+	/**
+	 * Inserts the specified element at the specified position in this
+	 * list. Shifts the element currently at that position (if any) and
+	 * any subsequent elements to the right (adds one to their indices).
+	 *
+	 * @param index index at which the specified element is to be inserted
+	 * @param element element to be inserted
+	 * @throws IndexOutOfBoundsException {@inheritDoc}
+	 */
+	virtual void addAt(int index, E element) THROWS(EIndexOutOfBoundsException) {
+		RangeCheckForAdd(index);
+		int numMoved = size_ - index;
+		ensureExplicitCapacity(++size_);  // Increments modCount!!
+		if (numMoved > 0)
+			arraycopy(*elementData, index, *elementData, index+1,
+							 numMoved);
+		(*elementData)[index] = element;
 	}
 
 	/**
@@ -878,9 +956,8 @@ public:
 	 * @return the element previously at the specified position
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	E setAt(int index, E element) {
-		rangeCheck(index);
-
+	virtual E setAt(int index, E element) {
+		RangeCheck(index);
 		E oldValue = (*elementData)[index];
 		(*elementData)[index] = element;
 		return oldValue;
@@ -892,7 +969,7 @@ public:
 	 * @param e element to be appended to this list
 	 * @return <tt>true</tt> (as specified by {@link Collection#add})
 	 */
-	boolean add(E e) {
+	virtual boolean add(E e) {
 		ensureExplicitCapacity(size_ + 1);  // Increments modCount!!
 		(*elementData)[size_++] = e;
 		return true;
@@ -907,8 +984,8 @@ public:
 	 * @return the element that was removed from the list
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	E removeAt(int index) {
-		rangeCheck(index);
+	virtual E removeAt(int index) {
+		RangeCheck(index);
 
 		E oldValue = (*elementData)[index];
 
@@ -934,7 +1011,7 @@ public:
 	 * @param o element to be removed from this list, if present
 	 * @return <tt>true</tt> if this list contained the specified element
 	 */
-	boolean remove(T* o) {
+	virtual boolean remove(T* o) {
 		if (o == null) {
 			for (int index = 0; index < size_; index++)
 				if ((*elementData)[index] == null) {
@@ -955,7 +1032,7 @@ public:
 	 * Removes all of the elements from this list.  The list will
 	 * be empty after this call returns.
 	 */
-	void clear() {
+	virtual void clear() {
 		// clear to let GC do its work
 		for (int i = 0; i < size_; i++)
 			(*elementData)[i] = null;
@@ -990,9 +1067,18 @@ private:
 	 * negative: It is always used immediately prior to an array access,
 	 * which throws an ArrayIndexOutOfBoundsException if index is negative.
 	 */
-	void rangeCheck(int index) {
+	void RangeCheck(int index) {
 		if (index >= size_)
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__, "outOfBoundsMsg(index)");
+	}
+
+	void RangeCheckForAdd(int index) {
+		int _size = size();
+		if (index > _size || index < 0) {
+			EString str;
+			str.format("Index: %d, Size: %d", index, _size);
+			throw EIndexOutOfBoundsException(__FILE__, __LINE__, str.c_str());
+		}
 	}
 
 	void ensureExplicitCapacity(int minCapacity) {

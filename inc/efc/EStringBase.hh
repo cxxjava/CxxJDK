@@ -27,7 +27,8 @@ public:
 	//c++ style
 	const char* c_str(uint fromIndex = 0) const;
 
-	uint length() const;uint countChars() const;
+	uint length() const;
+	uint countChars() const;
 
 	EStringBase& resize(uint newlen);
 
@@ -41,7 +42,7 @@ public:
 	EStringBase& clear();
 
 	EStringBase substr(uint index, int len = -1) const;
-	EStringBase splitAt(const char *separators, uint index) THROWS(EIndexOutOfBoundsException);
+	EStringBase splitAt(const char *separators, uint index);
 
 	int compare(const char* cstr, int len = -1) const;
 	int compare(const EStringBase& estr) const;
@@ -84,10 +85,10 @@ public:
 	boolean operator!=(const char* cstr) const;
 	boolean operator!=(const EStringBase& estr) const;
 
-	char& operator[](uint index) const;
+	char& operator[](uint index) const THROWS(EIndexOutOfBoundsException);
 
 	//java style
-	char charAt(uint index);
+	char charAt(uint index) THROWS(EIndexOutOfBoundsException);
 	boolean endsWith(EStringBase& suffix);
 	boolean endsWith(const char* suffix);
 	boolean startsWith(EStringBase& prefix, int toffset = 0);

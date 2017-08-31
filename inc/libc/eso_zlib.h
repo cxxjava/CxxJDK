@@ -30,33 +30,15 @@ extern "C" {
  * are errors, positive values are used for special but normal events.
  */
 
-/*
- * ZLIB
- */
-typedef struct
-{
-	es_size_t (*write)(void *p, const void *buf, es_size_t size);
-    /* Returns: result - the number of actually written bytes.
-       (result < size) means error */
-} es_zlib_ostream_t;
-
-typedef struct
-{
-	es_int32_t (*read)(void *p, void *buf, es_size_t *size);
-    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-       (output(*size) < input(*size)) is allowed. 
-       Returns: 0-suceess, other-failure*/
-} es_zlib_istream_t;
-
 //==============================================================================
 
 //ZLIB ziped
-es_int32_t eso_zlib_deflate(es_zlib_ostream_t *outStream, 
-                            es_zlib_istream_t *inStream);
+es_int32_t eso_zlib_deflate(es_ostream_t *outStream,
+                            es_istream_t *inStream);
 
 //ZLIB unzipd
-es_int32_t eso_zlib_inflate(es_zlib_ostream_t *outStream, 
-                            es_zlib_istream_t *inStream);
+es_int32_t eso_zlib_inflate(es_ostream_t *outStream, 
+                            es_istream_t *inStream);
 
 #ifdef __cplusplus
 }

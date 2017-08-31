@@ -279,26 +279,26 @@ typedef int es_status_t;      /* c style status code */
 
 
 /** 
- * BON Error Values
+ * BSON Error Values
  */
 /** Invalid argument */
-#define BON_EINVAL         (ES_OS_START_USERERR + 1)
+#define BSON_EINVAL         (ES_OS_START_USERERR + 1)
 /** System error */
-#define BON_ESYSTEM        (ES_OS_START_USERERR + 2)
+#define BSON_ESYSTEM        (ES_OS_START_USERERR + 2)
 /** Invalid node name */
-#define BON_EINVNODENAME   (ES_OS_START_USERERR + 3)
+#define BSON_EINVNODENAME   (ES_OS_START_USERERR + 3)
 /** No such node */
-#define BON_ENONODE        (ES_OS_START_USERERR + 4)
+#define BSON_ENONODE        (ES_OS_START_USERERR + 4)
 /** No such attribute */
-#define BON_ENOATTR        (ES_OS_START_USERERR + 5)
+#define BSON_ENOATTR        (ES_OS_START_USERERR + 5)
 /** Invalid data postion */
-#define BON_EINVDATAPOS    (ES_OS_START_USERERR + 6)
+#define BSON_EINVDATAPOS    (ES_OS_START_USERERR + 6)
 /** String syntax error */
-#define BON_ESYNTAX        (ES_OS_START_USERERR + 7)
+#define BSON_ESYNTAX        (ES_OS_START_USERERR + 7)
 /** Head data error */
-#define BON_EHEAD          (ES_OS_START_USERERR + 8)
+#define BSON_EHEAD          (ES_OS_START_USERERR + 8)
 /** Read data error */
-#define BON_EREAD          (ES_OS_START_USERERR + 9)
+#define BSON_EREAD          (ES_OS_START_USERERR + 9)
 
 
 #ifdef __cplusplus

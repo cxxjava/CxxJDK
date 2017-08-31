@@ -49,7 +49,7 @@ public:
 
 	explicit
 	EA(int length, E defval = 0) :
-		_length(length), _owned(true) {
+		_length(length), _owned(true), _defval(defval) {
 		_array = new E[_length]();
 		_type = MEM_NEW;
 		if (defval != 0) {
@@ -72,10 +72,10 @@ public:
 	EA(const EA<E>& that) {
 		EA<E>* t = (EA<E>*)&that;
 		_length = t->_length;
-		_array = t->_array;
-		_owned = t->isOwned();
-		_type = t->_type;
-		t->setOwned(false);
+		_array = new E[_length];
+		_owned = true;
+		_type = MEM_NEW;
+		eso_memcpy(_array, t->_array, _length*sizeof(E));
 	}
 
 	EA<E>& operator= (const EA<E>& that) {
@@ -85,10 +85,10 @@ public:
 			delete[] _array;
 		}
 		_length = t->_length;
-		_array = t->_array;
-		_owned = t->isOwned();
-		_type = t->_type;
-		t->setOwned(false);
+		_array = new E[_length];
+		_owned = true;
+		_type = MEM_NEW;
+		eso_memcpy(_array, t->_array, _length*sizeof(E));
 		return *this;
 	}
 
@@ -138,6 +138,39 @@ public:
 	void reset(E val=0) {
 		for (int i = 0; i < _length; i++) {
 			_array[i] = val;
+		}
+	}
+
+	void setLength(int newLength) {
+		if (newLength <= _length) {
+			_length = newLength;
+			return;
+		} else {
+			E* newArr = new E[newLength]();
+			eso_memcpy(newArr, _array, _length*sizeof(E));
+			if (_defval != 0) {
+				for (int i = _length; i < newLength; i++) {
+					newArr[i] = _defval;
+				}
+			}
+
+			if (_owned) {
+				switch (_type) {
+				case MEM_NEW:
+					if (_array) delete[] _array; break;
+				case MEM_MALLOC:
+					if (_array) eso_free(_array); break;
+				case MEM_MMALLOC:
+					if (_array) eso_mfree(_array); break;
+				default:
+					ES_ASSERT(false);
+					break;
+				}
+			}
+
+			_length = newLength;
+			_array = newArr;
+			_type = MEM_NEW;
 		}
 	}
 
@@ -216,6 +249,7 @@ private:
 	int _length;
 	boolean _owned;
 	MEMType _type;
+	E _defval;
 
 	void rangeCheck(int fromIndex, int toIndex) {
 		EString msg;
@@ -361,6 +395,24 @@ public:
 			}
 		}
 		eso_memset(_array, 0, sizeof(E)*_length);
+	}
+
+	void setLength(int newLength) {
+		if (newLength <= _length) {
+			if (_autoFree) {
+				for (int i=newLength; i<_length; i++) {
+					delete _array[i];
+				}
+			}
+
+			_length = newLength;
+		} else {
+			E* newArr = new E[newLength]();
+			eso_memcpy(newArr, _array, _length*sizeof(E));
+			delete[] _array;
+			_array = newArr;
+			_length = newLength;
+		}
 	}
 
 	void sort(int off=0, int len=-1) {
@@ -626,6 +678,24 @@ public:
 	void clear() {
 		for (int i=0; i<_length; i++) {
 			_array[i] = null;
+		}
+	}
+
+	void setLength(int newLength) {
+		if (newLength <= _length) {
+			for (int i=newLength; i<_length; i++) {
+				_array[i] = null;
+			}
+
+			_length = newLength;
+		} else {
+			E* newArr = new E[newLength];
+			for (int i=0; i<_length; i++) {
+				newArr[i] = _array[i];
+			}
+			delete[] _array;
+			_array = newArr;
+			_length = newLength;
 		}
 	}
 

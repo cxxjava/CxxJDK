@@ -54,10 +54,15 @@ public:
 	void clear();
 
 	/**
+	 * Returns true if empty
+	 */
+	boolean isEmpty();
+
+	/**
 	 * Get value with path like "/root/node|0"
 	 */
 	const char* getString(const char *path, const char* defval=NULL);
-	int getInteger(const char *path, int defval=0);
+	int getInt(const char *path, int defval=0);
 	llong getLLong(const char *path, llong defval=0L);
 	boolean getBoolean(const char *path, boolean defval=false);
 	float getFloat(const char *path, float defval=0.0);

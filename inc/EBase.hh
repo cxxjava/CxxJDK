@@ -12,8 +12,8 @@
 #include "eso_atomic.h"
 #include "eso_base64.h"
 #include "eso_bitset.h"
-#include "eso_bon.h"
-#include "eso_bon_ext.h"
+#include "eso_bson.h"
+#include "eso_bson_ext.h"
 #include "eso_buffer.h"
 #include "eso_canonicalize.h"
 #include "eso_conf.h"
@@ -181,6 +181,10 @@ inline ALWAYS_INLINE es_nullptr_t es_get_nullptr_t() {return es_nullptr_t(0);}
 
 #ifndef ulong
 #define ulong   unsigned long
+#endif
+
+#ifndef uchar
+#define uchar   unsigned char
 #endif
 
 #ifdef max

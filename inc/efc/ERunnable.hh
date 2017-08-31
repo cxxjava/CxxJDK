@@ -10,6 +10,10 @@
 
 #include "EObject.hh"
 
+#ifdef CPP11_SUPPORT
+#include <functional>
+#endif
+
 namespace efc {
 
 /**
@@ -56,6 +60,22 @@ interface ERunnable : virtual public EObject
 	 */
 	virtual void run() = 0;
 };
+
+#ifdef CPP11_SUPPORT
+class ERunnableTarget: virtual public ERunnable {
+public:
+	virtual ~ERunnableTarget(){}
+
+	ERunnableTarget(std::function<void()>& f) {
+		this->f = f;
+	}
+	virtual void run() {
+		f();
+	}
+private:
+	std::function<void()> f;
+};
+#endif
 
 } /* namespace efc */
 #endif /* ERUNNABLE_HH_ */

@@ -11,6 +11,10 @@
 #include "ESharedPtr.hh"
 #include "EException.hh"
 
+#ifdef CPP11_SUPPORT
+#include <functional>
+#endif
+
 namespace efc {
 
 /**
@@ -44,6 +48,23 @@ interface ECallable : virtual public EObject {
 	 */
 	virtual sp<V> call() THROWS(EException) = 0;
 };
+
+#ifdef CPP11_SUPPORT
+template<typename V>
+class ECallableTarget: virtual public ECallable<V> {
+public:
+	virtual ~ECallableTarget(){}
+
+	ECallableTarget(std::function<sp<V>()>& f) {
+		this->f = f;
+	}
+	virtual sp<V> call() {
+		return f();
+	}
+private:
+	std::function<sp<V>()> f;
+};
+#endif
 
 } /* namespace efc */
 #endif /* ECALLABLE_HH_ */

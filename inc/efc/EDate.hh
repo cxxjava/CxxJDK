@@ -167,6 +167,29 @@ public:
 	virtual EStringBase toString();
 
 	/**
+	 * Return a string representation of this calendar.
+	 * @param   format   a string to be parsed as a date.
+	 * @format:
+	 *	%a     locale¡¯s abbreviated weekday name (e.g., Sun)
+	 *	%b     locale¡¯s abbreviated month name (e.g., Jan)
+	 *	%d     day of month (01..31)
+	 *	%H     hour (00..23)
+	 *	%I     hour (01..12)
+	 *	%m     month (01..12)
+	 *	%M     minute (00..59)
+	 *	%S     second (00..60)
+	 *	%s     millisecond (000..999)
+	 *	%p     locale¡¯s equivalent of either AM or PM; blank if not known
+	 *	%P     like %p, but lower case
+	 *	%u     day of week (1..7); 1 is Monday
+	 *	%w     day of week (0..6); 0 is Sunday
+	 *	%Y     year
+	 *	%y     last two digits of year (00-99)
+	 *	%z     +hhmm numeric timezone (e.g., -0400)
+	 */
+	EString toString(const char *format);
+
+	/**
 	 * Returns a hash code value for this object. The result is the
 	 * exclusive OR of the two halves of the primitive <tt>long</tt>
 	 * value returned by the {@link Date#getTime}

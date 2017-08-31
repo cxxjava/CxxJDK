@@ -106,6 +106,15 @@ interface ECompletionService : virtual public EObject {
      * @throws InterruptedException if interrupted while waiting
      */
     virtual sp<EFuture<V> > poll(llong timeout, ETimeUnit *unit) THROWS(EInterruptedException) = 0;
+
+#ifdef CPP11_SUPPORT
+    virtual sp<EFuture<V> > submitX(std::function<sp<V>()> func) {
+		return this->submit(new ECallableTarget<V>(func));
+	}
+    virtual sp<EFuture<V> > submitX(std::function<void()> func, sp<V> result) {
+		return this->submit(new ERunnableTarget(func), result);
+	}
+#endif
 };
 
 } /* namespace efc */

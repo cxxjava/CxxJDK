@@ -1,12 +1,7 @@
-#include "main.hh"
+#include "es_main.h"
 #include "Efc.hh"
 
-#ifdef WIN32
-#define LOG ESystem::out->println
-#else
-//#define LOG(fmt,args...) ESystem::out->println(fmt, ##args)
 #define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
-#endif
 
 static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 	EServerSocketChannel* server = null;

@@ -16,14 +16,19 @@
 namespace efc {
 
 /**
- * The minimum radix available for conversion to and from Strings.
+ *
+ * The {@code Byte} class wraps a value of primitive type {@code byte}
+ * in an object.  An object of type {@code Byte} contains a single
+ * field whose type is {@code byte}.
+ *
+ * <p>In addition, this class provides several methods for converting
+ * a {@code byte} to a {@code String} and a {@code String} to a {@code
+ * byte}, as well as other constants and methods useful when dealing
+ * with a {@code byte}.
+ *
+ * @see     java.lang.Number
+ * @since   JDK1.1
  */
-#define BYTE_MIN_RADIX   2
-
-/**
- * The maximum radix available for conversion to and from Strings.
- */
-#define BYTE_MAX_RADIX   36
 
 class EByte : public ENumber, virtual public EComparable<EByte*> {
 public:
@@ -33,7 +38,7 @@ public:
 	 *
 	 * @since   JDK1.0.2
 	 */
-	static const byte MIN_VALUE;// = -128;
+	static const byte MIN_VALUE = -128;
 
 	/**
 	 * The constant value of this field is the largest value of type
@@ -41,7 +46,7 @@ public:
 	 *
 	 * @since   JDK1.0.2
 	 */
-	static const byte MAX_VALUE;// = 127;
+	static const byte MAX_VALUE = 127;
 
 	/**
 	 * The number of bits used to represent a {@code byte} value in two's
@@ -49,7 +54,7 @@ public:
 	 *
 	 * @since 1.5
 	 */
-	static const int SIZE;// = 8;
+	static const int SIZE = 8;
 
 public:
 	virtual ~EByte() {

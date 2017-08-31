@@ -437,6 +437,16 @@ protected:
 private:
 	/** Cannot instantiate. */
 	EExecutors() {}
+
+#ifdef CPP11_SUPPORT
+public:
+	template<typename T>
+	static sp<ECallable<T> > callableX(std::function<void()> func, sp<T> result) {
+		if (func == null)
+			throw ENullPointerException(__FILE__, __LINE__);
+		return new RunnableAdapter<T>(new ERunnableTarget(func), result);
+	}
+#endif
 };
 
 } /* namespace efc */

@@ -147,7 +147,11 @@ public:
 	 * insert or remove an element.
 	 */
 	virtual int remainingCapacity() {
-		return capacity - count.get();
+		return capacity_ - count.get();
+	}
+
+	virtual int capacity() {
+		return capacity_;
 	}
 
 	/**
@@ -177,12 +181,12 @@ public:
 			 * signalled if it ever changes from capacity. Similarly
 			 * for all other uses of count in other wait guards.
 			 */
-			while (count.get() == capacity) {
+			while (count.get() == capacity_) {
 				notFull->await();
 			}
 			enqueue(node);
 			c = count.getAndIncrement();
-			if (c + 1 < capacity)
+			if (c + 1 < capacity_)
 				notFull->signal();
 		} catch(...) {
 			putLock.unlock();
@@ -220,7 +224,7 @@ public:
 		putLock.lockInterruptibly();
 		boolean r = true;
 		try {
-			while (count.get() == capacity) {
+			while (count.get() == capacity_) {
 				if (nanos <= 0) {
 					r = false;
 					goto FINALLY;
@@ -230,7 +234,7 @@ public:
 			sp<Node> x(new Node(e));
 			enqueue(x);
 			c = count.getAndIncrement();
-			if (c + 1 < capacity)
+			if (c + 1 < capacity_)
 				notFull->signal();
 		} catch(...) {
 			putLock.unlock();
@@ -266,16 +270,16 @@ public:
 	}
 	virtual boolean offer(sp<E> e) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
-		if (count.get() == capacity)
+		if (count.get() == capacity_)
 			return false;
 		int c = -1;
 		sp<Node> node(new Node(e));
 		putLock.lock();
 		try {
-			if (count.get() < capacity) {
+			if (count.get() < capacity_) {
 				enqueue(node);
 				c = count.getAndIncrement();
-				if (c + 1 < capacity)
+				if (c + 1 < capacity_)
 					notFull->signal();
 			}
 		} catch(...) {
@@ -307,7 +311,7 @@ public:
 		} finally {
 			takeLock.unlock();
 		}
-		if (c == capacity)
+		if (c == capacity_)
 			signalNotFull();
 		return x;
 	}
@@ -337,7 +341,7 @@ public:
 		finally {
 			takeLock.unlock();
 		}
-		if (c == capacity)
+		if (c == capacity_)
 			signalNotFull();
 		return x;
 	}
@@ -361,7 +365,7 @@ public:
 		} finally {
 			takeLock.unlock();
 		}
-		if (c == capacity)
+		if (c == capacity_)
 			signalNotFull();
 		return x;
 	}
@@ -432,7 +436,7 @@ public:
 			}
 			head = last;
 			// assert head.item == null && head.next == null;
-			if (count.getAndSet(0) == capacity)
+			if (count.getAndSet(0) == capacity_)
 				notFull->signal();
 		} catch(...) {
 			fullyUnlock();
@@ -484,7 +488,7 @@ public:
 		} catch(...) {
 			if (i > 0) {
 				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
 			}
 			takeLock.unlock(); //unlock!
 			if (signalNotFull_)
@@ -495,7 +499,7 @@ public:
 			if (i > 0) {
 				// assert h.item == null;
 				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
 			}
 			takeLock.unlock(); //unlock!
 			if (signalNotFull_)
@@ -526,7 +530,7 @@ public:
 		} catch(...) {
 			if (i > 0) {
 				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
 			}
 			takeLock.unlock(); //unlock!
 			if (signalNotFull_)
@@ -537,7 +541,7 @@ public:
 			if (i > 0) {
 				// assert h.item == null;
 				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity);
+				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
 			}
 			takeLock.unlock(); //unlock!
 			if (signalNotFull_)
@@ -712,13 +716,13 @@ protected:
 		trail->next = p->next;
 		if (last == p)
 			last = trail;
-		if (count.getAndDecrement() == capacity)
+		if (count.getAndDecrement() == capacity_)
 			notFull->signal();
 	}
 
 private:
 	/** The capacity bound, or Integer.MAX_VALUE if none */
-	int capacity;
+	int capacity_;
 
 	/** Current number of elements */
 	EAtomicInteger count;
@@ -749,7 +753,7 @@ private:
 
 	void init(int capacity) {
 		if (capacity <= 0) throw EIllegalArgumentException(__FILE__, __LINE__);
-		this->capacity = capacity;
+		this->capacity_ = capacity;
 		last = head = new Node();
 
 		notEmpty = takeLock.newCondition();

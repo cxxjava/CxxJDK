@@ -107,6 +107,11 @@ public:
      */
 	virtual synchronized int size();
 
+	/**
+	 * Get the buffer where data is stored.
+	 */
+	virtual synchronized byte* data();
+
     /**
      * Converts the buffer's contents into a string decoding bytes using the
      * platform's default character set. The length of the new <tt>String</tt>

@@ -33,34 +33,17 @@ extern "C" {
 #define ES_SZ_ERROR_ARCHIVE 16
 #define ES_SZ_ERROR_NO_ARCHIVE 17
 
-/*
- * LZMA
- */
-typedef struct
-{
-	es_size_t (*write)(void *p, const void *buf, es_size_t size);
-    /* Returns: result - the number of actually written bytes.
-       (result < size) means error */
-} es_lzma_ostream_t;
-
-typedef struct
-{
-	es_int32_t (*read)(void *p, void *buf, es_size_t *size);
-    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
-       (output(*size) < input(*size)) is allowed. 
-       Returns: 0-suceess, other-failure*/
-} es_lzma_istream_t;
 
 //==============================================================================
 
 //LZMA ziped
-es_int32_t eso_lzma_zip(es_lzma_ostream_t *outStream, 
-                        es_lzma_istream_t *inStream, 
+es_int32_t eso_lzma_zip(es_ostream_t *outStream,
+                        es_istream_t *inStream,
                         es_size_t dataSize);
 
 //LZMA unzipd
-es_int32_t eso_lzma_unzip(es_lzma_ostream_t *outStream, 
-                          es_lzma_istream_t *inStream);
+es_int32_t eso_lzma_unzip(es_ostream_t *outStream, 
+                          es_istream_t *inStream);
 
 //LZMA with directory decompression, Note: opath must be last with '/'.
 es_int32_t eso_lzma_unzip_arfile(const char *ifname, 

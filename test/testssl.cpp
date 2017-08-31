@@ -4,16 +4,12 @@
  *  Created on: 2017-2-19
  *      Author: cxxjava@163.com
  */
-#include "main.hh"
+#include "es_main.h"
 #include "Efc.hh"
 
 #ifdef HAVE_OPENSSL
 
-#ifdef WIN32
-#define LOG ESystem::out->println
-#else
 #define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
-#endif
 
 #define SSL_FILE_PATH ""
 

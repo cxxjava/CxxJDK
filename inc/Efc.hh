@@ -1,7 +1,7 @@
 #ifndef __EFC_H__
 #define __EFC_H__
 
-#define EFC_VERSION "0.5.0"
+#define EFC_VERSION "0.6.0"
 
 #include "EBase.hh"
 
@@ -15,6 +15,7 @@
 #include "EAbstractQueuedSynchronizer.hh"
 #include "EAbstractSet.hh"
 #include "EAlreadyConnectedException.hh"
+#include "EArithmeticException.hh"
 #include "EArray.hh"
 #include "EArrayDeque.hh"
 #include "EArrays.hh"
@@ -28,10 +29,12 @@
 #include "EAtomicReference.hh"
 #include "EAuthenticationException.hh"
 #include "EBase64.hh"
+#include "EBigDecimal.hh"
+#include "EBigInteger.hh"
 #include "EBits.hh"
 #include "EBitSet.hh"
-#include "EBon.hh"
-#include "EBonParser.hh"
+#include "EBson.hh"
+#include "EBsonParser.hh"
 #include "EBoolean.hh"
 #include "EBufferedInputStream.hh"
 #include "EBufferedOutputStream.hh"
@@ -171,6 +174,7 @@
 #include "ESemaphore.hh"
 #include "ESentry.hh"
 #include "ESet.hh"
+#include "EShort.hh"
 #include "ESimpleCondition.hh"
 #include "ESimpleEnumeration.hh"
 #include "ESimpleLock.hh"
@@ -255,7 +259,6 @@
 
 //efc::cpp11
 #include "EScopeGuard.hh"
-#include "EThreadX.hh"
 
 using namespace efc;
 using namespace efc::nio;

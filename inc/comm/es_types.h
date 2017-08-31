@@ -256,6 +256,21 @@ typedef intptr_t                es_intptr_t;
 typedef es_uint32_t             es_uintptr_t;
 #endif
 
+typedef struct
+{
+	es_size_t (*write)(void *p, const void *buf, es_size_t size);
+    /* Returns: result - the number of actually written bytes.
+       (result < size) means error */
+} es_ostream_t;
+
+typedef struct
+{
+	es_int32_t (*read)(void *p, void *buf, es_size_t *size);
+    /* if (input(*size) != 0 && output(*size) == 0) means end_of_stream.
+       (output(*size) < input(*size)) is allowed.
+       Returns: 0-suceess, other-failure*/
+} es_istream_t;
+
 //==============================================================================
 
 #ifndef NULL

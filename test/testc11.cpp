@@ -1,13 +1,7 @@
-#include "main.hh"
+#include "es_main.h"
 #include "Efc.hh"
 
-#ifdef WIN32
-#define LOG ESystem::out->println
-#else
-//#define LOG(fmt,args...) ESystem::out->println(fmt, ##args)
 #define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
-//#define LOG(fmt,...)
-#endif
 
 #ifdef CPP11_SUPPORT
 
@@ -128,7 +122,7 @@ static void test_finally() {
 static void test_threadx() {
 	ESynchronizeable sync;
 
-	sp<EThread> ths1 = EThreadX::execute([&]() {
+	sp<EThread> ths1 = EThread::executeX([&]() {
 		//EThread::sleep(1000); //if wait after notify then will blocked forever.
 		SYNCHRONIZED(&sync) {
 			sync.wait();
@@ -136,7 +130,7 @@ static void test_threadx() {
 	});
 //	ths1->start(); //exception: Already started.
 
-	sp<EThread> ths2 = EThreadX::execute([&]() {
+	sp<EThread> ths2 = EThread::executeX([&]() {
 		EThread::sleep(1000);
 		SYNCHRONIZED(&sync) {
 			LOG("at here.");
@@ -151,6 +145,71 @@ static void test_threadx() {
 	LOG("end of test_threadx().");
 }
 
+static void test_executors() {
+	//1.
+	{
+		sp<EExecutorService> executors = EExecutors::newCachedThreadPool();
+
+		executors->executeX([]() {
+			for (int i=0; i<1000; i++) {
+				LOG("1 running...");
+			}
+		});
+
+		executors->shutdown();
+		executors->awaitTermination();
+	}
+
+	//2.
+	{
+		sp<EInteger> result(new EInteger(999));
+		sp<ECallable<EInteger> > callable = EExecutors::callableX([](){
+			LOG("2 running...");
+		}, result);
+		sp<EFutureTask<EInteger> > future = new EFutureTask<EInteger>(callable);
+		sp<EThread> thread = new EThread(future);
+		thread->start();
+		try {
+			EThread::sleep(50);//
+			LOG("i=%d", future->get()->intValue());
+		} catch (EInterruptedException& e) {
+			e.printStackTrace();
+		} catch (EExecutionException& e) {
+			e.printStackTrace();
+		}
+	}
+
+	//3.
+	{
+		EExecutorService* executorService = EExecutors::newCachedThreadPool();
+		ECompletionService<EInteger> *cs = new EExecutorCompletionService<EInteger>(executorService, new ELinkedBlockingQueue<EFuture<EInteger> >());
+
+		cs->submitX([]()->sp<EInteger>{
+			EThread::sleep(50);//
+			return new EInteger(999);
+		});
+
+		try {
+			sp<EFuture<EInteger> > f = cs->poll();
+			if (f != null) {
+				LOG("i=%d", f->get()->intValue());
+			}
+		} catch (EInterruptedException& e) {
+			e.printStackTrace();
+		} catch (EExecutionException& e) {
+			e.printStackTrace();
+		}
+
+		executorService->shutdown();
+		executorService->awaitTermination();
+
+		delete executorService;
+		delete cs;
+	}
+
+	LOG("end of test_executors().");
+}
+
 MAIN_IMPL(testc11) {
 	printf("main()\n");
 
@@ -162,13 +221,14 @@ MAIN_IMPL(testc11) {
 		try {
 //		test_scopeExit();
 //		test_finally();
-		test_threadx();
+//		test_threadx();
+		test_executors();
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());
 		} catch (...) {
 			LOG("Catched a exception.");
 		}
-	} while (0);
+	} while (1);
 
 	LOG("exit...");
 

@@ -450,6 +450,12 @@ public:
 
 	// Positional Access Operations
 
+	virtual E& operator [](int index) {
+		SYNC_IF(_threadSafe) {
+			return EArrayList<E>::operator [](index);
+		}}
+	}
+
 	/**
 	 * Returns the element at the specified position in this Vector.
 	 *
@@ -949,6 +955,12 @@ public:
 
 	// Positional Access Operations
 
+	virtual E& operator [](int index) {
+		SYNC_IF(_threadSafe) {
+			return EArrayList<E>::operator [](index);
+		}}
+	}
+
 	/**
 	 * Returns the element at the specified position in this Vector.
 	 *
@@ -1442,6 +1454,12 @@ public:
 	}
 
 	// Positional Access Operations
+
+	virtual E& operator [](int index) {
+		SYNC_IF(_threadSafe) {
+			return EArrayList<E>::operator [](index);
+		}}
+	}
 
 	/**
 	 * Returns the element at the specified position in this Vector.

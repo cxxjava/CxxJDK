@@ -462,17 +462,6 @@ private:
 		return false;
 	}
 
-	/**
-	 * Auto free.
-	 */
-	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	boolean getAutoFreeKey() {
-		return false;
-	}
-
 public:
 	/**
 	 * Constructs an empty <tt>HashMap</tt> with the default initial capacity
@@ -1321,21 +1310,6 @@ private:
 				if (e->value == null)
 					return true;
 		return false;
-	}
-
-	/**
-	 * Auto free.
-	 */
-	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	boolean getAutoFreeKey() {
-		return false;
-	}
-
-	boolean getAutoFreeValue() {
-		return true;
 	}
 
 public:
@@ -3638,18 +3612,6 @@ public:
 	}
 	float loadFactor() {
 		return _loadFactor;
-	}
-
-	void setAutoFree(boolean autoFreeKey, boolean autoFreeValue) {
-		throw EUNSUPPORTEDOPERATIONEXCEPTION;
-	}
-
-	boolean getAutoFreeKey() {
-		return true;
-	}
-
-	boolean getAutoFreeValue() {
-		return true;
 	}
 };
 

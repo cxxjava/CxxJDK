@@ -27,16 +27,6 @@ namespace efc {
  * @since JDK1.0
  */
 
-/**
- * The minimum radix available for conversion to and from Strings.
- */
-#define INTEGER_MIN_RADIX   2
-
-/**
- * The maximum radix available for conversion to and from Strings.
- */
-#define INTEGER_MAX_RADIX   36
-
 class EInteger : public ENumber, virtual public EComparable<EInteger*>
 {
 public:

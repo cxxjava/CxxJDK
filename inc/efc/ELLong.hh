@@ -34,16 +34,6 @@ namespace efc {
  */
 
 /**
- * The minimum radix available for conversion to and from Strings.
- */
-#define LLONG_MIN_RADIX   2
-
-/**
- * The maximum radix available for conversion to and from Strings.
- */
-#define LLONG_MAX_RADIX   36
-
-/**
  * The Long class wraps a value of the primitive type <code>long</code>
  * in an object. An object of type <code>Long</code> contains a single
  * field whose type is <code>long</code>.

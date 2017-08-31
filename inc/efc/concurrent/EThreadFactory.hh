@@ -34,6 +34,7 @@ namespace efc {
  */
 
 interface EThreadFactory : virtual public EObject {
+	virtual ~EThreadFactory(){}
 
     /**
      * Constructs a new {@code Thread}.  Implementations may also initialize
@@ -44,6 +45,12 @@ interface EThreadFactory : virtual public EObject {
      *         create a thread is rejected
      */
 	virtual EThread* newThread(sp<ERunnable> r) = 0;
+
+#ifdef CPP11_SUPPORT
+	virtual EThread* newThreadX(std::function<void()> func) {
+		return this->newThread(new ERunnableTarget(func));
+	}
+#endif
 };
 
 } /* namespace efc */

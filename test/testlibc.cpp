@@ -1,4 +1,4 @@
-#include "main.hh"
+#include "es_main.h"
 #include "libc.h"
 #include "eso_except.h"
 
@@ -70,15 +70,15 @@ static void test_bitset(void)
 
 static void test_conf(void)
 {
-	es_bon_t *bon = eso_bon_create(NULL);
+	es_bson_t *bson = eso_bson_create(NULL);
 
-	eso_conf_load(bon, "sample.conf");
-	char *p = eso_bon_get_str(bon, "/proc/prv_conf/http/include");
+	eso_conf_load(bson, "sample.conf");
+	char *p = eso_bson_get_str(bson, "/proc/prv_conf/http/include");
 	printf("conf v1=%s\n", p);
-	p = eso_bon_get_str(bon, "/proc/refork_wait");
+	p = eso_bson_get_str(bson, "/proc/refork_wait");
 	printf("conf v2=%s\n", p);
 
-	eso_bon_destroy(&bon);
+	eso_bson_destroy(&bson);
 }
 
 static void test_json(void)
@@ -700,12 +700,12 @@ static void test_net(void)
 
 
 typedef struct {
-	es_lzma_istream_t s;
+	es_istream_t s;
 	es_file_t *file;
 } CFileInStreamLZMA;
 
 typedef struct {
-	es_lzma_ostream_t s;
+	es_ostream_t s;
 	es_file_t *file;
 } CFileOutStreamLZMA;
 
@@ -728,14 +728,14 @@ static es_size_t lzma_stream_write_file(void *p, const void *buf, es_size_t size
 
 
 typedef struct {
-	es_lzma_istream_t s;
+	es_istream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
 } CMemInStreamLZMA;
 
 typedef struct {
-	es_lzma_ostream_t s;
+	es_ostream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
@@ -778,7 +778,7 @@ void test_lzma_unzip(void)
 	outStream.file = eso_fopen(".\\tst.7u", "wb");
 	
 	eso_log("eso_unzip begin....");
-	eso_lzma_unzip((es_lzma_ostream_t*)&outStream, (es_lzma_istream_t*)&inStream);
+	eso_lzma_unzip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	eso_log("eso_unzip end....");
 	
 	eso_fclose(outStream.file);
@@ -800,7 +800,7 @@ void test_lzma_unzip(void)
 	eso_fread(inStream.ptr, inStream.size, pfI);
 	eso_fclose(pfI);
 	
-	eso_lzma_unzip((es_lzma_ostream_t*)&outStream, (es_lzma_istream_t*)&inStream);
+	eso_lzma_unzip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	pfO = eso_fopen(".\\tst.7u", "wb");
 	eso_fwrite(outStream.ptr, outStream.size, pfO);
@@ -821,7 +821,7 @@ void test_lzma_zip(void)
 	outStream.file = eso_fopen(".\\tst.z7", "wb");
 	
 	eso_log("eso_unzip begin....");
-	eso_lzma_zip((es_lzma_ostream_t*)&outStream, (es_lzma_istream_t*)&inStream, eso_fsize(inStream.file));
+	eso_lzma_zip((es_ostream_t*)&outStream, (es_istream_t*)&inStream, eso_fsize(inStream.file));
 	eso_log("eso_unzip end....");
 	
 	eso_fclose(outStream.file);
@@ -831,12 +831,12 @@ void test_lzma_zip(void)
 //=============================================================================
 
 typedef struct {
-	es_lz77_istream_t s;
+	es_istream_t s;
 	es_file_t *file;
 } CFileInStreamLZ77;
 
 typedef struct {
-	es_lz77_ostream_t s;
+	es_ostream_t s;
 	es_file_t *file;
 } CFileOutStreamLZ77;
 
@@ -853,14 +853,14 @@ static es_size_t lz77_stream_write_file(void *p, const void *buf, es_size_t size
 }
 
 typedef struct {
-	es_lz77_istream_t s;
+	es_istream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
 } CMemInStreamLZ77;
 
 typedef struct {
-	es_lz77_ostream_t s;
+	es_ostream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
@@ -918,7 +918,7 @@ static void test_lz77_unzip(void)
 	inStream.file = eso_fopen("e:\\bmw\\tst.z7", "rb");
 	outStream.file = eso_fopen("e:\\bmw\\tst.u7", "wb");
 	
-	eso_lz77_unzip((es_lz77_ostream_t*)&outStream, (es_lz77_istream_t*)&inStream);
+	eso_lz77_unzip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	eso_fclose(outStream.file);
 	eso_fclose(inStream.file);
@@ -939,7 +939,7 @@ static void test_lz77_unzip(void)
 	eso_fread(inStream.ptr, inStream.size, pfI);
 	eso_fclose(pfI);
 	
-	eso_lz77_unzip((es_lz77_ostream_t*)&outStream, (es_lz77_istream_t*)&inStream);
+	eso_lz77_unzip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	pfO = eso_fopen("e:\\bmw\\tst.u7", "wb");
 	eso_fwrite(outStream.ptr, outStream.size, pfO);
@@ -960,7 +960,7 @@ static void test_lz77_zip(void)
 	inStream.file = eso_fopen("e:\\bmw\\tst.u7", "rb");
 	outStream.file = eso_fopen("e:\\bmw\\tst.z7", "wb");
 	
-	eso_lz77_zip((es_lz77_ostream_t*)&outStream, (es_lz77_istream_t*)&inStream);
+	eso_lz77_zip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	eso_fclose(outStream.file);
 	eso_fclose(inStream.file);
@@ -981,7 +981,7 @@ static void test_lz77_zip(void)
 	eso_fread(inStream.ptr, inStream.size, pfI);
 	eso_fclose(pfI);
 	
-	eso_lz77_zip((es_lz77_ostream_t*)&outStream, (es_lz77_istream_t*)&inStream);
+	eso_lz77_zip((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	pfO = eso_fopen("e:\\bmw\\tst.z7", "wb");
 	eso_fwrite(outStream.ptr, outStream.size, pfO);
@@ -993,12 +993,12 @@ static void test_lz77_zip(void)
 //=============================================================================
 
 typedef struct {
-	es_zlib_istream_t s;
+	es_istream_t s;
 	es_file_t *file;
 } CFileInStreamZLIB;
 
 typedef struct {
-	es_zlib_ostream_t s;
+	es_ostream_t s;
 	es_file_t *file;
 } CFileOutStreamZLIB;
 
@@ -1016,14 +1016,14 @@ static es_size_t zlib_stream_write_file(void *p, const void *buf, es_size_t size
 
 
 typedef struct {
-	es_zlib_istream_t s;
+	es_istream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
 } CMemInStreamZLIB;
 
 typedef struct {
-	es_zlib_ostream_t s;
+	es_ostream_t s;
 	es_byte_t *ptr;
 	es_int32_t size;
 	es_int32_t pos;
@@ -1081,7 +1081,7 @@ static void test_zlib_unzip(void)
 	inStream.file = eso_fopen("d:\\downloads\\tst.z", "rb");
 	outStream.file = eso_fopen("d:\\downloads\\tst.u", "wb");
 	
-	eso_zlib_inflate((es_zlib_ostream_t*)&outStream, (es_zlib_istream_t*)&inStream);
+	eso_zlib_inflate((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	eso_fclose(outStream.file);
 	eso_fclose(inStream.file);
@@ -1102,7 +1102,7 @@ static void test_zlib_unzip(void)
 	eso_fread(inStream.ptr, inStream.size, pfI);
 	eso_fclose(pfI);
 	
-	eso_zlib_inflate((es_zlib_ostream_t*)&outStream, (es_zlib_istream_t*)&inStream);
+	eso_zlib_inflate((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	pfO = eso_fopen("d:\\downloads\\tst.u", "wb");
 	eso_fwrite(outStream.ptr, outStream.size, pfO);
@@ -1123,7 +1123,7 @@ static void test_zlib_zip(void)
 	inStream.file = eso_fopen("d:\\downloads\\tst.u", "rb");
 	outStream.file = eso_fopen("d:\\downloads\\tst.z", "wb");
 	
-	eso_zlib_deflate((es_zlib_ostream_t*)&outStream, (es_zlib_istream_t*)&inStream);
+	eso_zlib_deflate((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	eso_fclose(outStream.file);
 	eso_fclose(inStream.file);
@@ -1144,7 +1144,7 @@ static void test_zlib_zip(void)
 	eso_fread(inStream.ptr, inStream.size, pfI);
 	eso_fclose(pfI);
 	
-	eso_zlib_deflate((es_zlib_ostream_t*)&outStream, (es_zlib_istream_t*)&inStream);
+	eso_zlib_deflate((es_ostream_t*)&outStream, (es_istream_t*)&inStream);
 	
 	pfO = eso_fopen("d:\\downloads\\tst.z", "wb");
 	eso_fwrite(outStream.ptr, outStream.size, pfO);
@@ -1156,64 +1156,64 @@ static void test_zlib_zip(void)
 //=============================================================================
 
 typedef struct {
-	es_bon_stream_t s;
+	es_bson_stream_t s;
 	es_file_t *file;
-} CFileInStreamBON;
+} CFileInStreamBSON;
 
-static es_int32_t bon_stream_read_file(void *s, void *buf, es_size_t *size)
+static es_int32_t bson_stream_read_file(void *s, void *buf, es_size_t *size)
 {
-	CFileInStreamBON *inStream = (CFileInStreamBON*)s;
+	CFileInStreamBSON *inStream = (CFileInStreamBSON*)s;
 	es_size_t ret = eso_fread(buf, *size, inStream->file);
 	*size = ret;
-	return ret > 0 ?  ES_SUCCESS : BON_EHEAD;
+	return ret > 0 ?  ES_SUCCESS : BSON_EHEAD;
 }
 
-static void bon_stream_parsed_node(void *p, es_bon_t *bon, es_bon_node_t *node)
+static void bson_stream_parsed_node(void *p, es_bson_t *bson, es_bson_node_t *node)
 {
 	printf("name=[%s]\n", node->name);
 }
 
-static void test_bon(void)
+static void test_bson(void)
 {
 	int stat;
-	es_bon_t *bon;
-	CFileInStreamBON inStream;
+	es_bson_t *bson;
+	CFileInStreamBSON inStream;
 	
-	bon = eso_bon_create("UTF-8");
+	bson = eso_bson_create("UTF-8");
 	
 #if 1
-	inStream.s.read = bon_stream_read_file;
-	inStream.s.parsed = bon_stream_parsed_node;
-	inStream.file = eso_fopen("bon.dat", "rb");
+	inStream.s.read = bson_stream_read_file;
+	inStream.s.parsed = bson_stream_parsed_node;
+	inStream.file = eso_fopen("bson.dat", "rb");
 	if (!inStream.file) {
 		return;
 	}
-	stat = eso_bon_parse(bon, (es_bon_stream_t*)&inStream);
+	stat = eso_bson_parse(bson, (es_bson_stream_t*)&inStream);
 	eso_fclose(inStream.file);
 	
- 	es_bon_node_t * node = eso_bon_add_str(bon, "/node/xxxx", "XXXXXXXXXXXXX");
- 	es_bon_node_t * attr_node1 = eso_bon_attr_add_str(node, "attr1", "attr 1");
- 	es_bon_node_t * attr_node2 = eso_bon_attr_add_str(node, "attr2", "attr 2");
- 	eso_bon_add_str(bon, "/node/yyyy", "YYYYYYYYYYYY");
- 	eso_bon_add_fmt(bon, "/node/xxxx", "==%s", "%%%%%%%%%%%%%%%%%%%");
- 	eso_bon_add_str(bon, "/node/xxxx|1", "11111111111111111111");
- 	eso_bon_add_str(bon, "/root", "root");
+ 	es_bson_node_t * node = eso_bson_add_str(bson, "/node/xxxx", "XXXXXXXXXXXXX");
+ 	es_bson_node_t * attr_node1 = eso_bson_attr_add_str(node, "attr1", "attr 1");
+ 	es_bson_node_t * attr_node2 = eso_bson_attr_add_str(node, "attr2", "attr 2");
+ 	eso_bson_add_str(bson, "/node/yyyy", "YYYYYYYYYYYY");
+ 	eso_bson_add_fmt(bson, "/node/xxxx", "==%s", "%%%%%%%%%%%%%%%%%%%");
+ 	eso_bson_add_str(bson, "/node/xxxx|1", "11111111111111111111");
+ 	eso_bson_add_str(bson, "/root", "root");
 #else
-	//load from bon file
- 	stat = eso_bon_load(bon, "bon.dat");
+	//load from bson file
+ 	stat = eso_bson_load(bson, "bson.dat");
  	if (stat != ES_SUCCESS) {
- 		printf("bon[%s] --> xml[%s] fail(%d).\n", argv[1], argv[2], stat);
- 		eso_bon_destroy(&bon);
+ 		printf("bson[%s] --> xml[%s] fail(%d).\n", argv[1], argv[2], stat);
+ 		eso_bson_destroy(&bson);
  		return stat;
  	}
 #endif
 
-	eso_bon_save(bon, "s0.dat", NULL);
-	eso_bon_save(bon, "s1.dat", "/node");
-	eso_bon_save(bon, "s2.dat", "/node/so");
-	eso_bon_save(bon, "s3.dat", "/node/t");
+	eso_bson_save(bson, "s0.dat", NULL);
+	eso_bson_save(bson, "s1.dat", "/node");
+	eso_bson_save(bson, "s2.dat", "/node/so");
+	eso_bson_save(bson, "s3.dat", "/node/t");
 
-	eso_bon_destroy(&bon);
+	eso_bson_destroy(&bson);
 }
 
 //=============================================================================
@@ -1229,7 +1229,7 @@ MAIN_IMPL(testlibc) {
 //		test_json();
 //		test_uuid();
 //		test_crc32();
-//		test_datetime();
+		test_datetime();
 //		test_atomic();
 //		test_file();
 //		test_file2();
@@ -1256,6 +1256,7 @@ MAIN_IMPL(testlibc) {
 //		test_lz77_unzip();
 //		test_zlib_zip();
 //		test_zlib_unzip();
+//		test_bson();
 	} while(0);
 
 	eso_terminate();

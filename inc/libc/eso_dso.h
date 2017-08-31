@@ -11,6 +11,8 @@
 
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <dlfcn.h>
 #endif
 
 #ifdef __cplusplus
@@ -25,12 +27,13 @@ typedef void      es_dso_t;
 /**
  * Load a DSO library.
  * @param path Path to the DSO library
+ * @param flags This parameter describes how dlopen()/LoadLibraryEx()
+ * will operate upon file with respect to the processing of relocations
+ * and the scope of visibility of the symbols provided within file.
  * @return Location to store new handle for the DSO.
- * @bug We aught to provide an alternative to RTLD_GLOBAL, which
- * is the only supported method of loading DSOs today.
- * is always need use ez_dso_unload() after ez_dso_load() to free res!.
  */
 es_dso_t* eso_dso_load(const char *path);
+es_dso_t* eso_dso_load_ext(const char *path, int flags);
 
 /**
  * Close a DSO library.

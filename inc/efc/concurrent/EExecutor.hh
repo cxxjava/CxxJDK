@@ -117,6 +117,14 @@ interface EExecutor : virtual public EObject {
      * @throws NullPointerException if command is null
      */
     virtual void execute(sp<ERunnable> command) = 0;
+
+#ifdef CPP11_SUPPORT
+	virtual sp<ERunnable> executeX(std::function<void()> func) {
+		sp<ERunnable> task = new ERunnableTarget(func);
+		this->execute(task);
+		return task;
+	}
+#endif
 };
 
 } /* namespace efc */

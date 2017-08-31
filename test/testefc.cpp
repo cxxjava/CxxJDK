@@ -11,16 +11,10 @@
 #endif
 //#include <memory> //for test std::shared_ptr
 
-#include "main.hh"
+#include "es_main.h"
 #include "Efc.hh"
 
-#ifdef WIN32
-#define LOG ESystem::out->println
-#else
-//#define LOG(fmt,args...) ESystem::out->println(fmt, ##args)
 #define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
-//#define LOG(fmt,...)
-#endif
 
 namespace efc {
 es_alogger_t* alogger;
@@ -1998,6 +1992,13 @@ static void test_arraylist2() {
 	list->add(new EInteger(2540000));
 	list->add(new EInteger(20063700));
 	list->add(new EInteger(200400));
+	list->addAt(2, new EInteger(22222222));
+
+	iter = list->iterator();
+	while (iter->hasNext()) {
+		printf("iter->next()=%d\n", iter->next()->intValue());
+	}
+
 	sp<EInteger>  old = list->setAt(0, new EInteger(9999999));
 
 	EArrayList<sp<EInteger> > *cc = new EArrayList<sp<EInteger> >(100);
@@ -3013,24 +3014,28 @@ static void test_array() {
 	ea4[16] = new EString("abc");
 	ea4[19] = new EString("aba");
 	ea4[10] = new EString("abbb");
+	ea4.setLength(100);
 	ea4.sort();
 	for (int i=0; i<ea4.length(); i++) {
 		if (ea4[i]) LOG("ea4[%d]=%s", i, ea4[i]->c_str());
 	}
 
 	EA<EString*> ea4_(ea4);
+	ea4_.setLength(200);
 	for (int i=0; i<ea4_.length(); i++) {
 		if (ea4_[i]) LOG("ea4_[%d]=%s", i, ea4_[i]->c_str());
 	}
 
 	EA<EString*> eacopy0(32, false);
 	ESystem::arraycopy(ea4, 0, eacopy0, 0, 32);
+	eacopy0.setLength(300);
 	for (int i=0; i<eacopy0.length(); i++) {
 		if (eacopy0[i]) LOG("eacopy0[%d]=%s", i, eacopy0[i]->c_str());
 	}
 
 	EA<EString*>* eacopy1 = new EA<EString*>(32, false);
 	ESystem::arraycopy(&ea4, 0, eacopy1, 0, 32);
+	eacopy1->setLength(400);
 	for (int i=0; i<eacopy1->length(); i++) {
 		if (eacopy1->getAt(i)) LOG("eacopy1[%d]=%s", i, eacopy1->getAt(i)->c_str());
 	}
@@ -3080,6 +3085,7 @@ static void test_array() {
 	shared_ea[16] = new EString("abc");
 	shared_ea[19] = new EString("aba");
 	shared_ea[10] = new EString("abbb");
+	shared_ea.setLength(20);
 	shared_ea.sort();
 	for (int i=0; i<shared_ea.length(); i++) {
 		if (shared_ea[i] != null) LOG("shared_ea[%d]=%s", i, shared_ea[i]->c_str());
@@ -3113,6 +3119,7 @@ static void test_array() {
 	ea[17] = 0;
 	ea[18] = -2;
 	ea[19] = -4;
+	ea.setLength(20);
 	for (i=0; i<ea.length(); i++) {
 		LOG("ea[%d]=%d", i, ea[i]);
 	}
@@ -3142,6 +3149,7 @@ static void test_array() {
 	(*ea2)[20] = 999.000001;
 	(*ea2)[22] = 999.000002;
 	(*ea2)[28] = -999.9100002;
+	ea2->setLength(6);
 	for (i = 0; i < ea2->length(); i++) {
 		LOG("ea2[%d]=%.9f", i, (*ea2)[i]);
 	}
@@ -3149,7 +3157,11 @@ static void test_array() {
 	for (i = 0; i < ea2->length(); i++) {
 		LOG("ea2[%d]=%.9f", i, (*ea2)[i]);
 	}
+	EA<double> ea2_(*ea2);
 	delete ea2;
+	for (i = 0; i < ea2_.length(); i++) {
+		LOG("ea2_[%d]=%.9f", i, ea2_[i]);
+	}
 
 	EA<char> ea3(32, 'c');
 	ea3[31] = 0;
@@ -3959,6 +3971,7 @@ static void test_datastream()
 	dos.writeShort(2121);
 	dos.writeBytes("|afdkaerejkrewkr|\r\n");
 	dos.writeDouble(9.99893001);
+	dos.write("123456789", 9);
 	dos.writeFloat(8.0009);
 	dos.writeInt(888888);
 	dos.writeLLong(LLONG(333333356757545609));
@@ -3971,6 +3984,9 @@ static void test_datastream()
 	LOG("readShort=%d", dis.readShort());
 	LOG("readLine=%s", dis.readLine()->c_str());
 	LOG("readDouble=%f", dis.readDouble());
+	char buf[512] = {0};
+	dis.read(buf, 9);
+	LOG("readString=%s", buf);
 	LOG("readFloat=%f", dis.readFloat());
 	LOG("readInt=%d", dis.readInt());
 	LOG("readLLong=%lld", dis.readLLong());
@@ -8260,16 +8276,16 @@ static void test_priorityQueue() {
 	LOG("================= 2\n");
 }
 
-static void test_bon() {
-	class BonParser : public EBonParser {
+static void test_bson() {
+	class BsonParser : public EBsonParser {
 	public:
-		BonParser(EInputStream *is) :
-				EBonParser(is) {
+		BsonParser(EInputStream *is) :
+			EBsonParser(is) {
 		}
-		void parsing(es_bon_node_t* node) {
+		void parsing(es_bson_node_t* node) {
 			if (!node) return;
 
-			for (int i=1; i<_bon->levelOf(node); i++) {
+			for (int i=1; i<_bson->levelOf(node); i++) {
 				printf("\t");
 			}
 			printf(node->name);
@@ -8280,60 +8296,60 @@ static void test_bon() {
 		}
 	};
 
-	EBon bon;
-	bon.add("/node/a", "a");
-	bon.add("/node/b", "b");
-	bon.add("/node", "0001");
-	bon.add("/node/A", "1");
-	bon.add("/node/B", "B");
-	bon.add("/node/B", "B2");
-	bon.add("/node/B", "B3");
-	bon.add("/node/B", "B4");
-	bon.add("/node/C", "0.99");
-	bon.add("/node/A", "A");
-	bon.add("/node/A|2", "a");
-	bon.add("/node/B/B1", "B1");
-	bon.add("/node/B/B3", "B3");
-	bon.add("/node/B/B3|1", "B2");
-	bon.add("/node", "0002");
+	EBson bson;
+	bson.add("/node/a", "a");
+	bson.add("/node/b", "b");
+	bson.add("/node", "0001");
+	bson.add("/node/A", "1");
+	bson.add("/node/B", "B");
+	bson.add("/node/B", "B2");
+	bson.add("/node/B", "B3");
+	bson.add("/node/B", "B4");
+	bson.add("/node/C", "0.99");
+	bson.add("/node/A", "A");
+	bson.add("/node/A|2", "a");
+	bson.add("/node/B/B1", "B1");
+	bson.add("/node/B/B3", "B3");
+	bson.add("/node/B/B3|1", "B2");
+	bson.add("/node", "0002");
 
-	int count = eso_bon_node_count(bon.c_bon(), "node/B");
+	int count = eso_bson_node_count(bson.c_bson(), "node/B");
 	LOG("node(/node/B) count=%d", count);
 
 	while (count > 1) {
-		bon.del("/node/B|0");
+		bson.del("/node/B|0");
 		count--;
 	}
 
 	es_buffer_t *buffer = eso_buffer_make(32, 32);
-	bon.Export(buffer, null, false);
+	bson.Export(buffer, null, false);
 
-	EBon bonx;
-	bonx.Import(buffer->data, buffer->len);
-	bonx.Export(buffer, null, false);
+	EBson bsonx;
+	bsonx.Import(buffer->data, buffer->len);
+	bsonx.Export(buffer, null, false);
 
-	EBon bon2;
-	bon2.add("/aaa/a", "a");
-	bon2.add("/aaa", "aaa");
+	EBson bson2;
+	bson2.add("/aaa/a", "a");
+	bson2.add("/aaa", "aaa");
 
 	eso_buffer_clear(buffer);
-	bon.Export(buffer, null, false);
-	bon2.Export(buffer, null, false);
+	bson.Export(buffer, null, false);
+	bson2.Export(buffer, null, false);
 
 	EByteArrayInputStream bais(buffer->data, buffer->len);
 
-	BonParser ep(&bais);
-	EBon bon_;
-	while (ep.nextBon(&bon_)) {
-		LOG("get one bon.");
+	BsonParser ep(&bais);
+	EBson bson_;
+	while (ep.nextBson(&bson_)) {
+		LOG("get one bson.");
 	}
 	eso_buffer_free(&buffer);
 
-	EBon bon__(bon);
-	bon__.save("/tmp/bon.txt", NULL);
+	EBson bson__(bson);
+	bson__.save("/tmp/bson.txt", NULL);
 
-	bon__ = bon;
-	bon__.save("/tmp/bon2.txt", NULL);
+	bson__ = bson;
+	bson__.save("/tmp/bson2.txt", NULL);
 }
 
 static void test_threadPoolExecutor()
@@ -8962,7 +8978,7 @@ static void test_uri() {
 
 	// relativize(URI uri)
 
-	EURI rel("http://java2s.com/index.htm");
+	EURI rel("http://java2s.com/index.htm?key1=v1&key2=v2&key3=&key4=%E4%B8%AD%E6%96%87&key5&key6=");
 	sp<EURI> uri3(uri.relativize(&rel));
 
 	LOG("\n\nscheme=%s", uri3->getScheme());
@@ -8982,6 +8998,14 @@ static void test_uri() {
 
 	LOG("string=%s", uri3->toString().c_str());
 	LOG("ascii string=%s", uri3->toASCIIString().c_str());
+
+	sp<EMap<EString*, EString*> > paramsMap = uri3->getParameterMap();
+	sp<EIterator<EMapEntry<EString*, EString*>*> > iter = paramsMap->entrySet()->iterator();
+	while (iter->hasNext()) {
+		EMapEntry<EString*, EString*>* me = iter->next();
+		LOG("==> %s=%s", me->getKey()->c_str(), me->getValue()->c_str());
+	}
+	LOG("key4=%s", uri3->getParameter("key4").c_str());
 }
 
 static void test_networkInferface(void) {
@@ -9242,6 +9266,405 @@ static void test_c_thread() {
 	eso_ptrarray_free(&arr);
 }
 
+static void test_biginteger() {
+	EBigInteger bi1("59435345123452345458998928392839247844353457");
+	EBigInteger bi2("-8928392839247844353457223888888");
+	EBigInteger bi3("0");
+	EBigInteger bi4("646534");
+	EBigInteger bi5("59435345123452345458998928392839247844353457");
+	EBigInteger bi6("0");
+
+	LOG("bi1 = %s", bi1.toString().c_str());
+
+	EBigInteger bi;
+
+	bi = bi1 - bi2;
+	LOG("- %s", bi.toString().c_str());
+
+	if (bi2 > bi1) {
+		LOG("bi2 > bi1");
+	}
+
+	bi = bi2 - bi1;
+	LOG("- %s", bi.toString().c_str());
+
+	bi = -bi3;
+	LOG("- %s", bi.toString().c_str());
+
+	bi = bi2 * bi1;
+	LOG("* %s", bi.toString().c_str());
+	bi = bi1 * -1000;
+	LOG("* %s", bi.toString().c_str());
+	bi = EBigInteger(0LL) * -1;
+	LOG("* %s", bi.toString().c_str());
+	bi = bi1 * -1;
+	LOG("* %s", bi.toString().c_str());
+
+	LOG("bi1=%s", bi1.toString().c_str());
+	LOG("bi2=%s", bi2.toString().c_str());
+	bi = bi1 / bi2;
+	LOG("/ %s", bi.toString().c_str());
+
+	bi = bi1 % bi2;
+	LOG("%% %s", bi.toString().c_str());
+
+	EA<EBigInteger*> dr = bi1.divideAndRemainder(bi2);
+	LOG("d=%s, r=%s", dr[0]->toString().c_str(), dr[1]->toString().c_str());
+
+	LOG("bi4 intValue=%d", bi4.intValue());
+
+	LOG("bi1 ? bi2: %d", bi3.compareTo(&bi6));
+
+	LOG("abs %s", bi1.abs().toString().c_str());
+
+	LOG("pow10(3) %s", bi1.pow10(3).toString().c_str());
+	LOG("pow10(-3) %s", bi1.pow10(-3).toString().c_str());
+
+	LOG("hashcode=%d", bi1.hashCode());
+}
+
+static void test_bigdecimal() {
+	EBigDecimal d1("+9999343343.2004384010000");
+	EBigDecimal d2("9999343343.9004384340000");
+	EBigDecimal d3("0.900438");
+	EBigDecimal d4("0.0043343000");
+
+	EBigDecimal d;
+
+	LOG("d1=%s", d1.toString().c_str());
+	LOG("d2=%s", d2.toString().c_str());
+
+	d = d1 + d2;
+	LOG("d1+d2 = %s", d.toString().c_str());
+
+	d = d1 - d2;
+	LOG("d1-d2 = %s", d.toString().c_str());
+
+	d = d2 - d1;
+	LOG("d2-d1 = %s", d.toString().c_str());
+
+	d = d2 * d1;
+	LOG("d2*d1 = %s", d.toString().c_str());
+
+	d = d3 * d4;
+	LOG("d3*d4 = %s", d.toString().c_str());
+
+	d = d2 / d1;
+	LOG("d2/d1 = %s", d.toString().c_str());
+
+	d = d3 / d4;
+	LOG("d3/d4 = %s", d.toString().c_str());
+
+	d = d1 / 8888;
+	LOG("d1/8888 = %s", d.toString().c_str());
+
+	d = d2.divide(d1, 3);
+	LOG("d2.divide(d1) = %s", d.toString().c_str());
+
+	d = d3.divide(d4, 3);
+	LOG("d3.divide(d4) = %s", d.toString().c_str());
+
+	d = d1.divide(-8888, 3);
+	LOG("d1.divide(-8888) = %s", d.toString().c_str());
+
+	LOG("d1 toBigInteger=%s", d1.toBigInteger().toString().c_str());
+	LOG("d1 llongValue=%lld", d1.llongValue());
+	LOG("d1 doubleValue=%lf", d1.doubleValue());
+
+	d = d3 % d4;
+	LOG("d3%%d4 = %s", d.toString().c_str());
+
+	d = d1 % 88779;
+	LOG("d1%%88779 = %s", d.toString().c_str());
+
+	EA<EBigDecimal*> r2 = d3.divideAndRemainder(d4);
+	LOG("d3%%d4 div=%s, rem=%s", r2[0]->toString().c_str(), r2[1]->toString().c_str());
+
+	//round test
+	{
+		//ROUND_UP
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_UP);
+		LOG("round_up(-5.5): %s", d.toString().c_str());
+
+		//ROUND_DOWN
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_DOWN);
+		LOG("round_down(-5.5): %s", d.toString().c_str());
+
+		//ROUND_CEILING
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_CEILING);
+		LOG("round_ceiling(-5.5): %s", d.toString().c_str());
+
+		//ROUND_FLOOR
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_FLOOR);
+		LOG("round_floor(-5.5): %s", d.toString().c_str());
+
+		//ROUND_HALF_UP
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_HALF_UP);
+		LOG("round_half_up(-5.5): %s", d.toString().c_str());
+
+		//ROUND_HALF_DOWN
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_HALF_DOWN);
+		LOG("round_half_down(-5.5): %s", d.toString().c_str());
+
+		//ROUND_HALF_EVEN
+		d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(5.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(-1.0): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(-1.1): %s", d.toString().c_str());
+
+		d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(-1.6): %s", d.toString().c_str());
+
+		d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(-2.5): %s", d.toString().c_str());
+
+		d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_HALF_EVEN);
+		LOG("round_half_even(-5.5): %s", d.toString().c_str());
+
+		//ROUND_UNNECESSARY
+		if (0) {
+		try {
+			d = EBigDecimal("5.5").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(5.5): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("2.5").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(2.5): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("1.6").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(1.6): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("1.1").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(1.1): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("1.0").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(1.0): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("-1.0").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(-1.0): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("-1.1").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(-1.1): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("-1.6").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(-1.6): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("-2.5").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(-2.5): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		try {
+			d = EBigDecimal("-5.5").divide(1, 0, EBigDecimal::ROUND_UNNECESSARY);
+			LOG("round_unnecessary(-5.5): %s", d.toString().c_str());
+		} catch (EArithmeticException& e) {
+			e.printStackTrace();
+		}
+		}
+	}
+}
+
 static void test_test(int argc, const char** argv) {
 //	test_null();
 //	test_cmpxchg();
@@ -9276,7 +9699,7 @@ static void test_test(int argc, const char** argv) {
 //	test_number_int();
 //	test_number_long();
 //	test_filepath();
-//	test_config();
+	test_config();
 //	test_system();
 //	test_strToken();
 //	test_arraylist();
@@ -9318,7 +9741,7 @@ static void test_test(int argc, const char** argv) {
 //	test_gzipstream();
 //	test_sequencestream();
 //	test_pattern();
-	test_atomic();
+//	test_atomic();
 //	test_atomic2();
 //	test_collections();
 //	test_instanceof();
@@ -9353,7 +9776,7 @@ static void test_test(int argc, const char** argv) {
 //	test_falseSharing();
 //	test_timer();
 //	test_priorityQueue();
-//	test_bon();
+//	test_bson();
 //	test_threadPoolExecutor();
 //	test_file_read_write(argc > 1 ? argv[1] : "/tmp/f.out");
 //	test_buffered_stream();
@@ -9366,6 +9789,8 @@ static void test_test(int argc, const char** argv) {
 //	test_datagramSocket();
 //	test_multicastSocket();
 //	test_c_thread();
+//	test_biginteger();
+//	test_bigdecimal();
 //
 //	EThread::sleep(3000);
 }
