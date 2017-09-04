@@ -1,5 +1,5 @@
 # CxxJDK
-##C++ library like JDK.
+## C++ library like JDK.
 <br/>
 *chinese version: [简体中文](README.zh_cn.md)*
 
@@ -12,13 +12,13 @@
   - [TODO](#todo)
   - [Support](#support)
 
-####Characteristics
+#### Characteristics
 * Cross platform: support Linux32/64, OSX64, Win64 platforms;
 * High performance: with the advantages of C/C++ and Java concurrent Libraries tegother, bursting performance;
 * Class rich: to achieve JDK rich class library, get rid of the plight of the poor class library C++;
 * Easy to develop: first, use the java development, and then use the `CxxJDK` for translation, So easy!
 
-####Example
+#### Example
 `java:`
 
 ```
@@ -92,7 +92,7 @@ more examples:
 [testc11.cpp](test/testc11.cpp)  
 [testssl.cpp](test/testssl.cpp)  
 
-####Performance
+#### Performance
 EConcurrentHashmap Test: 
 
 `software environment:`
@@ -114,9 +114,9 @@ Total Number of Cores:	2
 
 ![test_concurrentHashmap](img/test_concurrentHashmap.gif)
 
-####Features
+#### Features
 
-######base:
+###### base:
 
 | jdk class                       | cxxjdk class                     |
 | ------------------------------- | -------------------------------- |
@@ -292,7 +292,7 @@ Total Number of Cores:	2
 | try {xxx} finally {yyy}         | ON_FINALLY_NOTHROW(yyy) {xxx}    |
 
 
-######concurrent:
+###### concurrent:
 
 | jdk class                       | cxxjdk class                     |
 | ------------------------------- | -------------------------------- |
@@ -358,7 +358,7 @@ Total Number of Cores:	2
 | SortedSet*                      | EConcurrentSortedSet             |
 
 
-######nio:
+###### nio:
 
 | jdk class                    | cxxjdk class                  |
 | ---------------------------- | ----------------------------- |
@@ -399,7 +399,7 @@ Total Number of Cores:	2
 | UnresolvedAddressException   | EUnresolvedAddressException   |
 
 
-######other:
+###### other:
 
 | cxxjdk class       | class description                        |
 | ------------------ | ---------------------------------------- |
@@ -424,12 +424,12 @@ Total Number of Cores:	2
 | ENetWrapper        | Foundation for native socket             |
 
 
-####Manual
+#### Manual
 See [Guide document](doc/Guide.md).
 
-####TODO
+#### TODO
     java.security.*;
 
-####Support
+#### Support
 Email: [cxxjava@163.com](mailto:cxxjava@163.com)
 

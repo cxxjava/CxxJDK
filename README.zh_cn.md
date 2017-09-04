@@ -1,5 +1,5 @@
 # CxxJDK
-##山寨JDK实现的C++强大类库.
+## 山寨JDK实现的C++强大类库.
 <br/>
 *英文版本: [English](README.md)*
 
@@ -12,13 +12,13 @@
   - [TODO](#todo)
   - [Support](#support)
 
-####特点
+#### 特点
 * 跨平台：同时支持Linux32/64、OSX64、Win64等平台；
 * 高性能：同时具备C/C++和Java并发库的优点，性能爆棚；
 * 类丰富：实现JDK丰富的类库，从此摆脱C++贫类库的困境；
 * 易开发：先java开发，再使用`CxxJDK`进行翻译，So easy!
 
-####示例
+#### 示例
 `java:`
 
 ```
@@ -92,7 +92,7 @@ int main(int argc, const char **argv) {
 [testc11.cpp](test/testc11.cpp)  
 [testssl.cpp](test/testssl.cpp)  
 
-####性能
+#### 性能
 EConcurrentHashmap测试: 
 
 `软件环境:`
@@ -115,9 +115,9 @@ put 20线程 && get 20线程
 
 ![test_concurrentHashmap](img/test_concurrentHashmap.gif)
 
-####特性
+#### 特性
 
-######base:
+###### base:
 
 | jdk类                            | cxxjdk类                          |
 | ------------------------------- | -------------------------------- |
@@ -293,7 +293,7 @@ put 20线程 && get 20线程
 | try {xxx} finally {yyy}         | ON_FINALLY_NOTHROW(yyy) {xxx}}   |
 
 
-######concurrent:
+###### concurrent:
 
 | jdk类                            | cxxjdk类                          |
 | ------------------------------- | -------------------------------- |
@@ -359,7 +359,7 @@ put 20线程 && get 20线程
 | SortedSet*                      | EConcurrentSortedSet             |
 
 
-######nio:
+###### nio:
 
 | jdk类                         | cxxjdk类                       |
 | ---------------------------- | ----------------------------- |
@@ -400,7 +400,7 @@ put 20线程 && get 20线程
 | UnresolvedAddressException   | EUnresolvedAddressException   |
 
 
-######other:
+###### other:
 
 | cxxjdk类            | 类描述                           |
 | ------------------ | ----------------------------- |
@@ -425,11 +425,11 @@ put 20线程 && get 20线程
 | ENetWrapper        | socket操作辅助工具类                 |
 
 
-####手册
+#### 手册
 详见[Guide文档](doc/Guide.md)
 
-####TODO
+#### TODO
     java.security.*;
 
-####Support
+#### Support
 Email: [cxxjava@163.com](mailto:cxxjava@163.com)
