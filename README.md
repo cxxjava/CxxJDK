@@ -1,7 +1,11 @@
 # CxxJDK
 ## C++ library like JDK.
-<br/>
-*chinese version: [简体中文](README.zh_cn.md)*
+
+
+
+chinese version: [简体中文](README.zh_cn.md)
+
+
 
 ### Table of Contents
 - [Characteristics](characteristics)
@@ -432,4 +436,3 @@ See [Guide document](doc/Guide.md).
 
 #### Support
 Email: [cxxjava@163.com](mailto:cxxjava@163.com)
-
