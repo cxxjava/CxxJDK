@@ -1,39 +1,39 @@
 ################OPTION###################
-# release or debug
-VERTYPE=RELEASE
-
-LIBDIR = win
-LIBESO = ..\lib\$(LIBDIR)\eso19.lib
-LIBEFC = ..\lib\$(LIBDIR)\efc19.lib
 
 CCOMPILE = cl.exe
 LINK = link.exe
 
-!if "$(VERTYPE)" == "RELEASE"
+LIBDIR = win
+
+CCOMPILEVER = 0
+!IF [..\lib\cl_version_LE.bat 16]
+CCOMPILEVER = 16
+!ELSEIF [..\lib\cl_version_LE.bat 17]
+CCOMPILEVER = 17
+!ELSEIF [..\lib\cl_version_LE.bat 18]
+CCOMPILEVER = 18
+!ELSEIF [..\lib\cl_version_LE.bat 19]
+CCOMPILEVER = 19
+!ELSEIF [..\lib\cl_version_LE.bat 20]
+CCOMPILEVER = 20
+!ENDIF
+
+LIBESO = ..\lib\$(LIBDIR)\eso$(CCOMPILEVER).lib
+LIBEFC = ..\lib\$(LIBDIR)\efc$(CCOMPILEVER).lib
+
 COMPILEOPTION = -c /Zi /nologo /W3 /WX- /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Gd /analyze- -D_WINDOWS -D_MBCS -D_LIB -DES_DECLARE_EXPORT -D__MAIN__
 TESTEFC = testefc.exe
 TESTC11 = testc11.exe
 TESTNIO = testnio.exe
+TESTLIBC = testlibc.exe
 TESTBSON = testbson.exe
 TESTSSL = testssl.exe
-!else
-COMPILEOPTION = -c /Zi /nologo /W3 /WX- /O2 /Oy- /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Gd /analyze- -D_WINDOWS -D_MBCS -D_LIB -DES_DECLARE_EXPORT -D__MAIN__
-TESTEFC = testefc_d.exe
-TESTC11 = testc11_d.exe
-TESTNIO = testnio_d.exe
-TESTBSON = testbson_d.exe
-TESTSSL = testssl_d.exe
-!endif
+TESTUTILS = testutils.exe
 
 LINKOPTION = /NOLOGO /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /TLBID:1 /DYNAMICBASE /NXCOMPAT /MACHINE:X86
 
-INCLUDEDIR = -I..\inc \
-	-I..\inc\comm \
-	-I..\inc\efc \
-	-I..\inc\efc\concurrent \
-	-I..\inc\efc\cpp11 \
-	-I..\inc\efc\nio \
-	-I..\inc\libc \
+INCLUDEDIR = -I.. \
+	-I..\efc \
 	-I"C:\OpenSSL-Win32\include" \
 
 LIBDIRS = $(LIBESO) $(LIBEFC) "Ws2_32.lib" "kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib"
@@ -46,9 +46,16 @@ TESTC11_OBJS = testc11.obj
 
 TESTNIO_OBJS = testnio.obj
 
+TESTLIBC_OBJS = testlibc.obj
+
 TESTBSON_OBJS = testbson.obj
 
 TESTSSL_OBJS = testssl.obj
+
+TESTUTILS_OBJS = testutils.obj \
+				..\efc\utils\src\EBoundedInputStream.obj \
+				..\efc\utils\src\EDomainServerSocket.obj \
+				..\efc\utils\src\EDomainSocket.obj \
 
 $(TESTEFC): $(BASE_OBJS) $(TESTEFC_OBJS) 
 	$(LINK) $(LINKOPTION) /out:$(TESTEFC) $(LIBDIRS) $(BASE_OBJS) $(TESTEFC_OBJS)
@@ -59,20 +66,28 @@ $(TESTC11): $(BASE_OBJS) $(TESTC11_OBJS)
 $(TESTNIO): $(BASE_OBJS) $(TESTNIO_OBJS) 
 	$(LINK) $(LINKOPTION) /out:$(TESTNIO) $(LIBDIRS) $(BASE_OBJS) $(TESTNIO_OBJS) 
 
+$(TESTLIBC): $(BASE_OBJS) $(TESTLIBC_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTLIBC) $(LIBDIRS) $(BASE_OBJS) $(TESTLIBC_OBJS) 
+
 $(TESTBSON): $(BASE_OBJS) $(TESTBSON_OBJS) 
 	$(LINK) $(LINKOPTION) /out:$(TESTBSON) $(LIBDIRS) $(BASE_OBJS) $(TESTBSON_OBJS) 
 
 $(TESTSSL): $(BASE_OBJS) $(TESTSSL_OBJS) 
 	$(LINK) $(LINKOPTION) /out:$(TESTSSL) $(LIBDIRS) $(BASE_OBJS) $(TESTSSL_OBJS) crypt32.lib C:\OpenSSL-Win32\lib\VC\static\libeay32MD.lib C:\OpenSSL-Win32\lib\VC\static\ssleay32MD.lib
 
+$(TESTUTILS): $(BASE_OBJS) $(TESTUTILS_OBJS) 
+	$(LINK) $(LINKOPTION) /out:$(TESTUTILS) $(LIBDIRS) $(BASE_OBJS) $(TESTUTILS_OBJS) 
+
 clean: 
 	del $(TESTEFC_OBJS) 
 	del $(TESTC11_OBJS) 
 	del $(TESTNIO_OBJS) 
+	del $(TESTLIBC_OBJS)
 	del $(TESTBSON_OBJS)
 	del $(TESTSSL_OBJS)
+	del $(TESTUTILS_OBJS)
 
-all: clean $(TESTEFC) $(TESTC11) $(TESTNIO) $(TESTBSON) $(TESTSSL) clean
+all: clean $(TESTEFC) $(TESTC11) $(TESTNIO) $(TESTLIBC) $(TESTBSON) $(TESTSSL) $(TESTUTILS) clean
 .PRECIOUS:%.cpp %.c %.C
 .SUFFIXES:
 .SUFFIXES:  .cpp .obj

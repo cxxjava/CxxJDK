@@ -180,6 +180,10 @@ static void f_string(const EString& s) {
 }
 
 static void test_string() {
+	ullong v = -1;
+	EString vs(v);
+	LOG(vs.c_str());
+
 	//string join
 	EString x_y("xxx" + EString("|") + 10 + "yyy");
 	LOG(x_y.c_str());
@@ -2314,7 +2318,7 @@ static void test_linkedlist2()
 
 #if 1
 	{
-		ELinkedList<llong> list;
+		ELinkedList<ullong> list;
 
 		list.add(22222);
 		list.add(3333);
@@ -2323,7 +2327,7 @@ static void test_linkedlist2()
 		list.add(3);
 		list.add(99999999);
 
-		sp<EIterator<llong> > iter2 = list.listIterator(2);
+		sp<EIterator<ullong> > iter2 = list.listIterator(2);
 		while (iter2->hasNext()) {
 			llong l = iter2->next();
 			LOG("l=%ld", l);
@@ -9698,8 +9702,8 @@ static void test_test(int argc, const char** argv) {
 //	test_exception();
 //	test_number_int();
 //	test_number_long();
-//	test_filepath();
-	test_config();
+	test_filepath();
+//	test_config();
 //	test_system();
 //	test_strToken();
 //	test_arraylist();

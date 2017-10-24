@@ -1,0 +1,78 @@
+
+#ifndef __LIBC_H__
+#define __LIBC_H__
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#include "es_types.h"
+#include "es_comm.h"
+#include "es_status.h"
+#include "./inc/eso_alogger.h"
+#include "./inc/eso_array.h"
+#include "./inc/eso_array_ptr.h"
+#include "./inc/eso_array_int.h"
+#include "./inc/eso_atomic.h"
+#include "./inc/eso_base64.h"
+#include "./inc/eso_bitset.h"
+#include "./inc/eso_bson.h"
+#include "./inc/eso_bson_ext.h"
+#include "./inc/eso_buffer.h"
+#include "./inc/eso_canonicalize.h"
+#include "./inc/eso_conf.h"
+#include "./inc/eso_crc32.h"
+#include "./inc/eso_datetime.h"
+#include "./inc/eso_dso.h"
+#include "./inc/eso_debug.h"
+#include "./inc/eso_encode.h"
+#include "./inc/eso_file.h"
+#include "./inc/eso_flip_buffer.h"
+#include "./inc/eso_fmttime.h"
+#include "./inc/eso_hash.h"
+#include "./inc/eso_ini.h"
+#include "./inc/eso_json.h"
+#include "./inc/eso_libc.h"
+#include "./inc/eso_locale_str.h"
+#include "./inc/eso_lz77.h"
+#include "./inc/eso_lzma.h"
+#include "./inc/eso_map.h"
+#include "./inc/eso_md4.h"
+#include "./inc/eso_md5.h"
+#include "./inc/eso_mem.h"
+#include "./inc/eso_mmap.h"
+#include "./inc/eso_mpool.h"
+#include "./inc/eso_net.h"
+#include "./inc/eso_object.h"
+#include "./inc/eso_pcre.h"
+#include "./inc/eso_pipe.h"
+#include "./inc/eso_poll.h"
+#include "./inc/eso_printf_upper_bound.h"
+#include "./inc/eso_proc.h"
+#include "./inc/eso_proc_mutex.h"
+#include "./inc/eso_queue.h"
+#include "./inc/eso_ring.h"
+#include "./inc/eso_ring_buffer.h"
+#include "./inc/eso_sha1.h"
+#include "./inc/eso_sha2.h"
+#include "./inc/eso_shm.h"
+#include "./inc/eso_signal.h"
+#include "./inc/eso_sigsegv.h"
+#include "./inc/eso_stack.h"
+#include "./inc/eso_string.h"
+#include "./inc/eso_sys.h"
+#include "./inc/eso_thread.h"
+#include "./inc/eso_thread_cond.h"
+#include "./inc/eso_thread_mutex.h"
+#include "./inc/eso_thread_rwlock.h"
+#include "./inc/eso_thread_spin.h"
+#include "./inc/eso_util.h"
+#include "./inc/eso_uuid.h"
+#include "./inc/eso_vector.h"
+#include "./inc/eso_zlib.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __LIBC_H__ */

@@ -210,6 +210,31 @@ static void test_executors() {
 	LOG("end of test_executors().");
 }
 
+static void test_socketpair() {
+#ifndef WIN32
+	int raw_socks[2];
+	::socketpair(AF_UNIX, SOCK_STREAM, 0, raw_socks);
+
+	sp<EFork> process = EFork::executeX([&]() {
+		LOG("child process.");
+
+		sp<ESocket> s = ESocket::createFromFD(raw_socks[0], true, true);
+		EOutputStream* os = s->getOutputStream();
+		os->write("1234567890");
+
+		ESystem::exit(0);
+	});
+	EThread::sleep(100);
+	sp<ESocket> s = ESocket::createFromFD(raw_socks[1], true, true);
+	EInputStream* os = s->getInputStream();
+	char buf[512];
+	os->read(buf, sizeof(buf));
+	LOG("read: %s", buf);
+	process->waitFor();
+	LOG("parent process.");
+#endif
+}
+
 MAIN_IMPL(testc11) {
 	printf("main()\n");
 
@@ -222,7 +247,8 @@ MAIN_IMPL(testc11) {
 //		test_scopeExit();
 //		test_finally();
 //		test_threadx();
-		test_executors();
+//		test_executors();
+		test_socketpair();
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());
 		} catch (...) {

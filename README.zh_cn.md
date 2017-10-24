@@ -224,7 +224,6 @@ put 20线程 && get 20线程
 | MatchResult                     | EMatchResult                     |
 | Matcher                         | EMatcher                         |
 | Math                            | EMath                            |
-| MathFP                          | EMathFP                          |
 | MulticastSocket                 | EMulticastSocket                 |
 | NavigableMap                    | ENavigableMap                    |
 | NavigableSet                    | ENavigableSet                    |
@@ -427,7 +426,9 @@ put 20线程 && get 20线程
 | EAtomic            | 原子操作类                         |
 | EScopeGuard        | C++11风格封装的通过局部变量析构函数来管理资源的辅助类 |
 | EAtomicDouble      | double原子操作类                   |
-| ENetWrapper        | socket操作辅助工具类                 |
+| ENetWrapper        | socket操作辅助工具类                |
+| EDomainSocket      | Unix Domain Socket                |
+| EDomainServerSocket| Unix Domain Server Socket         |
 
 
 #### 手册

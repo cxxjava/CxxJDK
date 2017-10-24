@@ -1,13 +1,13 @@
 #include "es_main.h"
-#include "libc.h"
-#include "eso_except.h"
+#include "libc/libc.h"
+#include "libc/inc/eso_except.h"
 
 typedef void * volatile vvoidp;
 typedef vvoidp *pvvoidp;
 
 static void test_mstr(void)
 {
-	char *str1 = eso_mstrdup("XXXXXXXXXXXXXXXXXXXXX");
+	es_string_t *str1 = eso_mstrdup("XXXXXXXXXXXXXXXXXXXXX");
 	printf("str1=%s\n", str1);
 	eso_mfree(str1);
 
@@ -15,6 +15,30 @@ static void test_mstr(void)
 	eso_msprintf(&str1, "xxx:%d,%.2f,%s", 1, 1.92, "YYY");
 	printf("str1=%s\n", str1);
 	ESO_MFREE(&str1);
+
+	str1 = eso_itostring(1, 10);
+	printf("i=1, str1=%s\n", str1);
+	eso_mfree(str1);
+
+	str1 = eso_itostring(-1, 10);
+	printf("i=-1, str1=%s\n", str1);
+	eso_mfree(str1);
+
+	str1 = eso_uitostring(1, 10);
+	printf("ui=1, str1=%s\n", str1);
+	eso_mfree(str1);
+
+	str1 = eso_uitostring(-1, 16);
+	printf("ui=-1, str1=%s\n", str1);
+	eso_mfree(str1);
+
+	str1 = eso_ltostring(1, 10);
+	printf("l=1, str1=%s\n", str1);
+	eso_mfree(str1);
+
+	str1 = eso_ultostring(-1, 16);
+	printf("ul=-1, str1=%s\n", str1);
+	eso_mfree(str1);
 }
 
 static void test_mpool(void)
@@ -1222,14 +1246,14 @@ MAIN_IMPL(testlibc) {
 	eso_initialize();
 
 	do {
-//		test_mstr();
+		test_mstr();
 //		test_mpool();
 //		test_bitset();
 //		test_conf();
 //		test_json();
 //		test_uuid();
 //		test_crc32();
-		test_datetime();
+//		test_datetime();
 //		test_atomic();
 //		test_file();
 //		test_file2();

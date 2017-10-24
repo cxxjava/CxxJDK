@@ -222,7 +222,6 @@ Total Number of Cores:	2
 | MatchResult                     | EMatchResult                     |
 | Matcher                         | EMatcher                         |
 | Math                            | EMath                            |
-| MathFP                          | EMathFP                          |
 | MulticastSocket                 | EMulticastSocket                 |
 | NavigableMap                    | ENavigableMap                    |
 | NavigableSet                    | ENavigableSet                    |
@@ -426,7 +425,8 @@ Total Number of Cores:	2
 | EScopeGuard        | C++11 assistant for scope guards         |
 | EAtomicDouble      | double atomic operation                  |
 | ENetWrapper        | Foundation for native socket             |
-
+| EDomainSocket      | Unix Domain Socket                       |
+| EDomainServerSocket| Unix Domain Server Socket                |
 
 #### Manual
 See [Guide document](doc/Guide.md).
