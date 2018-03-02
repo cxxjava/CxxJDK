@@ -8,6 +8,7 @@
 #ifndef ESocket_HH_
 #define ESocket_HH_
 
+#include "ECloseable.hh"
 #include "EFile.hh"
 #include "ESocketOptions.hh"
 #include "EInetAddress.hh"
@@ -19,6 +20,7 @@
 #include "ESocketTimeoutException.hh"
 #include "EIOException.hh"
 #include "ESocketException.hh"
+#include "../nio/inc/ESocketChannel.hh"
 
 namespace efc {
 
@@ -40,7 +42,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class ESocket : virtual public ESocketOptions {
+class ESocket : virtual public ESocketOptions, virtual public ECloseable {
 public:
 	virtual ~ESocket();
 	
@@ -763,7 +765,7 @@ public:
      *
      * @return  a string representation of this socket.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
 
     /**
      * Returns the connection state of the socket.
@@ -849,7 +851,7 @@ public:
 	 * @since 1.4
 	 * @spec JSR-51
 	 */
-	virtual void* getChannel() {return null;}
+	virtual sp<nio::ESocketChannel> getChannel() {return null;}
 
 	/**
 	 * sendfile() copies data between one file descriptor and another. Either or both of these file descriptors may refer to a socket.

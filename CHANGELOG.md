@@ -1,3 +1,31 @@
+2018/03/02
+
+1. fixed a bug for efc::EInetAddress::getAllByName();
+2. sync EConcurrentLinkedQueue.hh to java 9 and fixed bugs;
+3. add EMutexLinkedQueue.hh;
+4. rename all concurrent keySet()/values()/entrySet() apis to native pointer mode;
+5. remove some EConcurrentXXX interface;
+6. add a new api for efc:EArrays.
+7. re-code efc::EString && remove efc::EStringBase;
+8. fixed memory leaks for efc::nio;
+9. EThread setDaemon(boolean) --> EThread::setDaemon(sp<EThread>, boolean) !!!
+10. add api getChannel() for efc::EFileXXXStream;
+11. add EArrayBlockingQueue for efc;
+12. add Closable && Flushable interface for efc;
+13. add owned param for efc::EFilterInputStream & EFilterOutputStream;
+14. fixed bugs for efc::sha1;
+15. add EFileFilter.hh for efc.
+16. add ECheckOutputStream for efc.
+17. add c++11 api support for efc::ETimer;
+18. add getXXX & setXXX for efc::nio::EIOByteBuffer;
+19. support EArrays::hashCode() for efc;
+20. add efc::EProperties;
+21. add EPushbackInputStream for efc;
+22. add lock support for EByteArrayXXX for efc;
+23. fixed a bug for efc::Fork::waitFor();
+
+
+
 2017/09/30
 
 1. 重新整合目录结构；

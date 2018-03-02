@@ -20,7 +20,6 @@ namespace efc {
  * legal protocol could be found in a specification string or the
  * string could not be parsed.
  *
- * @author  Arthur van Hoff
  * @since   JDK1.0
  */
 

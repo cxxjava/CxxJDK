@@ -8,6 +8,7 @@
 #ifndef ESELECTOR_HH_
 #define ESELECTOR_HH_
 
+#include "../../inc/ECloseable.hh"
 #include "../../inc/EHashSet.hh"
 #include "../../inc/EHashMap.hh"
 #include "../../inc/ESynchronizeable.hh"
@@ -225,7 +226,7 @@ namespace nio {
  * @since 1.4
  */
 
-class ESelector : public ESynchronizeable {
+class ESelector : public ESynchronizeable, virtual public ECloseable {
 public:
 	virtual ~ESelector();
 
@@ -289,7 +290,7 @@ public:
 	 * @throws  ClosedSelectorException
 	 *          If this selector is closed
 	 */
-	ESet<ESelectionKey*>* keys();
+	ESet<sp<ESelectionKey> >* keys();
 
 	/**
 	 * Returns this selector's selected-key set.
@@ -305,7 +306,7 @@ public:
 	 * @throws  ClosedSelectorException
 	 *          If this selector is closed
 	 */
-	ESet<ESelectionKey*>* selectedKeys();
+	ESet<sp<ESelectionKey> >* selectedKeys();
 
 	/**
 	 * Selects a set of keys whose corresponding channels are ready for I/O
@@ -400,7 +401,7 @@ protected:
 	 *
 	 * @return  The cancelled-key set
 	 */
-	ESet<ESelectionKey*>* cancelledKeys();
+	ESet<sp<ESelectionKey> >* cancelledKeys();
 
 	/**
 	 * Registers the given channel with this selector.
@@ -421,18 +422,13 @@ protected:
 	 * @return  A new key representing the registration of the given channel
 	 *          with this selector
 	 */
-	ESelectionKey* register_(ESelectableChannel* ch, int ops, void* att);
+	sp<ESelectionKey> register_(sp<ESelectableChannel> ch, int ops, EObject* att);
 
 	//@see: openjdk-8/src/share/classes/java/nio/channels/spi/AbstractSelector.java
-	void cancel(ESelectionKey* k);
+	void cancel(sp<ESelectionKey> k);
 
 	//@see: openjdk-8/jdk/src/share/classes/sun/nio/ch/SelectorImpl.java
     void processDeregisterQueue() THROWS(EIOException);
-
-	/**
-	 * Remove a channel's file descriptor from epoll
-	 */
-	void release(ESelectableChannel* channel);
 
 	/**
 	 * Removes the given key from its channel's key set.
@@ -443,7 +439,7 @@ protected:
 	 * @param  key
 	 *         The selection key to be removed
 	 */
-	void deregister(ESelectionKey* key);
+	void deregister(sp<ESelectionKey> key);
 
 	/**
 	 * Marks the beginning of an I/O operation that might block indefinitely.
@@ -478,15 +474,15 @@ protected:
     EAtomicBoolean selectorOpen_;
 
     // Public views of the key sets
-    EHashSet<ESelectionKey*>* keys_; // = new HashSet();  // Immutable
+    EHashSet<sp<ESelectionKey> >* keys_; // = new HashSet();  // Immutable
 	ELock* keysLock_;
 
 	// Reference views of the key sets
-	EHashSet<ESelectionKey*>* selectedKeys_; // Removal allowed, but not addition
+	EHashSet<sp<ESelectionKey> >* selectedKeys_; // Removal allowed, but not addition
 	ELock* selectedKeysLock_;
 
 	//@see: openjdk-8/src/share/classes/java/nio/channels/spi/AbstractSelector.java
-    EHashSet<ESelectionKey*>* cancelledKeys_;// = new HashSet();
+    EHashSet<sp<ESelectionKey> >* cancelledKeys_;// = new HashSet();
     ELock* cancelledKeysLock_;
 
  	/**
@@ -495,8 +491,8 @@ protected:
     ESelector();
 
 	//@see; openjdk-8/src/share/classes/sun/nio/ch/SelectorImpl.java
-	virtual void implRegister(ESelectionKey* ski) = 0;
-	virtual void implDereg(ESelectionKey* ski) THROWS(EIOException) = 0;
+	virtual void implRegister(sp<ESelectionKey> ski) = 0;
+	virtual void implDereg(sp<ESelectionKey> ski) THROWS(EIOException) = 0;
 	virtual void implClose() THROWS(EIOException) = 0;
 	virtual int doSelect(llong timeout) THROWS(EIOException) = 0;
 

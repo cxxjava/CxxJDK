@@ -79,11 +79,6 @@ public:
 
 protected:
 	/**
-	 *
-	 */
-	boolean owned;
-
-	/**
 	 * The internal buffer where data is stored.
 	 */
 	EA<byte>* buf;

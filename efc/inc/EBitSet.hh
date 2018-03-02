@@ -383,7 +383,7 @@ public:
      *
      * @return  a string representation of this bit set.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
     
 private:
     es_byte_t *_bits;

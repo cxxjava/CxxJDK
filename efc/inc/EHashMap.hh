@@ -419,7 +419,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+	ESet<EMapEntry<K, V>*>* _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -504,6 +504,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 	}
 
 	EHashMap(const EHashMap<K, V>& that) {
@@ -548,6 +549,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -911,7 +913,7 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	sp<ESet<K> > keySet() {
+	ESet<K>* keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
@@ -931,7 +933,7 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	sp<ECollection<V> > values() {
+	ECollection<V>* values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -954,7 +956,7 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+	ESet<EMapEntry<K, V>*>* entrySet() {
 		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}
@@ -1272,7 +1274,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+	ESet<EMapEntry<K, V>*>* _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -1350,6 +1352,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 	}
 
 	EHashMap(const EHashMap<K, V>& that) {
@@ -1392,6 +1395,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -1753,7 +1757,7 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	sp<ESet<K> > keySet() {
+	ESet<K>* keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
@@ -1773,7 +1777,7 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	sp<ECollection<V> > values() {
+	ECollection<V>* values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -1796,7 +1800,7 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+	ESet<EMapEntry<K, V>*>* entrySet() {
 		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}
@@ -2121,7 +2125,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+	ESet<EMapEntry<K, V>*>* _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -2245,6 +2249,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 	}
 
 	EHashMap(const EHashMap<K, V>& that) {
@@ -2290,6 +2295,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -2665,7 +2671,7 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	sp<ESet<K> > keySet() {
+	ESet<K>* keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
@@ -2685,7 +2691,7 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	sp<ECollection<V> > values() {
+	ECollection<V>* values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -2708,7 +2714,7 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+	ESet<EMapEntry<K, V>*>* entrySet() {
 		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}
@@ -2864,7 +2870,7 @@ private:
 				throw EILLEGALSTATEEXCEPTION;
 			K k = current->key;
 			current = null;
-			delete _map->removeEntryForKey(k);
+			delete _map->removeEntryForKey(k.get());
 		}
 
 		Entry* moveOutEntry() {
@@ -2872,7 +2878,7 @@ private:
 				throw EILLEGALSTATEEXCEPTION;
 			K k = current->key;
 			current = null;
-			return _map->removeEntryForKey(k);
+			return _map->removeEntryForKey(k.get());
 		}
 	};
 
@@ -2941,7 +2947,7 @@ private:
 			return new EntryIterator<EMapEntry<K,V>*>(_map);
 		}
 		boolean contains(EMapEntry<K,V> *e) {
-			EMapEntry<K,V> *candidate = _map->getEntry(e->getKey());
+			EMapEntry<K,V> *candidate = _map->getEntry(e->getKey().get());
 			return candidate != null && candidate->equals(e);
 		}
 		boolean remove(EMapEntry<K,V> *o) {
@@ -3033,7 +3039,7 @@ private:
 	float _loadFactor;
 
 	// Views
-	sp<ESet<EMapEntry<K, V>*> > _entrySet;
+	ESet<EMapEntry<K, V>*>* _entrySet;
 
 	/**
 	 * Initialization hook for subclasses. This method is called
@@ -3145,6 +3151,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 	}
 
 	EHashMap(const EHashMap<K, V>& that) {
@@ -3187,6 +3194,7 @@ public:
 		clear();
 
 		delete[] _table;
+		delete _entrySet;
 
 		//2.
 		_table = new Entry*[t->_capacity]();
@@ -3556,7 +3564,7 @@ public:
 	 * operations.  It does not support the <tt>add</tt> or <tt>addAll</tt>
 	 * operations.
 	 */
-	sp<ESet<K> > keySet() {
+	ESet<K>* keySet() {
 		if (!EAbstractMap<K,V>::_keySet) {
 			EAbstractMap<K,V>::_keySet = new Keys(this);
 		}
@@ -3576,7 +3584,7 @@ public:
 	 * <tt>retainAll</tt> and <tt>clear</tt> operations.  It does not
 	 * support the <tt>add</tt> or <tt>addAll</tt> operations.
 	 */
-	sp<ECollection<V> > values() {
+	ECollection<V>* values() {
 		if (!EAbstractMap<K,V>::_values) {
 			EAbstractMap<K,V>::_values = new Values(this);
 		}
@@ -3599,7 +3607,7 @@ public:
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	sp<ESet<EMapEntry<K, V>*> > entrySet() {
+	ESet<EMapEntry<K, V>*>* entrySet() {
 		if (_entrySet == null) {
 			_entrySet = new EntrySet(this);
 		}

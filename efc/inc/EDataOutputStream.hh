@@ -36,7 +36,7 @@ public:
 	 *                use.
 	 * @see     java.io.FilterOutputStream#out
 	 */
-	EDataOutputStream(EOutputStream* out);
+	EDataOutputStream(EOutputStream* out, boolean owned=false);
 
 	//TODO:
 	EDataOutputStream(const EDataOutputStream& that);

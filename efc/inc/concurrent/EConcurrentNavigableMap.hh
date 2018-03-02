@@ -8,11 +8,11 @@
 #ifndef ECONCURRENTNAVIGABLEMAP_HH_
 #define ECONCURRENTNAVIGABLEMAP_HH_
 
-#include "./EConcurrentMap.hh"
 #include "../ENavigableMap.hh"
 #include "../ENavigableSet.hh"
+#include "../ENavigableSet.hh"
+#include "./EConcurrentMap.hh"
 #include "./EConcurrentSortedMap.hh"
-#include "./EConcurrentNavigableSet.hh"
 
 namespace efc {
 
@@ -111,7 +111,7 @@ interface EConcurrentNavigableMap: virtual public EConcurrentSortedMap<K, V>
      *
      * @return a navigable set view of the keys in this map
      */
-	virtual sp<EConcurrentNavigableSet<K> > navigableKeySet() = 0;
+	virtual ENavigableSet<sp<K> >* navigableKeySet() = 0;
 
     /**
      * Returns a reverse order {@link NavigableSet} view of the keys contained in this map.
@@ -132,7 +132,7 @@ interface EConcurrentNavigableMap: virtual public EConcurrentSortedMap<K, V>
      *
      * @return a reverse order navigable set view of the keys in this map
      */
-	virtual sp<EConcurrentNavigableSet<K> > descendingKeySet() = 0;
+	virtual ENavigableSet<sp<K> >* descendingKeySet() = 0;
 
 	/* ---------------- NavigableMap Overrides -------------- */
 

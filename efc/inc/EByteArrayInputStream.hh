@@ -46,7 +46,7 @@ public:
      *
      * @param   buf   the input buffer.
      */
-    EByteArrayInputStream(void *buf, int len);
+    EByteArrayInputStream(void *buf, int len, boolean lock=true);
 	
     //TODO...
     EByteArrayInputStream(const EByteArrayInputStream& that);
@@ -142,6 +142,11 @@ protected:
      * can ever be read  from the input stream buffer.
      */
     long count;
+
+    /**
+	 * If false then no synchronized!
+	 */
+	boolean lock;
 };
 
 } /* namespace efc */

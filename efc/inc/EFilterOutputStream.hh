@@ -43,7 +43,7 @@ public:
      *                <code>null</code> if this instance is to be 
      *                created without an underlying stream.
      */
-    EFilterOutputStream(EOutputStream *out);
+    EFilterOutputStream(EOutputStream *out, boolean owned=false);
 
     /**
      * Writes <code>b.length</code> bytes to this output stream. 
@@ -97,6 +97,13 @@ protected:
      * The underlying output stream to be filtered. 
      */
     EOutputStream *_out;
+
+    boolean _owned;
+
+    /**
+	 * Indicates that the stream has been closed.
+	 */
+	volatile boolean closed;// = false;
 };
 
 } /* namespace efc */

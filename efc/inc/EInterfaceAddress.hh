@@ -88,7 +88,7 @@ public:
 	  *
 	  * @return  a string representation of this Interface address.
 	  */
-	 virtual EStringBase toString();
+	 virtual EString toString();
 
 private:
 	friend class ENetworkInterface;

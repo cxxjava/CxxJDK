@@ -8,6 +8,7 @@
 #ifndef ECOLLECTION_HH_
 #define ECOLLECTION_HH_
 
+#include "EA.hh"
 #include "EIterable.hh"
 #include "EIterator.hh"
 #include "ETraits.hh"
@@ -159,6 +160,24 @@ interface ECollection : virtual public EIterable<E>
      * @return an <tt>Iterator</tt> over the elements in this collection
      */
 	virtual sp<EIterator<E> > iterator(int index=0) = 0;
+
+	/**
+	 * Returns an array containing all of the elements in this collection.
+	 * If this collection makes any guarantees as to what order its elements
+	 * are returned by its iterator, this method must return the elements in
+	 * the same order.
+	 *
+	 * <p>The returned array will be "safe" in that no references to it are
+	 * maintained by this collection.  (In other words, this method must
+	 * allocate a new array even if this collection is backed by an array).
+	 * The caller is thus free to modify the returned array.
+	 *
+	 * <p>This method acts as bridge between array-based and collection-based
+	 * APIs.
+	 *
+	 * @return an array containing all of the elements in this collection
+	 */
+	virtual EA<E> toArray() = 0;
 
     // Modification Operations
 

@@ -40,8 +40,6 @@ namespace efc {
  * href="http://gee.cs.oswego.edu/dl/jsr166/dist/jsr166edocs/jsr166e/DoubleMaxUpdater.html">
  * DoubleMaxUpdater</a>.
  *
- * @author Doug Lea
- * @author Martin Buchholz
  * @since 11.0
  */
 
@@ -137,7 +135,7 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	virtual int intValue();
 	virtual llong llongValue();

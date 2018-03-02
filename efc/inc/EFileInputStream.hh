@@ -9,6 +9,7 @@
 #define EFileInputStream_HH_
 
 #include "EInputStream.hh"
+#include "ESynchronizeable.hh"
 #include "EFile.hh"
 #include "EFileNotFoundException.hh"
 
@@ -30,7 +31,11 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class EFileInputStream : public EInputStream
+namespace nio {
+class EFileChannel;
+}
+
+class EFileInputStream : public EInputStream, public ESynchronizeable
 {
 public:
 	virtual ~EFileInputStream();
@@ -211,6 +216,24 @@ public:
     es_file_t* getFD() THROWS(EIOException);
 
     /**
+	 * Returns the unique {@link java.nio.channels.FileChannel FileChannel}
+	 * object associated with this file input stream.
+	 *
+	 * <p> The initial {@link java.nio.channels.FileChannel#position()
+	 * position} of the returned channel will be equal to the
+	 * number of bytes read from the file so far.  Reading bytes from this
+	 * stream will increment the channel's position.  Changing the channel's
+	 * position, either explicitly or by reading, will change this stream's
+	 * file position.
+	 *
+	 * @return  the file channel associated with this file input stream
+	 *
+	 * @since 1.4
+	 * @spec JSR-51
+	 */
+    nio::EFileChannel* getChannel();
+
+    /**
 	 * Use buffered.
 	 */
 	boolean isIOBuffered();
@@ -220,6 +243,11 @@ private:
     es_os_file_t mFD;
 	es_file_t *mFile;
 	boolean needClose;
+
+	EReentrantLock closeLock;
+	volatile boolean closed;// = false;
+
+	nio::EFileChannel* channel;
 
 	/**
 	 * The internal buffer array where the data is stored. When necessary,

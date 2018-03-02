@@ -11,6 +11,8 @@
 #include "EFilterOutputStream.hh"
 #include "ESynchronizeable.hh"
 #include "ESimpleLock.hh"
+#include "EFile.hh"
+#include "EFileNotFoundException.hh"
 
 namespace efc {
 
@@ -51,7 +53,67 @@ public:
 	 *
 	 * @see java.io.PrintWriter#PrintWriter(java.io.OutputStream, boolean)
 	 */
-	EPrintStream(EOutputStream *out, boolean autoFlush=false);
+	EPrintStream(EOutputStream *out, boolean autoFlush=false, boolean owned=false);
+
+	/**
+	 * Creates a new print stream, without automatic line flushing, with the
+	 * specified file name.  This convenience constructor creates
+	 * the necessary intermediate {@link java.io.OutputStreamWriter
+	 * OutputStreamWriter}, which will encode characters using the
+	 * {@linkplain java.nio.charset.Charset#defaultCharset() default charset}
+	 * for this instance of the Java virtual machine.
+	 *
+	 * @param  fileName
+	 *         The name of the file to use as the destination of this print
+	 *         stream.  If the file exists, then it will be truncated to
+	 *         zero size; otherwise, a new file will be created.  The output
+	 *         will be written to the file and is buffered.
+	 *
+	 * @throws  FileNotFoundException
+	 *          If the given file object does not denote an existing, writable
+	 *          regular file and a new regular file of that name cannot be
+	 *          created, or if some other error occurs while opening or
+	 *          creating the file
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager is present and {@link
+	 *          SecurityManager#checkWrite checkWrite(fileName)} denies write
+	 *          access to the file
+	 *
+	 * @since  1.5
+	 */
+	explicit
+	EPrintStream(const char* fileName) THROWS(EFileNotFoundException);
+
+	/**
+	 * Creates a new print stream, without automatic line flushing, with the
+	 * specified file.  This convenience constructor creates the necessary
+	 * intermediate {@link java.io.OutputStreamWriter OutputStreamWriter},
+	 * which will encode characters using the {@linkplain
+	 * java.nio.charset.Charset#defaultCharset() default charset} for this
+	 * instance of the Java virtual machine.
+	 *
+	 * @param  file
+	 *         The file to use as the destination of this print stream.  If the
+	 *         file exists, then it will be truncated to zero size; otherwise,
+	 *         a new file will be created.  The output will be written to the
+	 *         file and is buffered.
+	 *
+	 * @throws  FileNotFoundException
+	 *          If the given file object does not denote an existing, writable
+	 *          regular file and a new regular file of that name cannot be
+	 *          created, or if some other error occurs while opening or
+	 *          creating the file
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager is present and {@link
+	 *          SecurityManager#checkWrite checkWrite(file.getPath())}
+	 *          denies write access to the file
+	 *
+	 * @since  1.5
+	 */
+	explicit
+	EPrintStream(EFile* file) THROWS(EFileNotFoundException);
 
 	// TODO:
 	EPrintStream(const EPrintStream& that);
@@ -70,7 +132,7 @@ public:
 	 * @param  b   A byte array
 	 * @param  len   Number of bytes to write
 	 */
-	void write(const void *b, int len) THROWS(EIOException);
+	virtual void write(const void *b, int len) THROWS(EIOException);
 
 	/**
 	 * Flushes the stream.  This is done by writing any buffered output bytes to
@@ -78,7 +140,7 @@ public:
 	 *
 	 * @see        java.io.OutputStream#flush()
 	 */
-	void flush() THROWS(EIOException);
+	virtual void flush() THROWS(EIOException);
 
 	/**
 	 * Closes the stream.  This is done by flushing the stream and then closing
@@ -86,7 +148,7 @@ public:
 	 *
 	 * @see        java.io.OutputStream#close()
 	 */
-	void close() THROWS(EIOException);
+	virtual void close() THROWS(EIOException);
 
 	/**
 	 * Flushes the stream and checks its error state. The internal error state
@@ -151,15 +213,170 @@ public:
 	 *
 	 * @since  1.5
 	 */
-	EPrintStream& print(const char* fmt, ...) THROWS(EIOException);
+	EPrintStream& printf(const char* fmt, ...) THROWS(EIOException);
+
+	/**
+	 * Prints a boolean value.  The string produced by <code>{@link
+	 * java.lang.String#valueOf(boolean)}</code> is translated into bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      b   The <code>boolean</code> to be printed
+	 */
+	EPrintStream& print(boolean b);
+
+	/**
+	 * Prints a character.  The character is translated into one or more bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      c   The <code>char</code> to be printed
+	 */
+	EPrintStream& print(char c);
+
+	/**
+	 * Prints an integer.  The string produced by <code>{@link
+	 * java.lang.String#valueOf(int)}</code> is translated into bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      i   The <code>int</code> to be printed
+	 * @see        java.lang.Integer#toString(int)
+	 */
+	EPrintStream& print(int i);
+
+	/**
+	 * Prints a long integer.  The string produced by <code>{@link
+	 * java.lang.String#valueOf(long)}</code> is translated into bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      l   The <code>long</code> to be printed
+	 * @see        java.lang.Long#toString(long)
+	 */
+	EPrintStream& print(llong l);
+
+	/**
+	 * Prints a floating-point number.  The string produced by <code>{@link
+	 * java.lang.String#valueOf(float)}</code> is translated into bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      f   The <code>float</code> to be printed
+	 * @see        java.lang.Float#toString(float)
+	 */
+	EPrintStream& print(float f);
+
+	/**
+	 * Prints a double-precision floating-point number.  The string produced by
+	 * <code>{@link java.lang.String#valueOf(double)}</code> is translated into
+	 * bytes according to the platform's default character encoding, and these
+	 * bytes are written in exactly the manner of the <code>{@link
+	 * #write(int)}</code> method.
+	 *
+	 * @param      d   The <code>double</code> to be printed
+	 * @see        java.lang.Double#toString(double)
+	 */
+	EPrintStream& print(double d);
+
+	/**
+	 * Prints an array of characters.  The characters are converted into bytes
+	 * according to the platform's default character encoding, and these bytes
+	 * are written in exactly the manner of the
+	 * <code>{@link #write(int)}</code> method.
+	 *
+	 * @param      s   The array of chars to be printed
+	 *
+	 * @throws  NullPointerException  If <code>s</code> is <code>null</code>
+	 */
+	EPrintStream& print(const char* s, int len=-1);
+
+	/* Methods that do terminate lines */
+
+	/**
+	 * Terminates the current line by writing the line separator string.  The
+	 * line separator string is defined by the system property
+	 * <code>line.separator</code>, and is not necessarily a single newline
+	 * character (<code>'\n'</code>).
+	 */
 	EPrintStream& println() THROWS(EIOException);
-	EPrintStream& println(const char* fmt, ...) THROWS(EIOException);
+
+	/**
+	 *
+	 */
+	EPrintStream& printfln(const char* fmt, ...) THROWS(EIOException);
+
+	/**
+	 * Prints a boolean and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(boolean)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  The <code>boolean</code> to be printed
+	 */
+	EPrintStream& println(boolean x);
+
+	/**
+	 * Prints a character and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(char)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  The <code>char</code> to be printed.
+	 */
+	EPrintStream& println(char x);
+
+	/**
+	 * Prints an integer and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(int)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  The <code>int</code> to be printed.
+	 */
+	EPrintStream& println(int x);
+
+	/**
+	 * Prints a long and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(long)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  a The <code>long</code> to be printed.
+	 */
+	EPrintStream& println(llong x);
+
+	/**
+	 * Prints a float and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(float)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  The <code>float</code> to be printed.
+	 */
+	EPrintStream& println(float x);
+
+	/**
+	 * Prints a double and then terminate the line.  This method behaves as
+	 * though it invokes <code>{@link #print(double)}</code> and then
+	 * <code>{@link #println()}</code>.
+	 *
+	 * @param x  The <code>double</code> to be printed.
+	 */
+	EPrintStream& println(double x);
+
+	/**
+	 * Prints an array of characters and then terminate the line.  This method
+	 * behaves as though it invokes <code>{@link #print(char[])}</code> and
+	 * then <code>{@link #println()}</code>.
+	 *
+	 * @param x  an array of chars to print.
+	 */
+	EPrintStream& println(const char* x, int len=-1);
 
 private:
-	EOutputStream *m_Out;
 	boolean m_autoFlush;// = false;
 	boolean m_trouble;// = false;
-	boolean m_closing;// = false; /* To avoid recursive closing */
 
 	ESimpleLock m_lock;
 

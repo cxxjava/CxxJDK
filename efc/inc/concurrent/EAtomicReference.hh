@@ -21,9 +21,147 @@ namespace efc {
  * @param <V> The type of object referred to by this reference
  */
 
+//=============================================================================
+//SharedPtr Types.
+
 template<typename E>
 class EAtomicReference: public EObject {
 public:
+	/**
+	 * Creates a new AtomicReference with the given initial value.
+	 *
+	 * @param initialValue the initial value
+	 */
+	EAtomicReference(sp<E> initialValue) {
+		value = initialValue;
+	}
+
+	/**
+	 * Creates a new AtomicReference with null initial value.
+	 */
+	EAtomicReference() {
+		value = null;
+	}
+
+	/**
+	 * Gets the current value.
+	 *
+	 * @return the current value
+	 */
+	sp<E> get() {
+		return atomic_load(&value);
+	}
+
+	/**
+	 * Sets to the given value.
+	 *
+	 * @param newValue the new value
+	 */
+	void set(sp<E> newValue) {
+		atomic_store(&value, newValue);
+	}
+
+	/**
+	 * Eventually sets to the given value.
+	 *
+	 * @param newValue the new value
+	 * @since 1.6
+	 */
+	void lazySet(sp<E> newValue) {
+		value = newValue;
+	}
+
+	/**
+	 * Atomically sets the value to the given updated value
+	 * if the current value {@code ==} the expected value.
+	 * @param expect the expected value
+	 * @param update the new value
+	 * @return true if successful. False return indicates that
+	 * the actual value was not equal to the expected value.
+	 */
+	boolean compareAndSet(sp<E> expect, sp<E> update) {
+		return atomic_compare_exchange(&value, &expect, update);
+	}
+
+	/**
+	 * Atomically sets the value to the given updated value
+	 * if the current value {@code ==} the expected value.
+	 *
+	 * <p>May <a href="package-summary.html#Spurious">fail spuriously</a>
+	 * and does not provide ordering guarantees, so is only rarely an
+	 * appropriate alternative to {@code compareAndSet}.
+	 *
+	 * @param expect the expected value
+	 * @param update the new value
+	 * @return true if successful.
+	 */
+	boolean weakCompareAndSet(sp<E> expect, sp<E> update) {
+		return atomic_compare_exchange(&value, &expect, update);
+	}
+
+	/**
+	 * Atomically sets to the given value and returns the old value.
+	 *
+	 * @param newValue the new value
+	 * @return the previous value
+	 */
+	sp<E> getAndSet(sp<E> newValue) {
+		while (true ) {
+			sp<E> x = get();
+			if (compareAndSet(x, newValue))
+				return x;
+		}
+		//never reach here!!!
+		return null;
+	}
+
+	/**
+	 * Returns the String representation of the current value.
+	 * @return the String representation of the current value.
+	 */
+	virtual EString toString() {
+		return EString::valueOf((llong)(get().get()));
+	}
+
+public:
+	// =
+	void operator = (sp<E> newValue) {
+		set(newValue);
+	}
+	void operator = (EAtomicReference<E>& that) {
+		set(that.get());
+	}
+
+	// ==
+	boolean operator == (sp<E> thatValue) {
+		return (get() == thatValue);
+	}
+	boolean operator == (EAtomicReference<E>& that) {
+		return (get() == that.get());
+	}
+
+	// !=
+	boolean operator != (sp<E> thatValue) {
+		return (get() != thatValue);
+	}
+	boolean operator != (EAtomicReference<E>& that) {
+		return (get() != that.get());
+	}
+
+private:
+	sp<E> value;
+};
+
+//=============================================================================
+//Native pointer type.
+
+template<typename E>
+class EAtomicReference<E*>: public EObject {
+public:
+	virtual ~EAtomicReference() {
+		delete value;
+	}
+
 	/**
 	 * Creates a new AtomicReference with the given initial value.
 	 *
@@ -37,7 +175,7 @@ public:
 	 * Creates a new AtomicReference with null initial value.
 	 */
 	EAtomicReference() {
-		value = 0;
+		value = null;
 	}
 
 	/**
@@ -118,8 +256,8 @@ public:
 	 * Returns the String representation of the current value.
 	 * @return the String representation of the current value.
 	 */
-	virtual EStringBase toString() {
-		return EStringBase::valueOf((llong)get());
+	virtual EString toString() {
+		return EString::valueOf((llong)get());
 	}
 
 public:

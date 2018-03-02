@@ -42,7 +42,8 @@ public:
      *
      * @since 1.7
 	 */
-	EDeflaterOutputStream(EOutputStream* out, int size=512, boolean syncFlush=false, boolean useDefault=true);
+	EDeflaterOutputStream(EOutputStream* out, int size=512,
+			boolean syncFlush=false, boolean useDefault=true, boolean owned=false);
 
 	//TODO:
 	EDeflaterOutputStream(const EDeflaterOutputStream& that);
@@ -117,11 +118,6 @@ private:
 	 * Decompressor for this stream.
 	 */
 	EDeflater *_def;
-
-	/**
-	 * Indicates that the stream has been closed.
-	 */
-	boolean _closed; // = false;
 
 	boolean _needFreeDeflater; //=false;
 

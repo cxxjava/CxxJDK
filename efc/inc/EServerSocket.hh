@@ -8,14 +8,16 @@
 #ifndef EServerSocket_HH_
 #define EServerSocket_HH_
 
-#include "EObject.hh"
+#include "ECloseable.hh"
 #include "ESocket.hh"
+#include "ESynchronizeable.hh"
 #include "ESocketOptions.hh"
 #include "EInetAddress.hh"
 #include "EInetSocketAddress.hh"
 #include "EIOException.hh"
 #include "ESocketException.hh"
 #include "EBindException.hh"
+#include "../nio/inc/EServerSocketChannel.hh"
 
 namespace efc {
 
@@ -37,7 +39,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class EServerSocket : virtual public ESocketOptions {
+class EServerSocket : public ESynchronizeable, virtual public ESocketOptions, virtual public ECloseable {
 public:
 	virtual ~EServerSocket();
 	
@@ -288,7 +290,7 @@ public:
      *
      * @return  a string representation of this socket.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
     
     /**
      * Sets a default proposed value for the SO_RCVBUF option for sockets 
@@ -376,7 +378,7 @@ public:
  	 * @since 1.4
  	 * @spec JSR-51
  	 */
-     virtual void* getChannel() {return null;};
+     virtual sp<nio::EServerSocketChannel> getChannel() {return null;};
 
 protected:
      /**
@@ -401,6 +403,8 @@ protected:
     	es_uint8_t bound:1;// = 0;
     	es_uint8_t closed:1;// = 0;
     } status;
+
+    EReentrantLock closeLock;// = new Object();
 };
 
 } /* namespace efc */

@@ -186,7 +186,7 @@ public:
 	EBigInteger abs();
 
 	virtual int hashCode();
-	virtual EStringBase toString();
+	virtual EString toString();
 	virtual int compareTo(EBigInteger* val);
 	virtual boolean equals(EObject* obj);
 

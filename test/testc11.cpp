@@ -1,7 +1,7 @@
 #include "es_main.h"
 #include "Efc.hh"
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
 #ifdef CPP11_SUPPORT
 
@@ -145,6 +145,18 @@ static void test_threadx() {
 	LOG("end of test_threadx().");
 }
 
+static void test_timerx() {
+	ETimer timer;
+
+	sp<ETimerTask> task = timer.scheduleX((llong)0, 100, []() {
+		LOG("timer runging...");
+	});
+
+	EThread::sleep(20000);
+
+	LOG("end of test_timerx().");
+}
+
 static void test_executors() {
 	//1.
 	{
@@ -244,11 +256,12 @@ MAIN_IMPL(testc11) {
 
 	do {
 		try {
-//		test_scopeExit();
-//		test_finally();
-//		test_threadx();
-//		test_executors();
-		test_socketpair();
+//			test_scopeExit();
+//			test_finally();
+//			test_threadx();
+			test_timerx();
+//			test_executors();
+//			test_socketpair();
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());
 		} catch (...) {

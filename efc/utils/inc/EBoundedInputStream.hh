@@ -127,7 +127,7 @@ public:
 	 * Invokes the delegate's <code>toString()</code> method.
 	 * @return the delegate's <code>toString()</code>
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 protected:
 	/**

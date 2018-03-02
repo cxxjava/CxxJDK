@@ -11,7 +11,7 @@
 #include "./EReentrantLock.hh"
 #include "../ESynchronizeable.hh"
 #include "./EAtomicCounter.hh"
-#include "./EConcurrentDeque.hh"
+#include "../EDeque.hh"
 #include "../ENoSuchElementException.hh"
 #include "../ENullPointerException.hh"
 #include "../EIllegalArgumentException.hh"
@@ -20,15 +20,43 @@
 namespace efc {
 
 /**
+ * A helper class for intrusive queue.
+ */
+
+class EQueueEntry: virtual public EObject {
+public:
+	EQueueEntry() : queuePtr(null) {
+	}
+
+	ALWAYS_INLINE void setPrev(sp<EQueueEntry> e) { queue_entry_prev = e; }
+	ALWAYS_INLINE sp<EQueueEntry> getPrev() { return queue_entry_prev; }
+
+	ALWAYS_INLINE void setNext(sp<EQueueEntry> e) { queue_entry_next = e; }
+	ALWAYS_INLINE sp<EQueueEntry> getNext() { return queue_entry_next; }
+
+	ALWAYS_INLINE void setOwner(EObject* p) { queuePtr = p; }
+	ALWAYS_INLINE EObject* getOwner() { return queuePtr; }
+
+protected:
+	sp<EQueueEntry> queue_entry_prev;
+	sp<EQueueEntry> queue_entry_next;
+	EObject* queuePtr; // for owner check.
+};
+
+//=============================================================================
+
+/**
  * An unbounded thread-safe {@linkplain Deque queue} based on the object
  * is extends <em>EQueueEntry</em>.
  *
  */
 
-template<typename E, typename LOCK=EReentrantLock>
-class EConcurrentIntrusiveDeque: public EConcurrentDeque<E> {
+template<typename E_, typename LOCK=EReentrantLock>
+class EConcurrentIntrusiveDeque: public EDeque<sp<E_> > {
 public:
-    ~EConcurrentIntrusiveDeque() {
+	typedef sp<E_> E;
+
+    virtual ~EConcurrentIntrusiveDeque() {
     	// node unlink for recursion
 
     }
@@ -48,10 +76,7 @@ public:
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
-    boolean add(E* e) {
-        return offer(e);
-    }
-    boolean add(sp<E> e) {
+    boolean add(E e) {
 		return offer(e);
 	}
 
@@ -61,15 +86,7 @@ public:
      * @return <tt>true</tt> (as specified by {@link Queue#offer})
      * @throws NullPointerException if the specified element is null
      */
-    boolean offer(E* e) {
-        sp<E> x(e);
-        boolean r = offer(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-    }
-    boolean offer(sp<E> e) {
+    boolean offer(E e) {
     	sp<EQueueEntry> entry = dynamic_pointer_cast<EQueueEntry>(e);
     	if (!entry || entry->getOwner()) {
     		throw EIllegalArgumentException(__FILE__, __LINE__);
@@ -88,7 +105,7 @@ public:
 		return true;
     }
 
-    sp<E> poll() {
+    E poll() {
     	sp<EQueueEntry> entry;
     	SYNCBLOCK(&lock) {
 			if (head == tail) {
@@ -104,23 +121,23 @@ public:
 			entry->setOwner(null);
 			size_--;
     	}}
-		return dynamic_pointer_cast<E>(entry);
+		return dynamic_pointer_cast<E_>(entry);
     }
 
-    sp<E> element() {
-    	sp<E> x = peek();
+    E element() {
+    	E x = peek();
 		if (x != null)
 			return x;
 		else
 			throw ENoSuchElementException(__FILE__, __LINE__);
     }
 
-    sp<E> peek() { // same as poll except don't remove item
+    E peek() { // same as poll except don't remove item
     	sp<EQueueEntry> entry;
     	SYNCBLOCK(&lock) {
 			entry = head->getNext();
     	}}
-		return dynamic_pointer_cast<E>(entry);
+		return dynamic_pointer_cast<E_>(entry);
     }
 
     /**
@@ -160,7 +177,7 @@ public:
 	 * @param o object to be checked for containment in this queue
 	 * @return <tt>true</tt> if this queue contains the specified element
 	 */
-	boolean contains(E* o) {
+	boolean contains(E_* o) {
 		EQueueEntry* entry = dynamic_cast<EQueueEntry*>(o);
 		if (!entry) {
 			return false;
@@ -188,7 +205,7 @@ public:
 	 * @param o element to be removed from this queue, if present
 	 * @return <tt>true</tt> if this queue changed as a result of the call
 	 */
-	boolean remove(E* o) {
+	boolean remove(E_* o) {
 		EQueueEntry* entry = dynamic_cast<EQueueEntry*>(o);
 		if (!entry) {
 			return false;
@@ -232,8 +249,8 @@ public:
 	 * @return the head of this queue
 	 * @throws NoSuchElementException if this queue is empty
 	 */
-	sp <E> remove() {
-		sp<E> x = poll();
+	E remove() {
+		E x = poll();
 		if (x != null)
 			return x;
 		else
@@ -277,7 +294,7 @@ public:
 	 *
 	 * @return an iterator over the elements in this queue in proper sequence
 	 */
-	sp<EConcurrentIterator<E> > iterator() {
+	sp<EIterator<E> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -294,38 +311,21 @@ public:
 	 *
 	 * @return an array containing all of the elements in this queue
 	 */
-	EA<sp<E> > toArray() {
+	EA<E> toArray() {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
 	// *** Deque methods ***
 
-	void addFirst(E* e) {
+	void addFirst(E e) {
 		(void)offerFirst(e);
 	}
 
-	void addFirst(sp<E> e) {
-		(void)offerFirst(e);
-	}
-
-	void addLast(E* e) {
+	void addLast(E e) {
 		this->offer(e);
 	}
 
-	void addLast(sp<E> e) {
-		this->offer(e);
-	}
-
-	boolean offerFirst(E* e) {
-		sp<E> x(e);
-		boolean r = offerFirst(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-	}
-
-	boolean offerFirst(sp<E> e) {
+	boolean offerFirst(E e) {
 		sp<EQueueEntry> entry = dynamic_pointer_cast<EQueueEntry>(e);
 		if (!entry || entry->getOwner()) {
 			throw EIllegalArgumentException(__FILE__, __LINE__);
@@ -343,27 +343,23 @@ public:
 		return true;
 	}
 
-	boolean offerLast(E* e) {
+	boolean offerLast(E e) {
 		return this->offer(e);
 	}
 
-	boolean offerLast(sp<E> e) {
-		return this->offer(e);
-	}
-
-	sp<E> removeFirst() {
+	E removeFirst() {
 		return pollFirst();
 	}
 
-	sp<E> removeLast() {
+	E removeLast() {
 		return pollLast();
 	}
 
-	sp<E> pollFirst() {
+	E pollFirst() {
 		return poll();
 	}
 
-	sp<E> pollLast() {
+	E pollLast() {
 		sp<EQueueEntry> entry;
 		SYNCBLOCK(&lock) {
 			if (head == tail) {
@@ -379,49 +375,74 @@ public:
 			entry->setOwner(null);
 			size_--;
 		}}
-		return dynamic_pointer_cast<E>(entry);
+		return dynamic_pointer_cast<E_>(entry);
 	}
 
-	sp<E> getFirst() {
+	E getFirst() {
 		return peekFirst();
 	}
 
-	sp<E> getLast() {
+	E getLast() {
 		return peekLast();
 	}
 
-	sp<E> peekFirst() {
+	E peekFirst() {
 		return peek();
 	}
 
-	sp<E> peekLast() {
+	E peekLast() {
 		sp<EQueueEntry> entry;
 		SYNCBLOCK(&lock) {
 			entry = tail->getPrev();
 		}}
-		return dynamic_pointer_cast<E>(entry);
+		return dynamic_pointer_cast<E_>(entry);
 	}
 
-	boolean removeFirstOccurrence(E* o) {
+	boolean removeFirstOccurrence(E_* o) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
-	boolean removeLastOccurrence(E* o) {
+	boolean removeLastOccurrence(E_* o) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
 	// *** Stack methods ***
 
-	void push(E* e) {
+	void push(E_* e) {
 		addFirst(e);
 	}
 
-	void push(sp<E> e) {
+	void push(E e) {
 		addFirst(e);
 	}
 
-	sp<E> pop() {
+	E pop() {
 		return removeFirst();
+	}
+
+	virtual sp<EIterator<E> > descendingIterator() {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean containsAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean removeAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean retainAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
 private:

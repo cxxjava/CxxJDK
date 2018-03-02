@@ -120,37 +120,6 @@ public:
 	int getMaxPriority();
 
 	/**
-	 * Tests if this thread group is a daemon thread group. A
-	 * daemon thread group is automatically destroyed when its last
-	 * thread is stopped or its last thread group is destroyed.
-	 *
-	 * @return  <code>true</code> if this thread group is a daemon thread group;
-	 *          <code>false</code> otherwise.
-	 * @since   JDK1.0
-	 */
-	boolean isDaemon();
-
-	/**
-	 * Changes the daemon status of this thread group.
-	 * <p>
-	 * First, the <code>checkAccess</code> method of this thread group is
-	 * called with no arguments; this may result in a security exception.
-	 * <p>
-	 * A daemon thread group is automatically destroyed when its last
-	 * thread is stopped or its last thread group is destroyed.
-	 *
-	 * @param      daemon   if <code>true</code>, marks this thread group as
-	 *                      a daemon thread group; otherwise, marks this
-	 *                      thread group as normal.
-	 * @exception  SecurityException  if the current thread cannot modify
-	 *               this thread group.
-	 * @see        java.lang.SecurityException
-	 * @see        java.lang.ThreadGroup#checkAccess()
-	 * @since      JDK1.0
-	 */
-	void setDaemon(boolean daemon);
-
-	/**
 	 * Tests if this thread group has been destroyed.
 	 *
 	 * @return  true if this object is destroyed
@@ -443,7 +412,7 @@ public:
 	 * @return  a string representation of this thread group.
 	 * @since   JDK1.0
 	 */
-	EStringBase toString();
+	EString toString();
 
 protected:
 	friend class EThread;
@@ -451,7 +420,6 @@ protected:
 	EString name;
 	int maxPriority;
 	boolean destroyed;
-	boolean daemon;
 
 	int nUnstartedThreads;// = 0;
 	int nthreads;

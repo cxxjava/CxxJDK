@@ -7,7 +7,7 @@
 #include "es_main.h"
 #include "Efc.hh"
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
 static void test_bson()
 {
@@ -126,6 +126,35 @@ static void test_bson_parser()
 	delete fos;
 }
 
+static void test_performance() {
+	llong startTime = ESystem::currentTimeMillis();
+	sp<EA<byte> > array;
+	for (int i = 0; i < 50000; i++) {
+		EByteArrayOutputStream baos(32, false);
+		EBson bs;
+		bs.addInt("ID", 10);
+		bs.addLLong("GoodID", 100);
+		bs.add("Url", "http://xxx.jpg");
+		bs.add("Guid", "11111-22222-3333-444");
+		bs.add("Type", "ITEM");
+		bs.addInt("Order", 0);
+		bs.Export(&baos, null);
+		array = baos.toByteArray();
+	}
+	llong endTime = ESystem::currentTimeMillis();
+	LOG("serialized size:%d, time used:%dms", array->length(),
+			(endTime - startTime));
+
+	for (int i = 0; i < 50000; i++) {
+		EByteArrayInputStream bais(array->address(), array->length(), false);
+		EBsonParser bp(&bais);
+		EBson bs;
+		bp.nextBson(&bs);
+	}
+	llong endTime2 = ESystem::currentTimeMillis();
+	LOG("deserialize time used:%dms", (endTime2 - endTime));
+}
+
 MAIN_IMPL(testbson) {
 	printf("main()\n");
 
@@ -136,8 +165,9 @@ MAIN_IMPL(testbson) {
 	do {
 		try {
 
-		test_bson();
 //		test_bson_parser();
+//		test_bson_parser();
+		test_performance();
 
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());

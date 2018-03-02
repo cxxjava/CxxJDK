@@ -9,7 +9,7 @@
 
 #ifdef HAVE_OPENSSL
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
 #define SSL_FILE_PATH ""
 

@@ -56,7 +56,9 @@ namespace efc {
 template<typename E>
 interface ENavigableSet : virtual public ESortedSet<E>
 {
-	virtual ~ENavigableSet(){}
+    typedef typename ETraits<E>::indexType idxE;
+
+    virtual ~ENavigableSet(){}
 
     /**
      * Returns the greatest element in this set strictly less than the
@@ -70,7 +72,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set does not permit null elements
      */
-	virtual E lower(E e) = 0;
+	virtual E lower(idxE e) = 0;
 
     /**
      * Returns the greatest element in this set less than or equal to
@@ -84,7 +86,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set does not permit null elements
      */
-	virtual E floor(E e) = 0;
+	virtual E floor(idxE e) = 0;
 
     /**
      * Returns the least element in this set greater than or equal to
@@ -98,7 +100,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set does not permit null elements
      */
-	virtual E ceiling(E e) = 0;
+	virtual E ceiling(idxE e) = 0;
 
     /**
      * Returns the least element in this set strictly greater than the
@@ -112,7 +114,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException if the specified element is null
      *         and this set does not permit null elements
      */
-	virtual E higher(E e) = 0;
+	virtual E higher(idxE e) = 0;
 
     /**
      * Retrieves and removes the first (lowest) element,
@@ -197,8 +199,8 @@ interface ENavigableSet : virtual public ESortedSet<E>
      *         has a restricted range, and {@code fromElement} or
      *         {@code toElement} lies outside the bounds of the range.
      */
-	virtual ENavigableSet<E>* subSet(E fromElement, boolean fromInclusive,
-			E toElement,   boolean toInclusive) = 0;
+	virtual ENavigableSet<E>* subSet(idxE fromElement, boolean fromInclusive,
+			idxE toElement,   boolean toInclusive) = 0;
 
     /**
      * Returns a view of the portion of this set whose elements are less than
@@ -227,7 +229,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      *         restricted range, and {@code toElement} lies outside the
      *         bounds of the range
      */
-	virtual ENavigableSet<E>* headSet(E toElement, boolean inclusive) = 0;
+	virtual ENavigableSet<E>* headSet(idxE toElement, boolean inclusive) = 0;
 
     /**
      * Returns a view of the portion of this set whose elements are greater
@@ -256,7 +258,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      *         restricted range, and {@code fromElement} lies outside the
      *         bounds of the range
      */
-	virtual ENavigableSet<E>* tailSet(E fromElement, boolean inclusive) = 0;
+	virtual ENavigableSet<E>* tailSet(idxE fromElement, boolean inclusive) = 0;
 
     /**
      * {@inheritDoc}
@@ -267,7 +269,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-	virtual ESortedSet<E>* subSet(E fromElement, E toElement) = 0;
+	virtual ESortedSet<E>* subSet(idxE fromElement, idxE toElement) = 0;
 
     /**
      * {@inheritDoc}
@@ -278,7 +280,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-	virtual ESortedSet<E>* headSet(E toElement) = 0;
+	virtual ESortedSet<E>* headSet(idxE toElement) = 0;
 
     /**
      * {@inheritDoc}
@@ -289,7 +291,7 @@ interface ENavigableSet : virtual public ESortedSet<E>
      * @throws NullPointerException     {@inheritDoc}
      * @throws IllegalArgumentException {@inheritDoc}
      */
-	virtual ESortedSet<E>* tailSet(E fromElement) = 0;
+	virtual ESortedSet<E>* tailSet(idxE fromElement) = 0;
 };
 
 } /* namespace efc */

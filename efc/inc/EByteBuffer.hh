@@ -37,6 +37,7 @@ public:
 	 * Append data to buffer.
 	 * @return appended data length.
 	 */
+	int              append(byte b);
 	int              append(const void *data, int size);
 	int              append(const char *cstr);
 	int              append(const EString& estr);
@@ -47,6 +48,7 @@ public:
 	 * Insert data to buffer.
 	 * @return inserted data length.
 	 */
+	int              insert(uint pos, byte b);
 	int              insert(uint pos, const void *data, int size);
 	int              insert(uint pos, const char *cstr);
 	int              insert(uint pos, const EString& estr);
@@ -72,7 +74,7 @@ public:
 	byte             operator[](int index) THROWS(EIndexOutOfBoundsException);
 	
 	/**
-	 * Reset and get the old data;
+	 * Reset and get the old data.
 	 */
 	sp<EA<byte> >    reset();
 

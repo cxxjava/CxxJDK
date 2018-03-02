@@ -12,10 +12,10 @@
 #include "./EByteChannel.hh"
 #include "./EMulticastChannel.hh"
 #include "./EMembershipKey.hh"
-#include "../../inc/EDatagramSocket.hh"
 #include "../../inc/EInetSocketAddress.hh"
 
 namespace efc {
+class EDatagramSocket;
 namespace nio {
 
 /**
@@ -89,8 +89,6 @@ namespace nio {
  * support concurrent reading and writing, though at most one thread may be
  * reading and at most one thread may be writing at any given time.  </p>
  *
- * @author Mark Reinhold
- * @author JSR-51 Expert Group
  * @since 1.4
  */
 
@@ -520,7 +518,7 @@ public:
 
 	virtual int getFDVal();
 
-	virtual EStringBase toString();
+	virtual EString toString();
 
 protected:
 	virtual void implConfigureBlocking(boolean block) THROWS(EIOException);
@@ -580,9 +578,6 @@ private:
 	Sender _sender;// = {0, 0};
 
 	// -- End of fields protected by stateLock
-
-	// Safe free when _socket != null;
-	boolean _freeing;// = false;
 
 	/**
 	 * Initializes a new instance of this class.

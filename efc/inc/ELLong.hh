@@ -566,7 +566,7 @@ public:
 	 *
 	 * @return  a string representation of this object in base&nbsp;10.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Returns a hash code for this <code>Long</code>. The result is

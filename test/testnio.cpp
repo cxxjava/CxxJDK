@@ -1,11 +1,11 @@
 #include "es_main.h"
 #include "Efc.hh"
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
-static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
-	EServerSocketChannel* server = null;
-	ESocketChannel* client = null;
+static void handleKey(ESelector *selector, sp<ESelectionKey> selectionKey) {
+	sp<EServerSocketChannel> server = null;
+	sp<ESocketChannel> client = null;
 
 	EIOByteBuffer receiveBuffer(512);
 	EA<EIOByteBuffer*> sends(3);
@@ -15,7 +15,7 @@ static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 	int count=0;
 
 	if (selectionKey->isAcceptable()) {
-		server = (EServerSocketChannel*) selectionKey->channel();
+		server = dynamic_pointer_cast<EServerSocketChannel>(selectionKey->channel());
 		client = server->accept();
 		if (!client) {
 			return;
@@ -27,7 +27,7 @@ static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 //		client->register_(selector, ESelectionKey::OP_READ | ESelectionKey::OP_WRITE);
 		client->register_(selector, ESelectionKey::OP_READ);
 	} else if (selectionKey->isReadable()) {
-		client = (ESocketChannel*) selectionKey->channel();
+		client = dynamic_pointer_cast<ESocketChannel>(selectionKey->channel());
 
 //		if (!client) {
 //			return;
@@ -52,13 +52,13 @@ static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 			char ss[6] = {0};
 			receiveBuffer.flip();
 			eso_strncpy(ss, (char*)receiveBuffer.current(), 3);
-//			ESystem::out->println("server recv:%s", ss);
+//			ESystem::out->printfln("server recv:%s", ss);
 //			client->register_(selector, ESelectionKey::OP_WRITE);
 			selectionKey->interestOps(ESelectionKey::OP_READ | ESelectionKey::OP_WRITE);
 		}
 	} else if (selectionKey->isWritable()) {
 		//sendBuffer.clear();
-		client = (ESocketChannel*) selectionKey->channel();
+		client = dynamic_pointer_cast<ESocketChannel>(selectionKey->channel());
 		//sendBuffer.put(sendText.getBytes());
         sends[0]->put("HTTP/1.1 200 OK\r\n", 17);
 		sends[0]->flip();
@@ -72,7 +72,7 @@ static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 			client->close();
 			return;
 		}
-//		ESystem::out->println("server send:%s", "1234567890");
+//		ESystem::out->printfln("server send:%s", "1234567890");
 //		client->register_(selector, ESelectionKey::OP_READ);
         selectionKey->interestOps(ESelectionKey::OP_READ);
 //        selectionKey->interestOps(0);
@@ -83,7 +83,7 @@ static void handleKey(ESelector *selector, ESelectionKey* selectionKey) {
 
 static void test_nioserver() {
 
-	EServerSocketChannel *ssc = EServerSocketChannel::open();
+	sp<EServerSocketChannel> ssc = EServerSocketChannel::open();
 	ssc->configureBlocking(false);
 	EInetSocketAddress isa(8899);
 	ssc->bind(&isa, 4096);
@@ -98,10 +98,10 @@ static void test_nioserver() {
 		int readyChannels = selector->select();
 		if (readyChannels == 0) continue;
 //		LOG("readyChannels=%d", readyChannels);
-		ESet< ESelectionKey* >* selectionKeys = selector->selectedKeys();
-		sp<EIterator < ESelectionKey* > > iterator = selectionKeys->iterator();
+		ESet<sp<ESelectionKey> >* selectionKeys = selector->selectedKeys();
+		sp<EIterator<sp<ESelectionKey> > > iterator = selectionKeys->iterator();
 		while (iterator->hasNext()) {
-			ESelectionKey* selectionKey = iterator->next();
+			sp<ESelectionKey> selectionKey = iterator->next();
 			handleKey(selector, selectionKey);
 			iterator->remove();
 		}
@@ -119,7 +119,7 @@ static void test_nioserver() {
 }
 
 static void test_nioserversocket() {
-	EServerSocketChannel *ssc = EServerSocketChannel::open();
+	sp<EServerSocketChannel> ssc = EServerSocketChannel::open();
 	EInetSocketAddress isa(8899);
 	ssc->bind(&isa);
 
@@ -139,25 +139,24 @@ static void test_nioserversocket() {
 	os->write(b, 12);
 
 	delete s;
-	delete ssc;//or	delete ss;
 }
 
 //===========================================================================
 
 
 static void test_nioclient() {
-	ESocketChannel* socketChannel = ESocketChannel::open();
+	sp<ESocketChannel> socketChannel = ESocketChannel::open();
 	socketChannel->configureBlocking(false );
 	ESelector* selector = ESelector::open();
 	socketChannel->register_(selector, ESelectionKey::OP_CONNECT);
-	EInetSocketAddress SERVER_ADDRESS("localhost", 8899);
+	EInetSocketAddress SERVER_ADDRESS("localhost", 8096);
 //	EInetSocketAddress SERVER_ADDRESS("10.211.55.8", 8899);
 	socketChannel->connect(&SERVER_ADDRESS);
 
-	ESet<ESelectionKey*>* selectionKeys;
-	sp<EIterator<ESelectionKey*> > iterator;
-	ESelectionKey* selectionKey;
-	ESocketChannel* client;
+	ESet<sp<ESelectionKey> >* selectionKeys;
+	sp<EIterator<sp<ESelectionKey> > > iterator;
+	sp<ESelectionKey> selectionKey;
+	sp<ESocketChannel> client;
 	int count = 0;
 	EIOByteBuffer sendbuffer(512);
 	EIOByteBuffer receivebuffer(512);
@@ -174,7 +173,7 @@ static void test_nioclient() {
 			selectionKey = iterator->next();
 			if (selectionKey->isConnectable()) {
 				ESystem::out->println("client connect");
-				client = (ESocketChannel*) selectionKey->channel();
+				client = dynamic_pointer_cast<ESocketChannel>(selectionKey->channel());
 				if (client->isConnectionPending()) {
 					client->finishConnect();
 					ESystem::out->println("connect finished!");
@@ -186,7 +185,7 @@ static void test_nioclient() {
 //				client->register_(selector, ESelectionKey::OP_READ | ESelectionKey::OP_WRITE);
 				client->register_(selector, ESelectionKey::OP_WRITE);
 			} else if (selectionKey->isReadable()) {
-				client = (ESocketChannel*) selectionKey->channel();
+				client = dynamic_pointer_cast<ESocketChannel>(selectionKey->channel());
 				receivebuffer.clear();
 				try {
 					count = client->read(&receivebuffer);
@@ -195,13 +194,13 @@ static void test_nioclient() {
 				}
 				if(count>0){
 					receivebuffer.flip();
-					ESystem::out->println("recev server:%s", receivebuffer.current());
+					ESystem::out->printfln("recev server:%s", receivebuffer.current());
 //					client->register_(selector, ESelectionKey::OP_WRITE);
 					selectionKey->interestOps(ESelectionKey::OP_READ | ESelectionKey::OP_WRITE);
 				}
 			} else if (selectionKey->isWritable()) {
 				sendbuffer.clear();
-				client = (ESocketChannel*) selectionKey->channel();
+				client = dynamic_pointer_cast<ESocketChannel>(selectionKey->channel());
 				sendbuffer.put("xxx", 3);
 				sendbuffer.flip();
 
@@ -216,7 +215,7 @@ static void test_nioclient() {
 				} catch (...) {
 					client->close();
 				}
-				ESystem::out->println("sendto server:%s", "xxx");
+				ESystem::out->printfln("sendto server:%s", "xxx");
 //				client->register_(selector, ESelectionKey::OP_READ);
 				selectionKey->interestOps(ESelectionKey::OP_READ);
 			}
@@ -228,7 +227,6 @@ static void test_nioclient() {
 	delete selector;
 
 	socketChannel->close();
-	delete socketChannel;
 }
 
 //===========================================================================
@@ -237,38 +235,38 @@ static void test_bytebuffer1() {
 	char addr[11] = {'x', 0};
 	EIOByteBuffer *bb = EIOByteBuffer::wrap(addr, 10, 0);
 
-	ESystem::out->println("bb text0:[%d]%s", bb->remaining(), bb->current());
+	ESystem::out->printfln("bb text0:[%d]%s", bb->remaining(), bb->current());
 	bb->put('a');
 	bb->put('b');
 	bb->put('c');
 	bb->put('d');
 	bb->flip();
-	ESystem::out->println("bb text1:[%d]%s", bb->remaining(), bb->current());
+	ESystem::out->printfln("bb text1:[%d]%s", bb->remaining(), bb->current());
 	bb->put('1');
 	bb->put('2');
 	bb->put('3');
 	bb->put('4');
 	bb->flip();
-	ESystem::out->println("bb text2:[%d]%s", bb->remaining(), bb->current());
-	ESystem::out->println("bb byte1:%c", bb->get());
-	ESystem::out->println("bb byte2:%c", bb->get());
-	ESystem::out->println("bb byte3:%c", bb->get());
-	ESystem::out->println("bb byte4:%c", bb->get());
+	ESystem::out->printfln("bb text2:[%d]%s", bb->remaining(), bb->current());
+	ESystem::out->printfln("bb byte1:%c", bb->get());
+	ESystem::out->printfln("bb byte2:%c", bb->get());
+	ESystem::out->printfln("bb byte3:%c", bb->get());
+	ESystem::out->printfln("bb byte4:%c", bb->get());
 
-	ESystem::out->println("bb byte0:%c", bb->get(0));
-	ESystem::out->println("bb byte3:%c", bb->get(3));
-//	ESystem::out->println("bb byte4:%c", bb->get(4));
+	ESystem::out->printfln("bb byte0:%c", bb->get(0));
+	ESystem::out->printfln("bb byte3:%c", bb->get(3));
+//	ESystem::out->printfln("bb byte4:%c", bb->get(4));
 
 	bb->clear();
 	bb->put("ABCDEFG12345678", 10);
 	bb->flip();
-	ESystem::out->println("bb text3:[%d]%s", bb->remaining(), bb->current());
+	ESystem::out->printfln("bb text3:[%d]%s", bb->remaining(), bb->current());
 	bb->put("ABCDEFG12345678", 10);
 	char readBuf[20] = {0};
 	bb->flip();
-	ESystem::out->println("bb text4:[%d]", bb->remaining());
+	ESystem::out->printfln("bb text4:[%d]", bb->remaining());
 	bb->get(readBuf, sizeof(readBuf), 10);
-	ESystem::out->println("bb text4:[%d]%s", bb->remaining(), readBuf);
+	ESystem::out->printfln("bb text4:[%d]%s", bb->remaining(), readBuf);
 
 	delete bb;
 }
@@ -279,21 +277,32 @@ static void test_bytebuffer2() {
 			(byte) 'o')->put((byte) '!');
 	bb.flip();
 	while (bb.hasRemaining()) {
-		ESystem::out->print("%c", (char) bb.get());
+		ESystem::out->printf("%c", (char) bb.get());
 	}
 	ESystem::out->println();
 	bb.put(0, (byte) 'a');
 	bb.put(1, (byte) 'b');
 	bb.rewind();
 	for (int i = 0; i < bb.remaining(); i++) {
-		ESystem::out->print("%c", (char) bb.get(i));
+		ESystem::out->printf("%c", (char) bb.get(i));
 	}
 	ESystem::out->println();
 	bb.clear();
 }
 
 static void test_bytebuffer() {
-    //    EIOByteBuffer receiveBuffer;
+	byte buf[512];
+	sp<EIOByteBuffer> bb = EIOByteBuffer::wrap((void*)buf, 512);
+	bb->putLLong(0, 998877665544L);
+//	bb->flip();
+	llong l = bb->getLLong(0);
+	LOG("l=%ld", l);
+
+	sp<EIOByteBuffer> bf = EIOByteBuffer::wrap((void*)"consddss", 8);
+	short n = bf->getShort();
+	LOG("n=%ld", n);
+
+//    EIOByteBuffer receiveBuffer;
 	EA<EIOByteBuffer*> sends(3);
 	sends[0] = new EIOByteBuffer((void*)"1234567890", 10, 0);
 	sends[1] = new EIOByteBuffer((void*)"abcdefghijk", 10, 0);
@@ -373,7 +382,7 @@ static void sendFile(EDatagramChannel* ch, EInetSocketAddress* remote) {
 }
 
 static void test_nioudpserver() {
-	EDatagramChannel* channel;
+	sp<EDatagramChannel> channel;
 	ESelector* selector;
 	EInetSocketAddress isa(9001);
 
@@ -395,12 +404,12 @@ static void test_nioudpserver() {
 		try {
 			int n = selector->select(timeout);
 			if (n > 0) {
-				sp<EIterator<ESelectionKey*> > iter = selector->selectedKeys()->iterator();
+				sp<EIterator<sp<ESelectionKey> > > iter = selector->selectedKeys()->iterator();
 				while (iter->hasNext()) {
-					ESelectionKey* key = iter->next();
+					sp<ESelectionKey> key = iter->next();
 					iter->remove();
 
-					EDatagramChannel* ch = dynamic_cast<EDatagramChannel*>(key->channel());
+					sp<EDatagramChannel> ch = dynamic_pointer_cast<EDatagramChannel>(key->channel());
 
 					if (key->isReadable()) {
 						buf->clear();
@@ -412,7 +421,7 @@ static void test_nioudpserver() {
 							buf->flip();
 							ch->send(buf, raddr.get());
 						} else {
-							sendFile(ch, raddr.get());
+							sendFile(ch.get(), raddr.get());
 						}
 					}
 				}
@@ -426,7 +435,6 @@ static void test_nioudpserver() {
 	selector->close();
 
 	delete buf;
-	delete channel;
 	delete selector;
 }
 
@@ -437,17 +445,17 @@ MAIN_IMPL(testnio) {
 		do {
 
 //		test_bytebuffer();
-//		test_nioserver();
+		test_nioserver();
 //		test_nioclient();
 //		test_nioserversocket();
 //		test_filechannel();
-		test_nioudpserver();
+//		test_nioudpserver();
 //		test_nioudpclient();
 
 		} while (1);
 	}
 	catch (EException& e) {
-		ESystem::out->println("e=%s", e.toString().c_str());
+		ESystem::out->printfln("e=%s", e.toString().c_str());
 		e.printStackTrace();
 	}
 	catch (...) {

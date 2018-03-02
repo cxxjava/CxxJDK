@@ -9,7 +9,7 @@
 #define EBLOCKINGQUEUE_HH_
 
 #include "../ECollection.hh"
-#include "./EConcurrentQueue.hh"
+#include "../EQueue.hh"
 #include "../EInterruptedException.hh"
 
 namespace efc {
@@ -155,7 +155,7 @@ namespace efc {
  */
 
 template<typename E>
-interface EBlockingQueue : virtual public EConcurrentQueue<E>
+interface EBlockingQueue : virtual public EQueue<sp<E> >
 {
 	virtual ~EBlockingQueue(){}
 
@@ -177,7 +177,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 * @throws IllegalArgumentException if some property of the specified
 	 *         element prevents it from being added to this queue
 	 */
-	virtual boolean add(E* e) = 0;
 	virtual boolean add(sp<E> e) = 0;
 
 	/**
@@ -197,7 +196,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 * @throws IllegalArgumentException if some property of the specified
 	 *         element prevents it from being added to this queue
 	 */
-	virtual boolean offer(E* e) = 0;
 	virtual boolean offer(sp<E> e) = 0;
 
 	/**
@@ -212,7 +210,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 * @throws IllegalArgumentException if some property of the specified
 	 *         element prevents it from being added to this queue
 	 */
-	virtual void put(E* e) THROWS(EInterruptedException) = 0;
 	virtual void put(sp<E> e) THROWS(EInterruptedException) = 0;
 
 	/**
@@ -233,7 +230,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 * @throws IllegalArgumentException if some property of the specified
 	 *         element prevents it from being added to this queue
 	 */
-	virtual boolean offer(E* e, llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) = 0;
 	virtual boolean offer(sp<E> e, llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) = 0;
 
 	/**
@@ -293,7 +289,7 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 *         is incompatible with this queue (optional)
 	 * @throws NullPointerException if the specified element is null (optional)
 	 */
-	using EConcurrentQueue<E>::remove;
+	using EQueue<sp<E> >::remove;
 
 	/**
 	 * Returns <tt>true</tt> if this queue contains the specified element.
@@ -331,7 +327,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 *         queue, or some property of an element of this queue prevents
 	 *         it from being added to the specified collection
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c) = 0;
     virtual int drainTo(ECollection<sp<E> >* c) = 0;
 
 	/**
@@ -357,7 +352,6 @@ interface EBlockingQueue : virtual public EConcurrentQueue<E>
 	 *         queue, or some property of an element of this queue prevents
 	 *         it from being added to the specified collection
 	 */
-    virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) = 0;
     virtual int drainTo(ECollection<sp<E> >* c, int maxElements) = 0;
 };
 

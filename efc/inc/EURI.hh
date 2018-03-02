@@ -419,7 +419,6 @@ namespace efc {
  * opening a connection to the specified resource.
  *
  *
- * @author Mark Reinhold
  * @since 1.4
  *
  * @see <a href="http://www.ietf.org/rfc/rfc2279.txt"><i>RFC&nbsp;2279: UTF-8, a
@@ -1326,7 +1325,7 @@ public:
      *
      * @return  The string form of this URI
      */
-    virtual EStringBase toString();
+    virtual EString toString();
 
     /**
 	 * Returns the content of this URI as a US-ASCII string.

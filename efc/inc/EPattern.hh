@@ -691,7 +691,7 @@ public:
 	 * @return  The string representation of this pattern
 	 * @since 1.5
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Return c pcre ptr.

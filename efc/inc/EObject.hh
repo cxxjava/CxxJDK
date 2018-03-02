@@ -2,7 +2,6 @@
 #define __EObject_H__
 
 #include "EBase.hh"
-#include "EStringBase.hh"
 
 namespace efc {
 
@@ -87,6 +86,8 @@ instanceof(T &object)
 }
 
 //=============================================================================
+
+class EString;
 
 class EObject
 {
@@ -200,7 +201,7 @@ public:
 	 *
 	 * @return  a string representation of the object.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 };
 
 } /* namespace efc */

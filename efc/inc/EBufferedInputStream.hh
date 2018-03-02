@@ -194,11 +194,6 @@ public:
 
 protected:
 	/**
-	 *
-	 */
-	boolean owned;
-
-	/**
 	 * The internal buffer array where the data is stored. When necessary,
 	 * it may be replaced by another array of
 	 * a different size.

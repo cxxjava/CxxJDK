@@ -26,8 +26,6 @@ namespace efc {
  * differently, and might arrive in any order. Packet delivery is
  * not guaranteed.
  *
- * @author  Pavani Diwanji
- * @author  Benjamin Renaud
  * @since   JDK1.0
  */
 

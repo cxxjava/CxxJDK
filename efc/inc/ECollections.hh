@@ -417,6 +417,8 @@ public:
 	template<typename E>
 	class SynchronizedCollection : public ECollection<E> {
 	public:
+		typedef typename ETraits<E>::indexType idxE;
+
 		SynchronizedCollection(ECollection<E>* c, ELock* lock,
 				boolean autoFree) :
 					autoFree_(autoFree) {
@@ -448,7 +450,7 @@ public:
 		boolean isEmpty() {
             SYNCBLOCK(lock_) {return collection_->isEmpty();}}
 		}
-		boolean contains(E o) {
+		boolean contains(idxE o) {
             SYNCBLOCK(lock_) {return collection_->contains(o);}}
 		}
 		sp<EIterator<E> > iterator(int index=0) {
@@ -457,7 +459,7 @@ public:
 		boolean add(E e) {
             SYNCBLOCK(lock_) {return collection_->add(e);}}
 		}
-		boolean remove(E o) {
+		boolean remove(idxE o) {
             SYNCBLOCK(lock_) {return collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
@@ -472,8 +474,11 @@ public:
 		void clear() {
             SYNCBLOCK(lock_) {collection_->clear();}}
 		}
-		EStringBase toString() {
+		EString toString() {
             SYNCBLOCK(lock_) {return collection_->toString();}}
+		}
+		EA<E> toArray() {
+			SYNCBLOCK(lock_) {return collection_->toArray();}}
 		}
 
 	protected:
@@ -519,6 +524,8 @@ public:
 	class SynchronizedSet: public SynchronizedCollection<E>,
 			public ESet<E> {
 	public:
+		typedef typename ETraits<E>::indexType idxE;
+
 		SynchronizedSet(ESet<E>* s, ELock* mutex=null, boolean autoFree=true) :
 			SynchronizedCollection<E>(s, mutex, autoFree) {
 		}
@@ -528,7 +535,7 @@ public:
 		boolean isEmpty() {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}}
 		}
-		boolean contains(E o) {
+		boolean contains(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}}
 		}
 		sp<EIterator<E> > iterator(int index=0) {
@@ -537,7 +544,7 @@ public:
 		boolean add(E e) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}}
 		}
-		boolean remove(E o) {
+		boolean remove(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
@@ -552,11 +559,14 @@ public:
 		void clear() {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}}
 		}
-		boolean equals(E o) {
+		boolean equals(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->equals(o);}}
 		}
 		int hashCode() {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->hashCode();}}
+		}
+		EA<E> toArray() {
+			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->toArray();}}
 		}
 	};
 
@@ -594,6 +604,8 @@ public:
 	class SynchronizedList : public SynchronizedCollection<E>,
 			public EList<E> {
 	public:
+		typedef typename ETraits<E>::indexType idxE;
+
 		EList<E>* list;
 
 		SynchronizedList(EList<E>* list, ELock* mutex = null, boolean autoFree = true ) :
@@ -601,7 +613,7 @@ public:
 			this->list = list;
 		}
 
-		boolean equals(E o) {
+		boolean equals(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->equals(o);}}
 		}
 		int hashCode() {
@@ -621,10 +633,10 @@ public:
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->removeAt(index);}}
 		}
 
-		int indexOf(E o) {
+		int indexOf(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->indexOf(o);}}
 		}
-		int lastIndexOf(E o) {
+		int lastIndexOf(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return list->lastIndexOf(o);}}
 		}
 
@@ -634,7 +646,7 @@ public:
 		boolean isEmpty() {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->isEmpty();}}
 		}
-		boolean contains(E o) {
+		boolean contains(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->contains(o);}}
 		}
 		sp<EIterator<E> > iterator(int index=0) {
@@ -643,7 +655,7 @@ public:
 		boolean add(E e) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->add(e);}}
 		}
-		boolean remove(E o) {
+		boolean remove(idxE o) {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->remove(o);}}
 		}
 		boolean containsAll(ECollection<E> *c) {
@@ -657,6 +669,9 @@ public:
 		}
 		void clear() {
             SYNCBLOCK(SynchronizedCollection<E>::lock_) {SynchronizedCollection<E>::collection_->clear();}}
+		}
+		EA<E> toArray() {
+			SYNCBLOCK(SynchronizedCollection<E>::lock_) {return SynchronizedCollection<E>::collection_->toArray();}}
 		}
 		sp<EListIterator<E> > listIterator(int index = 0) {
 			return list->listIterator(index); // Must be manually synched by user
@@ -697,15 +712,19 @@ public:
 	 */
 	template<typename K, typename V>
 	class SynchronizedMap : public EMap<K,V> {
+	public:
+		typedef typename ETraits<K>::indexType idxK;
+		typedef typename ETraits<V>::indexType idxV;
+
 	private:
 		EMap<K,V>* m;     // Backing Map
 		ELock*  mutex;        // Object on which to synchronize
 		boolean needFreeLock;
 		boolean autoFree;
 
-		sp<ESet<K> > keySet_;// = null;
-		sp<ESet<EMapEntry<K,V>*> > entrySet_;// = null;
-		sp<ECollection<V> > values_;// = null;
+		ESet<K>* keySet_;// = null;
+		ESet<EMapEntry<K,V>*>* entrySet_;// = null;
+		ECollection<V>* values_;// = null;
 
 	public:
 		SynchronizedMap(EMap<K, V>* m, ELock* mutex = null,
@@ -730,6 +749,9 @@ public:
 			if (autoFree) {
 				delete m;
 			}
+			delete keySet_;
+			delete entrySet_;
+			delete values_;
 		}
 
 		int size() {
@@ -738,45 +760,45 @@ public:
 		boolean isEmpty() {
             SYNCBLOCK(mutex) {return m->isEmpty();}}
 		}
-		boolean containsKey(K key) {
+		boolean containsKey(idxK key) {
             SYNCBLOCK(mutex) {return m->containsKey(key);}}
 		}
-		boolean containsValue(V value) {
+		boolean containsValue(idxV value) {
             SYNCBLOCK(mutex) {return m->containsValue(value);}}
 		}
-		V get(K key) {
+		V get(idxK key) {
             SYNCBLOCK(mutex) {return m->get(key);}}
 		}
 		V put(K key, V value, boolean *absent=null) {
             SYNCBLOCK(mutex) {return m->put(key, value, absent);}}
 		}
-		V remove(K key) {
+		V remove(idxK key) {
             SYNCBLOCK(mutex) {return m->remove(key);}}
 		}
 		void clear() {
             SYNCBLOCK(mutex) {m->clear();}}
 		}
 
-		sp<ESet<K> > keySet() {
+		ESet<K>* keySet() {
 			SYNCBLOCK(mutex) {
 				if (keySet_==null)
-					keySet_ = new SynchronizedSet<K>(m->keySet().get(), mutex, false);
+					keySet_ = new SynchronizedSet<K>(m->keySet(), mutex, false);
 				return keySet_;
             }}
 		}
 
-		sp<ESet<EMapEntry<K,V>*> > entrySet() {
+		ESet<EMapEntry<K,V>*>* entrySet() {
 			SYNCBLOCK(mutex) {
 				if (entrySet_==null)
-					entrySet_ = new SynchronizedSet<EMapEntry<K,V>*>(m->entrySet().get(), mutex, false);
+					entrySet_ = new SynchronizedSet<EMapEntry<K,V>*>(m->entrySet(), mutex, false);
 				return entrySet_;
             }}
 		}
 
-		sp<ECollection<V> > values() {
+		ECollection<V>* values() {
 			SYNCBLOCK(mutex) {
 				if (values_==null)
-					values_ = new SynchronizedCollection<V>(m->values().get(), mutex, false);
+					values_ = new SynchronizedCollection<V>(m->values(), mutex, false);
 				return values_;
             }}
 		}
@@ -786,7 +808,7 @@ public:
 		int hashCode() {
             SYNCBLOCK(mutex) {return m->hashCode();}}
 		}
-		EStringBase toString() {
+		EString toString() {
             SYNCBLOCK(mutex) {return m->toString();}}
 		}
 
@@ -845,6 +867,8 @@ public:
 		ECollection<E>* c;
 
 	public:
+		typedef typename ETraits<E>::indexType idxE;
+
 		UnmodifiableCollection(ECollection<E>* c) {
 			if (c==null)
 				throw ENullPointerException(__FILE__, __LINE__);
@@ -853,16 +877,17 @@ public:
 
 		int size()                   {return c->size();}
 		boolean isEmpty()            {return c->isEmpty();}
-		boolean contains(E o) {return c->contains(o);}
-		EStringBase toString()           {return c->toString();}
+		boolean contains(idxE o)     {return c->contains(o);}
+		EA<E> toArray()              {return c->toArray();}
+		EString toString()           {return c->toString();}
 
 		sp<EIterator<E> > iterator(int index=0) {
 			class UnmodifiableIterator : public EIterator<E> {
 			private:
 				sp<EIterator<E> > i;
 			public:
-				UnmodifiableIterator(ECollection<E>* c) {
-					i = c->iterator();
+				UnmodifiableIterator(ECollection<E>* c, int index) {
+					i = c->iterator(index);
 				}
 				~UnmodifiableIterator() {
 					//
@@ -876,13 +901,13 @@ public:
 					throw EUnsupportedOperationException(__FILE__, __LINE__);
 				}
 			};
-			return new UnmodifiableIterator(c);
+			return new UnmodifiableIterator(c, index);
 		}
 
 		boolean add(E e) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
-		boolean remove(E o) {
+		boolean remove(idxE o) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
@@ -926,6 +951,8 @@ public:
 	template<typename E>
 	class UnmodifiableSet: public UnmodifiableCollection<E>, public ESet<E> {
 	public:
+		typedef typename ETraits<E>::indexType idxE;
+
 		UnmodifiableSet(ESet<E>* s) : UnmodifiableCollection<E>(s) {}
 
 		int size() {
@@ -934,8 +961,11 @@ public:
 		boolean isEmpty() {
 			return UnmodifiableCollection<E>::c->isEmpty();
 		}
-		boolean contains(E o) {
+		boolean contains(idxE o) {
 			return UnmodifiableCollection<E>::c->contains(o);
+		}
+		EA<E> toArray() {
+			return UnmodifiableCollection<E>::c->toArray();
 		}
 		sp<EIterator<E> > iterator(int index=0) {
 			return UnmodifiableCollection<E>::c->iterator(index);
@@ -943,7 +973,7 @@ public:
 		boolean add(E e) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
-		boolean remove(E o) {
+		boolean remove(idxE o) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 		boolean containsAll(ECollection<E> *c) {
@@ -959,7 +989,7 @@ public:
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
-		boolean equals(E o) {return o == this || UnmodifiableCollection<E>::c->equals(o);}
+		boolean equals(idxE o) {return o == this || UnmodifiableCollection<E>::c->equals(o);}
 		int hashCode()           {return UnmodifiableCollection<E>::c->hashCode();}
 	};
 	template<typename T>
@@ -986,12 +1016,16 @@ public:
 	 */
 	template<typename K, typename V>
 	class UnmodifiableMap : public EMap<K,V> {
+	public:
+		typedef typename ETraits<K>::indexType idxK;
+		typedef typename ETraits<V>::indexType idxV;
+
 	private:
 		EMap<K,V>* m;
 
-		sp<ESet<K> > keySet_;// = null;
-		sp<ESet<EMapEntry<K,V>*> > entrySet_;// = null;
-		sp<ECollection<V> > values_;// = null;
+		ESet<K>* keySet_;// = null;
+		ESet<EMapEntry<K,V>*>* entrySet_;// = null;
+		ECollection<V>* values_;// = null;
 
 		/**
 		 * We need this class in addition to UnmodifiableSet as
@@ -1013,8 +1047,8 @@ public:
 					sp<EIterator<EMapEntry<K,V>*> > i;
 
 				public:
-					UnmodifiableEntrySetIterator() {
-						i = UnmodifiableCollection<EMapEntry<K,V>*>::c->iterator();
+					UnmodifiableEntrySetIterator(int index) {
+						i = UnmodifiableCollection<EMapEntry<K,V>*>::c->iterator(index);
 					}
 					~UnmodifiableEntrySetIterator() {
 						//
@@ -1033,7 +1067,7 @@ public:
 						throw EUnsupportedOperationException(__FILE__, __LINE__);
 					}
 				};
-				return new UnmodifiableEntrySetIterator();
+				return new UnmodifiableEntrySetIterator(index);
 			}
 
 			/**
@@ -1087,20 +1121,22 @@ public:
 			values_ = null;
 		}
 		~UnmodifiableMap() {
-			//
+			delete keySet_;
+			delete entrySet_;
+			delete values_;
 		}
 
 	public:
 		int size()                   {return m->size();}
 		boolean isEmpty()            {return m->isEmpty();}
-		boolean containsKey(K key)   {return m->containsKey(key);}
-		boolean containsValue(V val) {return m->containsValue(val);}
+		boolean containsKey(idxK key)   {return m->containsKey(key);}
+		boolean containsValue(idxV val) {return m->containsValue(val);}
 		V get(K key)                 {return m->get(key);}
 
 		V put(K key, V value, boolean *absent=null) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
-		V remove(K key) {
+		V remove(idxK key) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 		void putAll(EMap<K,V>* m) {
@@ -1110,12 +1146,12 @@ public:
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
-		sp<ESet<K> > keySet() {
+		ESet<K>* keySet() {
 			if (keySet_==null)
-				keySet_ = unmodifiableSet(m->keySet().get());
+				keySet_ = unmodifiableSet(m->keySet());
 			return keySet_;
 		}
-		sp<ESet<EMapEntry<K,V>*> > entrySet() {
+		ESet<EMapEntry<K,V>*>* entrySet() {
 			/** TODO:
 			 if (entrySet_==null)
 				entrySet_ = new UnmodifiableEntrySet<K,V>(m.entrySet());
@@ -1123,15 +1159,15 @@ public:
 			 */
 			return m->entrySet();
 		}
-		sp<ECollection<V> > values() {
+		ECollection<V>* values() {
 			if (values_==null)
-				values_ = unmodifiableCollection(m->values().get());
+				values_ = unmodifiableCollection(m->values());
 			return values_;
 		}
 
 		boolean equals(EMapEntry<K,V>* o) {return o == this || m->equals(o);}
 		int hashCode()           {return m->hashCode();}
-		EStringBase toString()       {return m->toString();}
+		EString toString()       {return m->toString();}
 
 		/**
 		 * Auto free.
@@ -1248,6 +1284,11 @@ private:
 
 	template<typename E>
 	static int compare(E o1, E o2) {
+		if (o1 == o2) return 0;
+		return (o1 < o2) ? -1 : 1;
+	}
+	template<typename E>
+	static int compare(E* o1, E* o2) {
 		return o1->compareTo(o2);
 	}
 	template<typename E>

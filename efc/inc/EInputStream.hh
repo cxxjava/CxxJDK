@@ -8,7 +8,7 @@
 #ifndef EInputStream_HH_
 #define EInputStream_HH_
 
-#include "EObject.hh"
+#include "ECloseable.hh"
 #include "EIOException.hh"
 
 namespace efc {
@@ -31,7 +31,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-abstract class EInputStream : virtual public EObject {
+abstract class EInputStream : virtual public ECloseable {
 public:
 	virtual ~EInputStream(){}
 

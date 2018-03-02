@@ -82,7 +82,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Parses the string argument as a signed {@code short} in the

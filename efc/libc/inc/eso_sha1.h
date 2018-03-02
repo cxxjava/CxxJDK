@@ -20,6 +20,8 @@
 extern "C" {
 #endif
 
+/** base64 encoded SHA1 is always 28 chars */
+#define ES_SHA1_BASE64SIZE 28
 
 /** size of the SHA1 DIGEST */
 #define ES_SHA1_DIGESTSIZE 20
@@ -65,22 +67,20 @@ struct es_sha1_ctx_t {
  *     will always generate the same hash, making it easier
  *     to break since the search space is smaller.
  */
-void eso_sha1_base64(const char *clear, int len, char out[ES_SHA1_DIGESTSIZE]);
+void eso_sha1_base64(const char *clear, int len, char out[ES_SHA1_BASE64SIZE]);
 
 /**
  * Initialize the SHA digest
  * @param context The SHA context to initialize
  */
-void es_sha1_init(es_sha1_ctx_t *context);
+void eso_sha1_init(es_sha1_ctx_t *context);
 
 /**
  * Update the SHA digest
  * @param context The SHA1 context to update
- * @param input The buffer to add to the SHA digest
- * @param inputLen The length of the input buffer
+ * @param input The string to add to the SHA digest
  */
-void es_sha1_update(es_sha1_ctx_t *context, const char *input,
-                                unsigned int inputLen);
+void eso_sha1_update(es_sha1_ctx_t *context, const char *input);
 
 /**
  * Update the SHA digest with binary data
@@ -88,7 +88,7 @@ void es_sha1_update(es_sha1_ctx_t *context, const char *input,
  * @param input The buffer to add to the SHA digest
  * @param inputLen The length of the input buffer
  */
-void es_sha1_update_binary(es_sha1_ctx_t *context,
+void eso_sha1_update_binary(es_sha1_ctx_t *context,
                                        const unsigned char *input,
                                        unsigned int inputLen);
 

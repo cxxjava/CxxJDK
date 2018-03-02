@@ -407,7 +407,7 @@ public:
 	 * @return  a string representation of the value of this object in
 	 *          base&nbsp;10.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Returns a hash code for this <code>Integer</code>.

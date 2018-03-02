@@ -8,6 +8,7 @@
 #ifndef ERandomAccessFile_HH_
 #define ERandomAccessFile_HH_
 
+#include "ECloseable.hh"
 #include "EDataOutput.hh"
 #include "EDataInput.hh"
 #include "EFile.hh"
@@ -44,7 +45,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class ERandomAccessFile : public EDataOutput, public EDataInput {
+class ERandomAccessFile : public EDataOutput, public EDataInput, virtual public ECloseable {
 public:
 	virtual ~ERandomAccessFile();
 	

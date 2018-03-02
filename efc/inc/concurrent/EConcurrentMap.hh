@@ -8,8 +8,8 @@
 #ifndef ECONCURRENTMAP_HH_
 #define ECONCURRENTMAP_HH_
 
-#include "./EConcurrentSet.hh"
-#include "./EConcurrentCollection.hh"
+#include "../ESet.hh"
+#include "../ECollection.hh"
 
 namespace efc {
 
@@ -231,7 +231,6 @@ interface EConcurrentMap : virtual public EObject {
 	 * @throws IllegalArgumentException if some property of the specified key
 	 *         or value prevents it from being stored in this map
 	 */
-	virtual sp<V> put(K* key, V* value) = 0;
 	virtual sp<V> put(sp<K> key, sp<V> value) = 0;
 
 	/**
@@ -290,7 +289,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a set view of the keys contained in this map
 	 */
-	virtual sp<EConcurrentSet<K> > keySet() = 0;
+	virtual ESet<sp<K> >* keySet() = 0;
 
 	/**
 	 * Returns a {@link Collection} view of the values contained in this map.
@@ -307,7 +306,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a collection view of the values contained in this map
 	 */
-	virtual sp<EConcurrentCollection<V> > values() = 0;
+	virtual ECollection<sp<V> >* values() = 0;
 
 	/**
 	 * Returns a {@link Set} view of the mappings contained in this map.
@@ -325,7 +324,7 @@ interface EConcurrentMap : virtual public EObject {
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	virtual sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() = 0;
+	virtual ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() = 0;
 
 
 	// ==ConcurrentMap==
@@ -358,7 +357,6 @@ interface EConcurrentMap : virtual public EObject {
      *         or value prevents it from being stored in this map
      *
      */
-	virtual sp<V> putIfAbsent(K* key, V* value) = 0;
 	virtual sp<V> putIfAbsent(sp<K> key, sp<V> value) = 0;
 
     /**
@@ -406,7 +404,6 @@ interface EConcurrentMap : virtual public EObject {
      * @throws IllegalArgumentException if some property of a specified key
      *         or value prevents it from being stored in this map
      */
-	virtual boolean replace(K* key, V* oldValue, V* newValue) = 0;
 	virtual boolean replace(K* key, V* oldValue, sp<V> newValue) = 0;
 
     /**
@@ -434,7 +431,6 @@ interface EConcurrentMap : virtual public EObject {
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
      */
-	virtual sp<V> replace(K* key, V* value) = 0;
 	virtual sp<V> replace(K* key, sp<V> value) = 0;
 };
 
@@ -522,8 +518,6 @@ ECME_DECLARE(int)
 ECME_DECLARE(short)
 ECME_DECLARE(long)
 ECME_DECLARE(llong)
-ECME_DECLARE(float)
-ECME_DECLARE(double)
 
 
 #define ECM_DECLARE(K) template<typename V> \
@@ -535,19 +529,15 @@ interface EConcurrentMap<K, V> : virtual public EObject { \
 	virtual boolean containsKey(K key) = 0; \
 	virtual boolean containsValue(V* value) = 0; \
 	virtual sp<V> get(K key) = 0; \
-	virtual sp<V> put(K key, V* value) = 0; \
 	virtual sp<V> put(K key, sp<V> value) = 0; \
 	virtual sp<V> remove(K key) = 0; \
 	virtual void clear() = 0; \
-	virtual sp<EConcurrentSet<K> > keySet() = 0; \
-	virtual sp<EConcurrentCollection<V> > values() = 0; \
-	virtual sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() = 0; \
-	virtual sp<V> putIfAbsent(K key, V* value) = 0; \
+	virtual ESet<K>* keySet() = 0; \
+	virtual ECollection<sp<V> >* values() = 0; \
+	virtual ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() = 0; \
 	virtual sp<V> putIfAbsent(K key, sp<V> value) = 0; \
 	virtual boolean remove(K key, V* value) = 0; \
-	virtual boolean replace(K key, V* oldValue, V* newValue) = 0; \
 	virtual boolean replace(K key, V* oldValue, sp<V> newValue) = 0; \
-	virtual sp<V> replace(K key, V* value) = 0; \
 	virtual sp<V> replace(K key, sp<V> value) = 0; \
 };
 
@@ -557,8 +547,6 @@ ECM_DECLARE(int)
 ECM_DECLARE(short)
 ECM_DECLARE(long)
 ECM_DECLARE(llong)
-ECM_DECLARE(float)
-ECM_DECLARE(double)
 
 
 #define ECIE_DECLARE(K) template<typename V> \
@@ -598,8 +586,6 @@ ECIE_DECLARE(int)
 ECIE_DECLARE(short)
 ECIE_DECLARE(long)
 ECIE_DECLARE(llong)
-ECIE_DECLARE(float)
-ECIE_DECLARE(double)
 
 } /* namespace efc */
 #endif /* ECONCURRENTMAP_HH_ */

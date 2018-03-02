@@ -449,11 +449,23 @@ static void test_sys(void)
 
 static void test_dso(void)
 {
+#ifndef WIN32
+	//1.
 	es_dso_t *handle = NULL;
 	handle = eso_dso_load("E:\\WORK\\MEC\\libc\\test\\Debug\\uninst.dll");
-	void *pfunc = eso_dso_sym(handle, "UninstInitialize");
-	pfunc = eso_dso_sym(handle, "UninstInitializexx");
-	eso_dso_unload(&handle);
+	if (handle) {
+		void *pfunc = eso_dso_sym(handle, "UninstInitialize");
+		pfunc = eso_dso_sym(handle, "UninstInitializexx");
+		eso_dso_unload(&handle);
+	}
+
+	//2.
+	printf("before sleep.\n");
+	typedef unsigned int (*sleep_t)(unsigned int seconds);
+	sleep_t sleep_f = (sleep_t)eso_dso_sym(RTLD_NEXT, "sleep");
+	sleep_f(1);
+	printf("after sleep.\n");
+#endif
 }
 
 static void test_mmap(void)
@@ -1246,7 +1258,7 @@ MAIN_IMPL(testlibc) {
 	eso_initialize();
 
 	do {
-		test_mstr();
+//		test_mstr();
 //		test_mpool();
 //		test_bitset();
 //		test_conf();
@@ -1262,7 +1274,7 @@ MAIN_IMPL(testlibc) {
 //		test_time();
 //		test_signal();
 //		test_sys();
-//		test_dso();
+		test_dso();
 //		test_mmap();
 //		test_shm();
 //		test_pipe();

@@ -117,7 +117,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} is null
 	 */
-	void schedule(ETimerTask* task, llong delay);
+	void schedule(sp<ETimerTask> task, llong delay);
 
 	/**
 	 * Schedules the specified task for execution at the specified time.  If
@@ -130,7 +130,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} or {@code time} is null
 	 */
-	void schedule(ETimerTask* task, EDate* time);
+	void schedule(sp<ETimerTask> task, EDate* time);
 
 	/**
 	 * Schedules the specified task for repeated <i>fixed-delay execution</i>,
@@ -164,7 +164,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} is null
 	 */
-	void schedule(ETimerTask* task, llong delay, llong period);
+	void schedule(sp<ETimerTask> task, llong delay, llong period);
 
 	/**
 	 * Schedules the specified task for repeated <i>fixed-delay execution</i>,
@@ -199,7 +199,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} or {@code firstTime} is null
 	 */
-	void schedule(ETimerTask* task, EDate* firstTime, llong period);
+	void schedule(sp<ETimerTask> task, EDate* firstTime, llong period);
 
 	/**
 	 * Schedules the specified task for repeated <i>fixed-rate execution</i>,
@@ -234,7 +234,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} is null
 	 */
-	void scheduleAtFixedRate(ETimerTask* task, llong delay, llong period);
+	void scheduleAtFixedRate(sp<ETimerTask> task, llong delay, llong period);
 
 	/**
 	 * Schedules the specified task for repeated <i>fixed-rate execution</i>,
@@ -271,7 +271,7 @@ public:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} or {@code firstTime} is null
 	 */
-	void scheduleAtFixedRate(ETimerTask* task, EDate* firstTime, llong period);
+	void scheduleAtFixedRate(sp<ETimerTask> task, EDate* firstTime, llong period);
 
 	/**
 	 * Terminates this timer, discarding any currently scheduled tasks.
@@ -344,7 +344,47 @@ private:
 	 *         cancelled, timer was cancelled, or timer thread terminated.
 	 * @throws NullPointerException if {@code task} is null
 	 */
-	void sched(ETimerTask* task, llong time, llong period);
+	void sched(sp<ETimerTask> task, llong time, llong period);
+
+public:
+#ifdef CPP11_SUPPORT
+public:
+	sp<ETimerTask> scheduleX(llong delay, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->schedule(task, delay);
+		return task;
+	}
+
+	sp<ETimerTask> scheduleX(EDate* time, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->schedule(task, time);
+		return task;
+	}
+
+	sp<ETimerTask> scheduleX(llong delay, llong period, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->schedule(task, delay, period);
+		return task;
+	}
+
+	sp<ETimerTask> scheduleX(EDate* firstTime, llong period, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->schedule(task, firstTime, period);
+		return task;
+	}
+
+	sp<ETimerTask> scheduleAtFixedRateX(llong delay, llong period, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->scheduleAtFixedRate(task, delay, period);
+		return task;
+	}
+
+	sp<ETimerTask> scheduleAtFixedRateX(EDate* firstTime, llong period, std::function<void()> func) {
+		sp<ETimerTask> task = new ETimerTaskTarget(func);
+		this->scheduleAtFixedRate(task, firstTime, period);
+		return task;
+	}
+#endif
 };
 
 } /* namespace efc */

@@ -25,7 +25,6 @@ namespace efc {
  * Throwable, boolean, boolean) suppression were disabled and/or the
  * stack trace was not writable}.
  *
- * @author  unascribed
  * @since   JDK1.0
  */
 

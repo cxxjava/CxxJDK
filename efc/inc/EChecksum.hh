@@ -17,7 +17,7 @@ namespace efc {
  *
  * @version 	1.17, 11/17/05
  */
-interface EChecksum {
+interface EChecksum : virtual public EObject {
 	virtual ~EChecksum() {
 	}
 
@@ -40,7 +40,7 @@ interface EChecksum {
 	 * Returns the current checksum value.
 	 * @return the current checksum value
 	 */
-	virtual long getValue() = 0;
+	virtual llong getValue() = 0;
 
 	/**
 	 * Resets the checksum to its initial value.

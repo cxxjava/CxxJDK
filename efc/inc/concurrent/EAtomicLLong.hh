@@ -143,7 +143,7 @@ public:
      * Returns the String representation of the current value.
      * @return the String representation of the current value.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
 
 
     virtual int intValue();

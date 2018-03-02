@@ -162,7 +162,7 @@ public:
 	 *
 	 * @return  A descriptive string
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 private:
 	friend class EFileChannel;

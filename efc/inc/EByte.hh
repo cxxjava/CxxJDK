@@ -83,7 +83,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
      * Assuming the specified String represents a byte, returns

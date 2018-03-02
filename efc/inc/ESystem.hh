@@ -206,6 +206,24 @@ public:
 	static const char* getProperty(const char* key, const char* defaultValue=null);
 
 	/**
+	 * Sets the system property indicated by the specified key.
+	 * <p>
+	 * First, if a security manager exists, its
+	 * <code>SecurityManager.checkPermission</code> method
+	 * is called with a <code>PropertyPermission(key, "write")</code>
+	 * permission. This may result in a SecurityException being thrown.
+	 * If no exception is thrown, the specified property is set to the given
+	 * value.
+	 * <p>
+	 *
+	 * @param      key   the name of the system property.
+	 * @param      value the value of the system property.
+	 * @return     the previous value of the system property,
+	 *             or <code>null</code> if it did not have one.
+	 */
+	static sp<EString> setProperty(const char* key, const char* value);
+
+	/**
 	 * Get the parsed config object.
 	 */
 	static EConfig* getConfig();

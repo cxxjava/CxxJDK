@@ -20,8 +20,6 @@ namespace efc {
  *
  * @since 1.5
  *
- * @author Rosanna Lee
- * @author Rob Weltman
  */
 
 class ESaslException: public EIOException {
@@ -114,8 +112,8 @@ public:
 	 * @see java.lang.Throwable#getMessage
 	 */
 	// Override Throwable.toString() to conform to JSR 28
-	virtual EStringBase toString() {
-		EStringBase answer = EIOException::toString();
+	virtual EString toString() {
+		EString answer = EIOException::toString();
 		if (_exception != null && _exception != this) {
 			answer << " [Caused by " << _exception->toString() << "]";
 		}

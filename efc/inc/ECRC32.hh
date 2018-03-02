@@ -13,9 +13,18 @@
 
 namespace efc {
 
-class ECRC32: public EObject, virtual public EChecksum {
+/**
+ * A class that can be used to compute the CRC-32 of a data stream.
+ *
+ * <p> Passing a {@code null} argument to a method in this class will cause
+ * a {@link NullPointerException} to be thrown.
+ *
+ * @see         Checksum
+ */
+
+class ECRC32: virtual public EChecksum {
 public:
-	~ECRC32();
+	virtual ~ECRC32();
 
 	/**
 	 * Creates a new CRC32 object.
@@ -35,7 +44,7 @@ public:
 	/**
 	 * Returns CRC-32 value.
 	 */
-	long getValue();
+	llong getValue();
 
 	/**
 	 * Resets CRC-32 to initial value.

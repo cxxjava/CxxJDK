@@ -223,7 +223,7 @@ interface EConcurrentSortedMap : virtual public EConcurrentMap<K,V>
      * @return a set view of the keys contained in this map, sorted in
      *         ascending order
      */
-    virtual sp<EConcurrentSet<K> > keySet() = 0;
+    virtual ESet<sp<K> >* keySet() = 0;
 
     /**
      * Returns a {@link Collection} view of the values contained in this map.
@@ -243,7 +243,7 @@ interface EConcurrentSortedMap : virtual public EConcurrentMap<K,V>
      * @return a collection view of the values contained in this map,
      *         sorted in ascending key order
      */
-    virtual sp<EConcurrentCollection<V> > values() = 0;
+    virtual ECollection<sp<V> >* values() = 0;
 
     /**
      * Returns a {@link Set} view of the mappings contained in this map.
@@ -263,7 +263,7 @@ interface EConcurrentSortedMap : virtual public EConcurrentMap<K,V>
      * @return a set view of the mappings contained in this map,
      *         sorted in ascending key order
      */
-    virtual sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() = 0;
+    virtual ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() = 0;
 };
 
 } /* namespace efc */

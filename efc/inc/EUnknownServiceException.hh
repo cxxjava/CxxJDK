@@ -21,7 +21,6 @@ namespace efc {
  * not make sense, or the application is attempting to write to a
  * read-only URL connection.
  *
- * @author  unascribed
  * @since   JDK1.0
  */
 

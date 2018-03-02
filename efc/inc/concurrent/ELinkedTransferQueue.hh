@@ -10,7 +10,7 @@
 
 #include "./ETransferQueue.hh"
 #include "./EThreadLocalRandom.hh"
-#include "./EAbstractConcurrentQueue.hh"
+#include "../EAbstractQueue.hh"
 #include "../ENullPointerException.hh"
 #include "../EIllegalStateException.hh"
 #include "../EIllegalArgumentException.hh"
@@ -59,9 +59,9 @@ namespace efc {
  * @param <E> the type of elements held in this queue
  */
 
-template<typename E>
-class ELinkedTransferQueue: public EAbstractConcurrentQueue<E>,
-		public ETransferQueue<E> {
+template<typename E_>
+class ELinkedTransferQueue: public EAbstractQueue<sp<E_> >,
+		public ETransferQueue<E_> {
 	/*
 	 * *** Overview of Dual Queues with Slack ***
 	 *
@@ -385,6 +385,7 @@ class ELinkedTransferQueue: public EAbstractConcurrentQueue<E>,
 
 public:
 	friend class Itr;
+	typedef sp<E_> E;
 
 	virtual ~ELinkedTransferQueue() {
 		//...
@@ -405,8 +406,8 @@ public:
 	 * @throws NullPointerException if the specified collection or any
 	 *         of its elements are null
 	 */
-	ELinkedTransferQueue(ECollection<E*>* c) {
-		EAbstractConcurrentQueue<E>::addAll(c);
+	ELinkedTransferQueue(ECollection<E>* c) {
+		EAbstractQueue<E>::addAll(c);
 	}
 
 	/**
@@ -417,11 +418,7 @@ public:
 	 * @return {@code true} (as specified by {@link Collection#add})
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual boolean add(E* e) {
-		xfer(e, true, ASYNC, 0);
-		return true;
-	}
-	virtual boolean add(sp<E> e) {
+	virtual boolean add(E e) {
 		xfer(e, true, ASYNC, 0);
 		return true;
 	}
@@ -433,11 +430,7 @@ public:
 	 * @return {@code true} (as specified by {@link Queue#offer})
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual boolean offer(E* e) {
-		xfer(e, true, ASYNC, 0);
-		return true;
-	}
-	virtual boolean offer(sp<E> e) {
+	virtual boolean offer(E e) {
 		xfer(e, true, ASYNC, 0);
 		return true;
 	}
@@ -448,10 +441,7 @@ public:
 	 *
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual void put(E* e) {
-		xfer(e, true, ASYNC, 0);
-	}
-	virtual void put(sp<E> e) {
+	virtual void put(E e) {
 		xfer(e, true, ASYNC, 0);
 	}
 
@@ -465,29 +455,25 @@ public:
 	 *  BlockingQueue.offer})
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual boolean offer(E* e, llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
-		xfer(e, true, ASYNC, 0);
-		return true;
-	}
-	virtual boolean offer(sp<E> e, llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
+	virtual boolean offer(E e, llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
 		xfer(e, true, ASYNC, 0);
 		return true;
 	}
 
-	virtual sp<E> take() THROWS(EInterruptedException) {
-		sp<E> e = xfer(null, false, SYNC, 0);
+	virtual E take() THROWS(EInterruptedException) {
+		E e = xfer(null, false, SYNC, 0);
 		if (e != null)
 			return e;
 		EThread::interrupted();
 		throw EInterruptedException(__FILE__, __LINE__);
 	}
 
-	virtual sp<E> poll() {
+	virtual E poll() {
 		return xfer(null, false, NOW, 0);
 	}
 
-	virtual sp<E> poll(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
-		sp<E> e = xfer(null, false, TIMED, unit->toNanos(timeout));
+	virtual E poll(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
+		E e = xfer(null, false, TIMED, unit->toNanos(timeout));
 		if (e != null || !EThread::interrupted())
 			return e;
 		throw EInterruptedException(__FILE__, __LINE__);
@@ -516,9 +502,14 @@ public:
 	 * @param o element to be removed from this queue, if present
 	 * @return {@code true} if this queue changed as a result of the call
 	 */
-	virtual boolean remove(E* o) {
+	virtual boolean remove(E_* o) {
 		return findAndRemove(o);
 	}
+
+	/**
+	 * {@inherit from super for c++ hides overloaded virtual function}
+	 */
+	using EAbstractQueue<E>::remove;
 
 	/**
 	 * Returns {@code true} if this queue contains the specified element.
@@ -528,12 +519,12 @@ public:
 	 * @param o object to be checked for containment in this queue
 	 * @return {@code true} if this queue contains the specified element
 	 */
-	virtual boolean contains(E* o) {
+	virtual boolean contains(E_* o) {
 		if (o == null) return false;
 		for (sp<Node> p = atomic_load(&head); p != null; p = succ(p)) {
-			sp<E> item = atomic_load(&p->item);
+			E item = atomic_load(&p->item);
 			if (p->isData) {
-				if (item != null && item != (E*)FORGET_ITEM && item->equals(o))
+				if (item != null && item != (E_*)FORGET_ITEM && item->equals(o))
 					return true;
 			}
 			else if (item == null)
@@ -546,23 +537,11 @@ public:
 	 * @throws NullPointerException     {@inheritDoc}
 	 * @throws IllegalArgumentException {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c) {
-		if (c == null)
-			throw ENullPointerException(__FILE__, __LINE__);
-		if (c == this)
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		int n = 0;
-		for (sp<E> e; (e = poll()) != null;) {
-			c->add(e);
-			++n;
-		}
-		return n;
-	}
-	virtual int drainTo(ECollection<sp<E> >* c) {
+	virtual int drainTo(ECollection<E>* c) {
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		int n = 0;
-		for (sp<E> e; (e = poll()) != null;) {
+		for (E e; (e = poll()) != null;) {
 			c->add(e);
 			++n;
 		}
@@ -573,23 +552,11 @@ public:
 	 * @throws NullPointerException     {@inheritDoc}
 	 * @throws IllegalArgumentException {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) {
-		if (c == null)
-			throw ENullPointerException(__FILE__, __LINE__);
-		if (c == this)
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		int n = 0;
-		for (sp<E> e; n < maxElements && (e = poll()) != null;) {
-			c->add(e);
-			++n;
-		}
-		return n;
-	}
-	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
+	virtual int drainTo(ECollection<E>* c, int maxElements) {
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		int n = 0;
-		for (sp<E> e; n < maxElements && (e = poll()) != null;) {
+		for (E e; n < maxElements && (e = poll()) != null;) {
 			c->add(e);
 			++n;
 		}
@@ -606,7 +573,7 @@ public:
 	 *
 	 * @throws NullPointerException if the specified element is null
 	 */
-	boolean tryTransfer(sp<E> e) {
+	boolean tryTransfer(E e) {
 		return xfer(e, true, NOW, 0) == null;
 	}
 
@@ -621,7 +588,7 @@ public:
 	 *
 	 * @throws NullPointerException if the specified element is null
 	 */
-	void transfer(sp<E> e) THROWS(EInterruptedException) {
+	void transfer(E e) THROWS(EInterruptedException) {
 		if (xfer(e, true, SYNC, 0) != null) {
 			EThread::interrupted(); // failure possible only due to interrupt
 			throw EInterruptedException(__FILE__, __LINE__);
@@ -642,7 +609,7 @@ public:
 	 *
 	 * @throws NullPointerException if the specified element is null
 	 */
-	boolean tryTransfer(sp<E> e, llong timeout, ETimeUnit* unit)
+	boolean tryTransfer(E e, llong timeout, ETimeUnit* unit)
 			THROWS(EInterruptedException) {
 		if (xfer(e, true, TIMED, unit->toNanos(timeout)) == null)
 			return true;
@@ -684,11 +651,11 @@ public:
 	 *
 	 * @return an iterator over the elements in this queue in proper sequence
 	 */
-	virtual sp<EConcurrentIterator<E> > iterator() {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		return new Itr(this);
 	}
 
-	virtual sp<E> peek() {
+	virtual E peek() {
 		return firstDataItem();
 	}
 
@@ -770,7 +737,7 @@ private:
 	class Node : public EObject {
 	public:
 		boolean isData;   // false if this is a request node
-		sp<E> item;   //volatile? // initially non-null if isData; CASed to match
+		E item;   //volatile? // initially non-null if isData; CASed to match
 		sp<Node> next;//volatile?
 		EThread* volatile waiter; // null until waiting
 
@@ -789,7 +756,7 @@ private:
 			return atomic_compare_exchange(&next, &cmp, val);
 		}
 
-		boolean casItem(sp<E>& cmp, sp<E> val) {
+		boolean casItem(E& cmp, E val) {
 			// assert cmp == null || cmp.getClass() != Node.class;
 			return atomic_compare_exchange(&item, &cmp, val);
 		}
@@ -798,7 +765,7 @@ private:
 		 * Constructs a new node.  Uses relaxed write because item can
 		 * only be seen after publication via casNext.
 		 */
-		Node(sp<E>& item, boolean isData) : waiter(null) {
+		Node(E& item, boolean isData) : waiter(null) {
 			//@see: UNSAFE.putObject(this, itemOffset, item); // relaxed write
 			this->item = item; // relaxed write
 			this->isData = isData;
@@ -826,7 +793,7 @@ private:
 		void forgetContents() {
 			//@see: UNSAFE.putObject(this, itemOffset, this);
 			//@see: UNSAFE.putObject(this, waiterOffset, null);
-			sp<E> e((E*)FORGET_ITEM);
+			E e((E_*)FORGET_ITEM);
 			atomic_store(&item, e);
 			*((EThread**)&waiter) = null; // relaxed write
 		}
@@ -836,8 +803,8 @@ private:
 		 * case of artificial matches due to cancellation.
 		 */
 		boolean isMatched() {
-			sp<E> x = atomic_load(&item);
-			return (x == (E*)FORGET_ITEM) || ((x == null) == isData);
+			E x = atomic_load(&item);
+			return (x == (E_*)FORGET_ITEM) || ((x == null) == isData);
 		}
 
 		/**
@@ -854,8 +821,8 @@ private:
 		 */
 		boolean cannotPrecede(boolean haveData) {
 			boolean d = isData;
-			sp<E> x;
-			return d != haveData && (x = atomic_load(&item)) != (E*)FORGET_ITEM && (x != null) == d;
+			E x;
+			return d != haveData && (x = atomic_load(&item)) != (E_*)FORGET_ITEM && (x != null) == d;
 		}
 
 		/**
@@ -863,8 +830,8 @@ private:
 		 */
 		boolean tryMatchData() {
 			// assert isData;
-			sp<E> x = atomic_load(&item);
-			if (x != null && x != (E*)FORGET_ITEM && casItem(x, null)) {
+			E x = atomic_load(&item);
+			if (x != null && x != (E_*)FORGET_ITEM && casItem(x, null)) {
 				ELockSupport::unpark(waiter);
 				return true;
 			}
@@ -883,13 +850,13 @@ private:
 		}
 	};
 
-	class Itr : public EConcurrentIterator<E> {
+	class Itr : public EIterator<E> {
 	private:
 		sp<Node> nextNode;   // next node to return item for
-		sp<E> nextItem;      // the corresponding item
+		E nextItem;      // the corresponding item
 		sp<Node> lastRet;    // last returned node, to support remove
 		sp<Node> lastPred;   // predecessor to unlink lastRet
-		ELinkedTransferQueue<E>* queue;
+		ELinkedTransferQueue<E_>* queue;
 
 		/**
 		 * Moves to next node after prev, or first node if prev null.
@@ -928,9 +895,9 @@ private:
 					p = null;
 					continue;
 				}
-				sp<E> item = atomic_load(&s->item);
+				E item = atomic_load(&s->item);
 				if (s->isData) {
-					if (item != null && item != (E*)FORGET_ITEM) {
+					if (item != null && item != (E_*)FORGET_ITEM) {
 						nextItem = item;
 						nextNode = s;
 						return;
@@ -953,7 +920,7 @@ private:
 		}
 
 	public:
-		Itr(ELinkedTransferQueue<E>* queue) {
+		Itr(ELinkedTransferQueue<E_>* queue) {
 			this->queue = queue;
 			advance(null);
 		}
@@ -962,10 +929,10 @@ private:
 			return nextNode != null;
 		}
 
-		virtual sp<E> next() {
+		virtual E next() {
 			sp<Node> p = nextNode;
 			if (p == null) throw ENoSuchElementException(__FILE__, __LINE__);
-			sp<E> e = nextItem;
+			E e = nextItem;
 			advance(p);
 			return e;
 		}
@@ -977,6 +944,10 @@ private:
 			this->lastRet = null;
 			if (lastRet->tryMatchData())
 				queue->unsplice(lastPred, lastRet);
+		}
+
+		virtual E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 	};
 
@@ -1025,7 +996,7 @@ private:
 	 * @return an item if matched, else e
 	 * @throws NullPointerException if haveData mode but e is null
 	 */
-	sp<E> xfer(sp<E> e, boolean haveData, int how, long nanos) {
+	E xfer(E e, boolean haveData, int how, long nanos) {
 		if (haveData && (e == null))
 			throw ENullPointerException(__FILE__, __LINE__);
 		sp<Node> s;// = null;                        // the node to append, if needed
@@ -1034,8 +1005,8 @@ private:
 		for (;;) {                            // restart on append race
 			for (sp<Node> h = atomic_load(&head), p = h; p != null;) { // find & match first node
 				boolean isData = p->isData;
-				sp<E> item = atomic_load(&p->item);
-				if (item != (E*)FORGET_ITEM && (item != null) == isData) { // unmatched
+				E item = atomic_load(&p->item);
+				if (item != (E_*)FORGET_ITEM && (item != null) == isData) { // unmatched
 					if (isData == haveData)   // can't match
 						break;
 					if (p->casItem(item, e)) { // match
@@ -1122,21 +1093,21 @@ private:
 	 * @param nanos timeout in nanosecs, used only if timed is true
 	 * @return matched item, or e if unmatched on interrupt or timeout
 	 */
-	sp<E> awaitMatch(sp<Node> s, sp<Node> pred, sp<E> e, boolean timed, llong nanos) {
+	E awaitMatch(sp<Node> s, sp<Node> pred, E e, boolean timed, llong nanos) {
 		llong deadline = timed ? ESystem::nanoTime() + nanos : 0L;
 		EThread* w = EThread::currentThread();
 		int spins = -1; // initialized after first item and cancel checks
 		EThreadLocalRandom* randomYields = null; // bound if needed
 
 		for (;;) {
-			sp<E> item = atomic_load(&s->item);
+			E item = atomic_load(&s->item);
 			if (item != e) {                  // matched
 				// assert item != s;
 				s->forgetContents();           // avoid garbage
 				return item;
 			}
 			if ((w->isInterrupted() || (timed && nanos <= 0)) &&
-					s->casItem(e, (E*)FORGET_ITEM)) {        // cancel
+					s->casItem(e, (E_*)FORGET_ITEM)) {        // cancel
 				unsplice(pred, s);
 				return e;
 			}
@@ -1211,9 +1182,9 @@ private:
 	 */
 	sp<Node> firstDataNode() {
 		for (sp<Node> p = atomic_load(&head); p != null;) {
-			sp<E> item = atomic_load(&p->item);
+			E item = atomic_load(&p->item);
 			if (p->isData) {
-				if (item != null && item != (E*)FORGET_ITEM)
+				if (item != null && item != (E_*)FORGET_ITEM)
 					return p;
 			}
 			else if (item == null)
@@ -1228,11 +1199,11 @@ private:
 	 * Returns the item in the first unmatched node with isData; or
 	 * null if none.  Used by peek.
 	 */
-	sp<E> firstDataItem() {
+	E firstDataItem() {
 		for (sp<Node> p = atomic_load(&head); p != null; p = succ(p)) {
-			sp<E> item = atomic_load(&p->item);
+			E item = atomic_load(&p->item);
 			if (p->isData) {
-				if (item != null && item != (E*)FORGET_ITEM)
+				if (item != null && item != (E_*)FORGET_ITEM)
 					return item;
 			}
 			else if (item == null)
@@ -1339,12 +1310,12 @@ private:
 	/**
 	 * Main implementation of remove(Object)
 	 */
-	boolean findAndRemove(E* e) {
+	boolean findAndRemove(E_* e) {
 		if (e != null) {
 			for (sp<Node> pred, p = atomic_load(&head); p != null; ) {
-				sp<E> item = atomic_load(&p->item);
+				E item = atomic_load(&p->item);
 				if (p->isData) {
-					if (item != null && item != (E*)FORGET_ITEM && item->equals(e) &&
+					if (item != null && item != (E_*)FORGET_ITEM && item->equals(e) &&
 						p->tryMatchData()) {
 						unsplice(pred, p);
 						return true;

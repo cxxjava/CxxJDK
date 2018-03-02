@@ -133,12 +133,26 @@ public:
 	char* getName();
 	
 	/**
+	 * Returns this process's id.
+	 *
+	 * @return pid.
+	 */
+	es_os_pid_t getPid();
+
+	/**
+	 * Returns the parent process's id.
+	 *
+	 * @return ppid.
+	 */
+	es_os_pid_t getPPid();
+
+	/**
 	 * Returns a string representation of this process, including the
 	 * thread's name and priority.
 	 *
 	 * @return  a string representation of this process.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 	
 	/**
 	 * Wait for any current child process to die and return information 
@@ -180,6 +194,8 @@ public:
 
 private:
 	es_proc_t    m_Process;
+
+	es_os_pid_t  m_ppid;
 
 	/* What will be run. */
 	sp<ERunnable> m_Target;

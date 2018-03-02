@@ -13,6 +13,13 @@
 
 namespace efc {
 
+/**
+ * An input stream that also maintains a checksum of the data being read.
+ * The checksum can then be used to verify the integrity of the input data.
+ *
+ * @see         Checksum
+ */
+
 class ECheckedInputStream: public EFilterInputStream {
 public:
 	virtual ~ECheckedInputStream();
@@ -22,7 +29,7 @@ public:
 	 * @param in the input stream
 	 * @param cksum the Checksum
 	 */
-	ECheckedInputStream(EInputStream *in, EChecksum *cksum);
+	ECheckedInputStream(EInputStream *in, EChecksum *cksum, boolean owned=false);
 
 	//TODO...
 	ECheckedInputStream(const ECheckedInputStream& that);
@@ -33,7 +40,7 @@ public:
 	 * @return the byte read, or -1 if the end of the stream is reached.
 	 * @exception IOException if an I/O error has occurred
 	 */
-	int read() THROWS(EIOException);
+	virtual int read() THROWS(EIOException);
 
 	/**
 	 * Reads into an array of bytes. If <code>len</code> is not zero, the method
@@ -49,7 +56,7 @@ public:
 	 * <code>buf.length - off</code>
 	 * @exception IOException if an I/O error has occurred
 	 */
-	int read(void *b, int len) THROWS(EIOException);
+	virtual int read(void *b, int len) THROWS(EIOException);
 
 	/**
 	 * Skips specified number of bytes of input.
@@ -57,7 +64,7 @@ public:
 	 * @return the actual number of bytes skipped
 	 * @exception IOException if an I/O error has occurred
 	 */
-	long skip(long n) THROWS(EIOException);
+	virtual long skip(long n) THROWS(EIOException);
 
 	/**
 	 * Returns the Checksum for this input stream.

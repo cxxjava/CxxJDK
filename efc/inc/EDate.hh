@@ -164,7 +164,7 @@ public:
 	 * @return  a string representation of this date.
 	 * @since CLDC 1.1
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Return a string representation of this calendar.

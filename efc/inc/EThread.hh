@@ -14,7 +14,7 @@
 #include "EIllegalArgumentException.hh"
 #include "EIllegalStateException.hh"
 #include "EInterruptedException.hh"
-#include "ERuntimeException.hh"
+#include "EThreadUnCInitException.hh"
 #include "ESharedPtr.hh"
 
 namespace efc {
@@ -398,10 +398,6 @@ public:
 	 * thread. The method <code>setPriority</code> may be used to
 	 * change the priority to a new value.
 	 * <p>
-	 * The newly created thread is initially marked as being a daemon
-	 * thread if and only if the thread creating it is currently marked
-	 * as a daemon thread. The method <code>setDaemon </code> may be used
-	 * to change whether or not a thread is a daemon.
 	 *
 	 * @param      group     the thread group.
 	 * @param      target   the object whose <code>run</code> method is called.
@@ -411,7 +407,6 @@ public:
 	 *               override the context class loader methods.
 	 * @see        Runnable#run()
 	 * @see        #run()
-	 * @see        #setDaemon(boolean)
 	 * @see        #setPriority(int)
 	 * @see        ThreadGroup#checkAccess()
 	 * @see        SecurityManager#checkAccess
@@ -424,30 +419,11 @@ public:
 	EThread& operator= (const EThread& that);
 
 	/**
-	 * Marks this thread as either a {@linkplain #isDaemon daemon} thread
-	 * or a user thread. The Java Virtual Machine exits when the only
-	 * threads running are all daemon threads.
-	 *
-	 * <p> This method must be invoked before the thread is started.
-	 *
-	 * @param  on
-	 *         if {@code true}, marks this thread as a daemon thread
-	 *
-	 * @throws  IllegalThreadStateException
-	 *          if this thread is {@linkplain #isAlive alive}
-	 *
-	 * @throws  SecurityException
-	 *          if {@link #checkAccess} determines that the current
-	 *          thread cannot modify this thread
-	 */
-	void setDaemon(boolean on);
-
-	/**
 	 * Tests if this thread is a daemon thread.
 	 *
 	 * @return  <code>true</code> if this thread is a daemon thread;
 	 *          <code>false</code> otherwise.
-	 * @see     #setDaemon(boolean)
+	 * @see     #setDaemon(sp<EThread>)
 	 */
 	boolean isDaemon();
 
@@ -714,7 +690,7 @@ public:
 	 *
 	 * @return  a string representation of this thread.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Returns the handler invoked when this thread abruptly terminates
@@ -890,12 +866,33 @@ public:
 	/**
 	 * C thread initialize.
 	 */
-	static EThread* c_init();
+	static sp<EThread> c_init() THROWS(EThreadUnCInitException);
 
 	/**
 	 * Returns count of alive c threads.
 	 */
 	static int getCThreadsCount();
+
+	/**
+	 * Marks this thread as either a {@linkplain #isDaemon daemon} thread
+	 * or a user thread.
+	 *
+	 * <p> This method must be invoked before the thread is started.
+	 *
+	 * @param  thread
+	 *         The thread to be set
+	 *
+	 * @param  on
+	 *         if {@code true}, marks this thread as a daemon thread
+	 *
+	 * @throws  IllegalThreadStateException
+	 *          if this thread is {@linkplain #isAlive alive}
+	 *
+	 * @throws  SecurityException
+	 *          if {@link #checkAccess} determines that the current
+	 *          thread cannot modify this thread
+	 */
+	static void setDaemon(sp<EThread> thread, boolean on);
 
 public:
 	/**
@@ -1036,8 +1033,8 @@ private:
 	EParkEvent * _MutexEvent;  // for native internal Mutex/Monitor
 	EParkEvent * _MuxEvent;  // for low-level muxAcquire-muxRelease
 
-	/* Whether or not the thread is a daemon thread. */
-	boolean daemon;
+	/* If not null then the thread is a daemon thread. */
+	sp<EThread> self;
 
 	// C thread id, 0 is main thread, >0 other c thread.
 	int c_tid;// = -1;

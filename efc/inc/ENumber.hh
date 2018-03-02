@@ -33,8 +33,6 @@ namespace efc {
  * See the documentation of a given {@code Number} implementation for
  * conversion details.
  *
- * @author      Lee Boynton
- * @author      Arthur van Hoff
  * @jls 5.1.2 Widening Primitive Conversions
  * @jls 5.1.3 Narrowing Primitive Conversions
  * @since   JDK1.0

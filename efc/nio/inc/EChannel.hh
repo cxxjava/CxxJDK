@@ -8,7 +8,7 @@
 #ifndef ECHANNEL_HH_
 #define ECHANNEL_HH_
 
-#include "../../inc/EObject.hh"
+#include "../../inc/ECloseable.hh"
 #include "../../inc/EIOException.hh"
 
 namespace efc {
@@ -36,7 +36,7 @@ namespace nio {
  * @since 1.4
  */
 
-interface EChannel : virtual public EObject {
+interface EChannel : virtual public ECloseable {
 	virtual ~EChannel(){}
 
 	/**

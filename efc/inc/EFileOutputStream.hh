@@ -10,6 +10,8 @@
 
 #include "EOutputStream.hh"
 #include "EFile.hh"
+#include "ESynchronizeable.hh"
+#include "./concurrent/EReentrantLock.hh"
 #include "EFileNotFoundException.hh"
 
 namespace efc {
@@ -34,7 +36,11 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class EFileOutputStream : public EOutputStream
+namespace nio {
+class EFileChannel;
+}
+
+class EFileOutputStream : public EOutputStream, public ESynchronizeable
 {
 public:
 	virtual ~EFileOutputStream();
@@ -177,9 +183,9 @@ public:
      * @param      b   the data.
      * @exception  IOException  if an I/O error occurs.
      */
-    void write(const void *b, int len) THROWS(EIOException);
-    void write(const char *s) THROWS(EIOException);
-    void write(int b) THROWS(EIOException);
+    virtual void write(const void *b, int len) THROWS(EIOException);
+    virtual void write(const char *s) THROWS(EIOException);
+    virtual void write(int b) THROWS(EIOException);
 	
 	/**
      * Flushes this output stream and forces any buffered output bytes 
@@ -199,7 +205,7 @@ public:
      *
      * @exception  IOException  if an I/O error occurs.
      */
-    void flush() THROWS(EIOException);
+    virtual void flush() THROWS(EIOException);
     
 	/**
      * Closes this file output stream and releases any system resources 
@@ -214,7 +220,7 @@ public:
      * @revised 1.4
      * @spec JSR-51
      */
-    void close() THROWS(EIOException);
+    virtual void close() THROWS(EIOException);
 	
 	/**
      * Returns the file descriptor associated with this stream.
@@ -229,6 +235,25 @@ public:
     es_file_t* getFD() THROWS(EIOException);
 
     /**
+	 * Returns the unique {@link java.nio.channels.FileChannel FileChannel}
+	 * object associated with this file output stream.
+	 *
+	 * <p> The initial {@link java.nio.channels.FileChannel#position()
+	 * position} of the returned channel will be equal to the
+	 * number of bytes written to the file so far unless this stream is in
+	 * append mode, in which case it will be equal to the size of the file.
+	 * Writing bytes to this stream will increment the channel's position
+	 * accordingly.  Changing the channel's position, either explicitly or by
+	 * writing, will change this stream's file position.
+	 *
+	 * @return  the file channel associated with this file output stream
+	 *
+	 * @since 1.4
+	 * @spec JSR-51
+	 */
+    nio::EFileChannel* getChannel();
+
+    /**
      * Use buffered.
      */
     boolean isIOBuffered();
@@ -238,6 +263,19 @@ private:
 	es_file_t *mFile;
 	boolean needClose;
 	boolean mBuffered;
+
+	EReentrantLock closeLock;
+	volatile boolean closed;// = false;
+
+	/**
+	 * True if the file is opened for append.
+	 */
+	boolean append;
+
+	/**
+	 * The associated channel, initialized lazily.
+	 */
+	nio::EFileChannel* channel;
 };
 
 } /* namespace efc */

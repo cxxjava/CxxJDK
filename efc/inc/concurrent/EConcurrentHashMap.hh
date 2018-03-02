@@ -11,11 +11,11 @@
 #include "../EMap.hh"
 #include "../EMath.hh"
 #include "../EInteger.hh"
-#include "./EConcurrentSet.hh"
+#include "../ESet.hh"
 #include "./EConcurrentMap.hh"
-#include "./EAbstractConcurrentCollection.hh"
-#include "./EConcurrentIterator.hh"
-#include "./EConcurrentEnumeration.hh"
+#include "../EAbstractCollection.hh"
+#include "../EIterator.hh"
+#include "../EEnumeration.hh"
 #include "./EReentrantLock.hh"
 #include "../ENullPointerException.hh"
 #include "../EIllegalArgumentException.hh"
@@ -613,8 +613,8 @@ public:
 		}
 	};
 
-	class KeyIterator: public HashIterator, public EConcurrentIterator<
-	K>, public EConcurrentEnumeration<K> {
+	class KeyIterator: public HashIterator, public EIterator<sp<
+	K> >, public EEnumeration<sp<K> > {
 	public:
 		KeyIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {}
 		boolean hasMoreElements()    { return HashIterator::hasMoreElements();  }
@@ -622,17 +622,19 @@ public:
 		sp<K> next()        { return HashIterator::nextEntry()->key; }
 		sp<K> nextElement() { return HashIterator::nextEntry()->key; }
 		void remove()                { HashIterator::remove();                  }
+		sp<K> moveOut()              {throw EUnsupportedOperationException(__FILE__, __LINE__);}
 	};
 
-	class ValueIterator: public HashIterator, public EConcurrentIterator<
-	V>, public EConcurrentEnumeration<V> {
+	class ValueIterator: public HashIterator, public EIterator<sp<
+	V> >, public EEnumeration<sp<V> > {
 	public:
 		ValueIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {}
-		boolean hasMoreElements()      { return HashIterator::hasMoreElements();  }
-		boolean hasNext()              { return HashIterator::hasNext();          }
+		boolean hasMoreElements()    { return HashIterator::hasMoreElements();  }
+		boolean hasNext()            { return HashIterator::hasNext();          }
 		sp<V> next()        { return HashIterator::nextEntry()->value; }
 		sp<V> nextElement() { return HashIterator::nextEntry()->value; }
-		void remove()                  { HashIterator::remove();                  }
+		void remove()                { HashIterator::remove();                  }
+		sp<V> moveOut()              {throw EUnsupportedOperationException(__FILE__, __LINE__);}
 	};
 
 	/**
@@ -709,7 +711,7 @@ public:
 	};
 
 	class EntryIterator: public HashIterator,
-	                     public EConcurrentIterator<EConcurrentMapEntry<K, V> >
+	                     public EIterator<sp<EConcurrentMapEntry<K, V> > >
 	{
 	private:
 		EConcurrentHashMap<K, V>* chm;
@@ -727,15 +729,18 @@ public:
 		void remove() {
 			HashIterator::remove();
 		}
+		sp<EConcurrentMapEntry<K, V> > moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
 	};
 
-	class KeySet : public EConcurrentSet<K> {
+	class KeySet : public EAbstractSet<sp<K> > {
 	private:
 		EConcurrentHashMap<K,V>* chm;
 	public:
 		KeySet(EConcurrentHashMap<K,V>* chm) : chm(chm) {
 		}
-		sp<EConcurrentIterator<K> > iterator() {
+		sp<EIterator<sp<K> > > iterator(int index=0) {
 			return new KeyIterator(chm);
 		}
 		int size() {
@@ -753,21 +758,15 @@ public:
 		void clear() {
 			chm->clear();
 		}
-		boolean add(K* e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
-		boolean add(sp<K> e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
 	};
 
-	class Values : public EAbstractConcurrentCollection<V> {
+	class Values : public EAbstractCollection<sp<V> > {
 	private:
 		EConcurrentHashMap<K,V>* chm;
 	public:
 		Values(EConcurrentHashMap<K,V>* chm) : chm(chm) {
 		}
-		sp<EConcurrentIterator<V> > iterator() {
+		sp<EIterator<sp<V> > > iterator(int index=0) {
 			return new ValueIterator(chm);
 		}
 		int size() {
@@ -782,31 +781,15 @@ public:
 		void clear() {
 			chm->clear();
 		}
-//		boolean add(V* e) {
-//			throw EUnsupportedOperationException(__FILE__, __LINE__);
-//		}
-//		boolean add(sp<V> e) {
-//			throw EUnsupportedOperationException(__FILE__, __LINE__);
-//		}
-//		boolean remove(V* o) {
-//			sp<EConcurrentIterator<V> > e = iterator();
-//			while (e->hasNext()) {
-//				if (o->equals(e->next().get())) {
-//					e->remove();
-//					return true;
-//				}
-//			}
-//			return false;
-//		}
 	};
 
-	class EntrySet : public EConcurrentSet<EConcurrentMapEntry<K,V> > {
+	class EntrySet : public EAbstractSet<sp<EConcurrentMapEntry<K,V> > > {
 	private:
 		EConcurrentHashMap<K,V>* chm;
 	public:
 		EntrySet(EConcurrentHashMap<K,V>* chm) : chm(chm) {
 		}
-		sp<EConcurrentIterator<EConcurrentMapEntry<K,V> > > iterator() {
+		sp<EIterator<sp<EConcurrentMapEntry<K,V> > > > iterator(int index=0) {
 			return new EntryIterator(chm);
 		}
 		boolean contains(EConcurrentMapEntry<K,V>* e) {
@@ -825,19 +808,16 @@ public:
 		void clear() {
 			chm->clear();
 		}
-		boolean add(EConcurrentMapEntry<K,V>* e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
-		boolean add(sp<EConcurrentMapEntry<K,V> > e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
 	};
 
 public:
 	/* ---------------- Public operations -------------- */
 
-	~EConcurrentHashMap() {
+	virtual ~EConcurrentHashMap() {
 		delete segments_;
+		delete entrySet_;
+		delete keySet_;
+		delete values_;
 	}
 
 	/**
@@ -1143,11 +1123,6 @@ public:
 	 *         <tt>null</tt> if there was no mapping for <tt>key</tt>
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> put(K* key, V* value) {
-		sp<K> k(key);
-		sp<V> v(value);
-		return put(k, v);
-	}
 	sp<V> put(sp<K> key, sp<V> value) {
 		if (value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -1162,11 +1137,6 @@ public:
 	 *         or <tt>null</tt> if there was no mapping for the key
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> putIfAbsent(K* key, V* value) {
-		sp<K> k(key);
-		sp<V> v(value);
-		return putIfAbsent(k, v);
-	}
 	sp<V> putIfAbsent(sp<K> key, sp<V> value) {
 		if (value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -1220,10 +1190,6 @@ public:
 	 *
 	 * @throws NullPointerException if any of the arguments are null
 	 */
-	boolean replace(K* key, V* oldValue, V* newValue) {
-		sp<V> nv(newValue);
-		return replace(key, oldValue, nv);
-	}
 	boolean replace(K* key, V* oldValue, sp<V> newValue) {
 		if (oldValue == null || newValue == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -1238,10 +1204,6 @@ public:
 	 *         or <tt>null</tt> if there was no mapping for the key
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> replace(K* key, V* value) {
-		sp<V> v(value);
-		return replace(key, v);
-	}
 	sp<V> replace(K* key, sp<V> value) {
 		if (value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -1273,7 +1235,7 @@ public:
 	 * construction of the iterator, and may (but is not guaranteed to)
 	 * reflect any modifications subsequent to construction.
 	 */
-	sp<EConcurrentSet<K> > keySet() {
+	ESet<sp<K> >* keySet() {
 		if (!keySet_) {
 			keySet_ = new KeySet(this);
 		}
@@ -1296,7 +1258,7 @@ public:
 	 * construction of the iterator, and may (but is not guaranteed to)
 	 * reflect any modifications subsequent to construction.
 	 */
-	sp<EConcurrentCollection<V> > values() {
+	ECollection<sp<V> >* values() {
 		if (!values_) {
 			values_ = new Values(this);
 		}
@@ -1319,7 +1281,7 @@ public:
 	 * construction of the iterator, and may (but is not guaranteed to)
 	 * reflect any modifications subsequent to construction.
 	 */
-	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() {
+	ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() {
 		if (!entrySet_) {
 			entrySet_ = new EntrySet(this);
 		}
@@ -1333,7 +1295,7 @@ public:
 	 * @see #keySet()
 	 *
 	 */
-	sp<EConcurrentEnumeration<K> > keys() {
+	sp<EEnumeration<sp<K> > > keys() {
 		return new KeyIterator(this);
 	}
 
@@ -1344,7 +1306,7 @@ public:
 	 * @see #values()
 	 *
 	 */
-	sp<EConcurrentEnumeration<V> > elements() {
+	sp<EEnumeration<sp<V> > > elements() {
 		return new ValueIterator(this);
 	}
 
@@ -1369,9 +1331,9 @@ protected:
 	 */
 	EA<Segment*>* segments_;
 
-	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet_;
-	sp<EConcurrentSet<K> > keySet_;
-	sp<EConcurrentCollection<V> > values_;
+	ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet_;
+	ESet<sp<K> >* keySet_;
+	ECollection<sp<V> >* values_;
 
 private:
 
@@ -1393,7 +1355,10 @@ private:
 		}
 		segmentShift = 32 - sshift;
 		segmentMask = ssize - 1;
-		this->segments_ = Segment::newArray(ssize);
+		segments_ = Segment::newArray(ssize);
+		entrySet_ = null;
+		keySet_ = null;
+		values_ = null;
 
 		if (initialCapacity > CHM_MAXIMUM_CAPACITY)
 			initialCapacity = CHM_MAXIMUM_CAPACITY;
@@ -1404,8 +1369,8 @@ private:
 		while (cap < c)
 			cap <<= 1;
 
-		for (int i = 0; i < this->segments_->length(); ++i)
-			(*this->segments_)[i] = new Segment(cap, loadFactor, this);
+		for (int i = 0; i < segments_->length(); ++i)
+			(*segments_)[i] = new Segment(cap, loadFactor, this);
 	}
 
 	/* ---------------- Small Utilities -------------- */
@@ -1795,8 +1760,8 @@ public: \
 		} \
 	}; \
  \
-	class KeyIterator: public HashIterator, public EConcurrentIterator< \
-	K>, public EConcurrentEnumeration<K> { \
+	class KeyIterator: public HashIterator, public EIterator< \
+	K>, public EEnumeration<K> { \
 	public: \
 		KeyIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {} \
 		boolean hasMoreElements()    { return HashIterator::hasMoreElements();  } \
@@ -1804,17 +1769,19 @@ public: \
 		K next()        { return HashIterator::nextEntry()->key; } \
 		K nextElement() { return HashIterator::nextEntry()->key; } \
 		void remove()                { HashIterator::remove();                  } \
+		K moveOut()                  {throw EUnsupportedOperationException(__FILE__, __LINE__);} \
 	}; \
  \
-	class ValueIterator: public HashIterator, public EConcurrentIterator< \
-	V>, public EConcurrentEnumeration<V> { \
+	class ValueIterator: public HashIterator, public EIterator<sp< \
+	V> >, public EEnumeration<sp<V> > { \
 	public: \
 		ValueIterator(EConcurrentHashMap<K,V>* chm) : HashIterator(chm) {} \
-		boolean hasMoreElements()      { return HashIterator::hasMoreElements();  } \
-		boolean hasNext()              { return HashIterator::hasNext();          } \
+		boolean hasMoreElements()    { return HashIterator::hasMoreElements();  } \
+		boolean hasNext()            { return HashIterator::hasNext();          } \
 		sp<V> next()        { return HashIterator::nextEntry()->value; } \
 		sp<V> nextElement() { return HashIterator::nextEntry()->value; } \
-		void remove()                  { HashIterator::remove();                  } \
+		void remove()                { HashIterator::remove();                  } \
+		sp<V> moveOut()              {throw EUnsupportedOperationException(__FILE__, __LINE__);} \
 	}; \
  \
 	class WriteThroughEntry: public EConcurrentMapEntry<K, V> { \
@@ -1861,7 +1828,7 @@ public: \
 	}; \
  \
 	class EntryIterator: public HashIterator, \
-	                     public EConcurrentIterator<EConcurrentMapEntry<K, V> > \
+	                     public EIterator<sp<EConcurrentMapEntry<K, V> > > \
 	{ \
 	private: \
 		EConcurrentHashMap<K, V>* chm; \
@@ -1879,15 +1846,18 @@ public: \
 		void remove() { \
 			HashIterator::remove(); \
 		} \
+		sp<EConcurrentMapEntry<K, V> > moveOut() { \
+			throw EUnsupportedOperationException(__FILE__, __LINE__); \
+		} \
 	}; \
  \
-	class KeySet : public EConcurrentSet<K> { \
+	class KeySet : public EAbstractSet<K> { \
 	private: \
 		EConcurrentHashMap<K,V>* chm; \
 	public: \
 		KeySet(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
 		} \
-		sp<EConcurrentIterator<K> > iterator() { \
+		sp<EIterator<K> > iterator(int index=0) { \
 			return new KeyIterator(chm); \
 		} \
 		int size() { \
@@ -1905,18 +1875,15 @@ public: \
 		void clear() { \
 			chm->clear(); \
 		} \
-		boolean add(K e) { \
-			throw EUnsupportedOperationException(__FILE__, __LINE__); \
-		} \
 	}; \
  \
-	class Values : public EAbstractConcurrentCollection<V> { \
+	class Values : public EAbstractCollection<sp<V> > { \
 	private: \
 		EConcurrentHashMap<K,V>* chm; \
 	public: \
 		Values(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
 		} \
-		sp<EConcurrentIterator<V> > iterator() { \
+		sp<EIterator<sp<V> > > iterator(int index=0) { \
 			return new ValueIterator(chm); \
 		} \
 		int size() { \
@@ -1933,13 +1900,13 @@ public: \
 		} \
 	}; \
  \
-	class EntrySet : public EConcurrentSet<EConcurrentMapEntry<K,V> > { \
+	class EntrySet : public EAbstractSet<sp<EConcurrentMapEntry<K,V> > > { \
 	private: \
 		EConcurrentHashMap<K,V>* chm; \
 	public: \
 		EntrySet(EConcurrentHashMap<K,V>* chm) : chm(chm) { \
 		} \
-		sp<EConcurrentIterator<EConcurrentMapEntry<K,V> > > iterator() { \
+		sp<EIterator<sp<EConcurrentMapEntry<K,V> > > > iterator(int index=0) { \
 			return new EntryIterator(chm); \
 		} \
 		boolean contains(EConcurrentMapEntry<K,V>* e) { \
@@ -1958,17 +1925,14 @@ public: \
 		void clear() { \
 			chm->clear(); \
 		} \
-		boolean add(EConcurrentMapEntry<K,V>* e) { \
-			throw EUnsupportedOperationException(__FILE__, __LINE__); \
-		} \
-		boolean add(sp<EConcurrentMapEntry<K,V> > e) { \
-			throw EUnsupportedOperationException(__FILE__, __LINE__); \
-		} \
 	}; \
  \
 public: \
-	~EConcurrentHashMap() { \
+	virtual ~EConcurrentHashMap() { \
 		delete segments_; \
+		delete entrySet_; \
+		delete keySet_; \
+		delete values_; \
 	} \
  \
 	EConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyLevel) { \
@@ -2134,11 +2098,6 @@ public: \
 		return containsValue(value); \
 	} \
  \
-	sp<V> put(K key, V* value) { \
-		K k(key); \
-		sp<V> v(value); \
-		return put(k, v); \
-	} \
 	sp<V> put(K key, sp<V> value) { \
 		if (value == null) \
 			throw ENullPointerException(__FILE__, __LINE__); \
@@ -2146,11 +2105,6 @@ public: \
 		return segmentFor(hash)->put(key, hash, value, false); \
 	} \
  \
-	sp<V> putIfAbsent(K key, V* value) { \
-		K k(key); \
-		sp<V> v(value); \
-		return putIfAbsent(k, v); \
-	} \
 	sp<V> putIfAbsent(K key, sp<V> value) { \
 		if (value == null) \
 			throw ENullPointerException(__FILE__, __LINE__); \
@@ -2178,10 +2132,6 @@ public: \
 		return segmentFor(hash)->remove(key, hash, value) != null; \
 	} \
  \
-	boolean replace(K key, V* oldValue, V* newValue) { \
-		sp<V> nv(newValue); \
-		return replace(key, oldValue, nv); \
-	} \
 	boolean replace(K key, V* oldValue, sp<V> newValue) { \
 		if (oldValue == null || newValue == null) \
 			throw ENullPointerException(__FILE__, __LINE__); \
@@ -2189,10 +2139,6 @@ public: \
 		return segmentFor(hash)->replace(key, hash, oldValue, newValue); \
 	} \
  \
-	sp<V> replace(K key, V* value) { \
-		sp<V> v(value); \
-		return replace(key, v); \
-	} \
 	sp<V> replace(K key, sp<V> value) { \
 		if (value == null) \
 			throw ENullPointerException(__FILE__, __LINE__); \
@@ -2205,32 +2151,32 @@ public: \
 			(*segments_)[i]->clear(); \
 	} \
  \
-	sp<EConcurrentSet<K> > keySet() { \
+	ESet<K>* keySet() { \
 		if (!keySet_) { \
 			keySet_ = new KeySet(this); \
 		} \
 		return keySet_; \
 	} \
  \
-	sp<EConcurrentCollection<V> > values() { \
+	ECollection<sp<V> >* values() { \
 		if (!values_) { \
 			values_ = new Values(this); \
 		} \
 		return values_; \
 	} \
  \
-	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() { \
+	ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() { \
 		if (!entrySet_) { \
 			entrySet_ = new EntrySet(this); \
 		} \
 		return entrySet_; \
 	} \
  \
-	sp<EConcurrentEnumeration<K> > keys() { \
+	sp<EEnumeration<K> > keys() { \
 		return new KeyIterator(this); \
 	} \
  \
-	sp<EConcurrentEnumeration<V> > elements() { \
+	sp<EEnumeration<sp<V> > > elements() { \
 		return new ValueIterator(this); \
 	} \
  \
@@ -2239,9 +2185,9 @@ protected: \
 	int segmentMask; \
 	int segmentShift; \
 	EA<Segment*>* segments_; \
-	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet_; \
-	sp<EConcurrentSet<K> > keySet_; \
-	sp<EConcurrentCollection<V> > values_; \
+	ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet_; \
+	ESet<K>* keySet_; \
+	ECollection<sp<V> >* values_; \
  \
 private: \
  \
@@ -2262,7 +2208,10 @@ private: \
 		} \
 		segmentShift = 32 - sshift; \
 		segmentMask = ssize - 1; \
-		this->segments_ = Segment::newArray(ssize); \
+		segments_ = Segment::newArray(ssize); \
+		entrySet_ = null; \
+		keySet_ = null; \
+		values_ = null; \
  \
 		if (initialCapacity > CHM_MAXIMUM_CAPACITY) \
 			initialCapacity = CHM_MAXIMUM_CAPACITY; \
@@ -2273,8 +2222,8 @@ private: \
 		while (cap < c) \
 			cap <<= 1; \
  \
-		for (int i = 0; i < this->segments_->length(); ++i) \
-			(*this->segments_)[i] = new Segment(cap, loadFactor, this); \
+		for (int i = 0; i < segments_->length(); ++i) \
+			(*segments_)[i] = new Segment(cap, loadFactor, this); \
 	} \
  \
 	static int hashIt(int h) { \
@@ -2297,8 +2246,6 @@ ECHM_DECLARE(int)
 ECHM_DECLARE(short)
 ECHM_DECLARE(long)
 ECHM_DECLARE(llong)
-ECHM_DECLARE(float)
-ECHM_DECLARE(double)
 
 } /* namespace efc */
 #endif /* ECONCURRENTHASHMAP_HH_ */

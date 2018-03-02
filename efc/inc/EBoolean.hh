@@ -131,7 +131,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Returns a hash code for this {@code Boolean} object.

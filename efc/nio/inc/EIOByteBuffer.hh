@@ -15,7 +15,7 @@
 namespace efc {
 namespace nio {
 
-class EIOByteBuffer : public EObject {
+class EIOByteBuffer : virtual public EComparable<EIOByteBuffer*> {
 public:
 	virtual ~EIOByteBuffer();
 
@@ -313,6 +313,19 @@ public:
 	byte get(int index);
 	EIOByteBuffer* get(void* addr, int size, int length);
 
+	char getChar();
+	char getChar(int index);
+	short getShort();
+	short getShort(int index);
+	int getInt();
+	int getInt(int index);
+	llong getLLong();
+	llong getLLong(int index);
+	float getFloat();
+	float getFloat(int index);
+	double getDouble();
+	double getDouble(int index);
+
 	/**
 	 * Relative <i>put</i> method&nbsp;&nbsp;<i>(optional operation)</i>.
 	 *
@@ -334,6 +347,19 @@ public:
 	EIOByteBuffer* put(int index, byte b);
 	EIOByteBuffer* put(const void* addr, int length);
 	EIOByteBuffer* put(EIOByteBuffer* src);
+
+	EIOByteBuffer* putChar(char value);
+	EIOByteBuffer* putChar(int index, char value);
+	EIOByteBuffer* putShort(short value);
+	EIOByteBuffer* putShort(int index, short value);
+	EIOByteBuffer* putInt(int value);
+	EIOByteBuffer* putInt(int index, int value);
+	EIOByteBuffer* putLLong(llong value);
+	EIOByteBuffer* putLLong(int index, llong value);
+	EIOByteBuffer* putFloat(float value);
+	EIOByteBuffer* putFloat(int index, float value);
+	EIOByteBuffer* putDouble(double value);
+	EIOByteBuffer* putDouble(int index, double value);
 
 	/**
 	 * Returns the current hash code of this buffer.
@@ -375,7 +401,7 @@ public:
 	 * @return  <tt>true</tt> if, and only if, this buffer is equal to the
 	 *           given object
 	 */
-	boolean equals(EIOByteBuffer* that);
+	virtual boolean equals(EObject* that);
 
 	/**
 	 * Compares this buffer to another.
@@ -389,14 +415,14 @@ public:
 	 * @return  A negative integer, zero, or a positive integer as this buffer
 	 *		is less than, equal to, or greater than the given buffer
 	 */
-	int compareTo(EIOByteBuffer* that);
+	virtual int compareTo(EIOByteBuffer* that);
 
 	/**
 	 * Returns a string summarizing the state of this buffer.  </p>
 	 *
 	 * @return  A summary string
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Return base address.

@@ -38,7 +38,7 @@ public:
 	 *
 	 * @param  in   the specified input stream
 	 */
-	EDataInputStream(EInputStream* in);
+	EDataInputStream(EInputStream* in, boolean owned=false);
 
 	//TODO:
 	EDataInputStream(const EDataInputStream& that);

@@ -215,7 +215,7 @@ public:
 
 	virtual int hashCode();
 
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Searches for the network interface with the specified name.

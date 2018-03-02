@@ -12,7 +12,7 @@
 #include "../ETimeUnit.hh"
 #include "./EBlockingQueue.hh"
 #include "./EAtomicInteger.hh"
-#include "./EAbstractConcurrentQueue.hh"
+#include "../EAbstractQueue.hh"
 #include "../EInterruptedException.hh"
 #include "../EIllegalArgumentException.hh"
 #include "../ENoSuchElementException.hh"
@@ -52,7 +52,7 @@ namespace efc {
  */
 
 template<typename E>
-class ELinkedBlockingQueue: virtual public EAbstractConcurrentQueue<E>,
+class ELinkedBlockingQueue: virtual public EAbstractQueue<sp<E> >,
 		virtual public EBlockingQueue<E> {
 public:
 	/*
@@ -161,10 +161,6 @@ public:
 	 * @throws InterruptedException {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual void put(E* e) THROWS(EInterruptedException) {
-		sp<E> x(e);
-		put(x);
-	}
 	virtual void put(sp<E> e) THROWS(EInterruptedException) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
 		// Note: convention in all put/take/etc is to preset
@@ -207,15 +203,6 @@ public:
 	 * @throws InterruptedException {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual boolean offer(E* e, llong timeout, ETimeUnit* unit)
-			THROWS(EInterruptedException) {
-		sp<E> x(e);
-		boolean r = offer(x, timeout, unit);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-	}
 	virtual boolean offer(sp<E> e, llong timeout, ETimeUnit* unit)
 			THROWS(EInterruptedException) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
@@ -260,14 +247,6 @@ public:
 	 *
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual boolean offer(E* e) {
-		sp<E> x(e);
-		boolean r = offer(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-	}
 	virtual boolean offer(sp<E> e) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
 		if (count.get() == capacity_)
@@ -452,9 +431,6 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c) {
-		return drainTo(c, EInteger::MAX_VALUE);
-	}
 	virtual int drainTo(ECollection<sp<E> >* c) {
 		return drainTo(c, EInteger::MAX_VALUE);
 	}
@@ -465,48 +441,6 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) {
-		if (c == null)
-			throw ENullPointerException(__FILE__, __LINE__);
-		if (c == dynamic_cast<EConcurrentCollection<E>*>(this))
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		boolean signalNotFull_ = false;
-		takeLock.lock(); //lock!
-		int n = ES_MIN(maxElements, count.get());
-		// count.get provides visibility to first n Nodes
-		sp<Node> h = head;
-		int i = 0;
-		try {
-			while (i < n) {
-				sp<Node> p = h->next;
-				c->add(p->item);
-				p->item = null;
-				h->next = null; //!! h->next = h;
-				h = p;
-				++i;
-			}
-		} catch(...) {
-			if (i > 0) {
-				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
-			}
-			takeLock.unlock(); //unlock!
-			if (signalNotFull_)
-				signalNotFull();
-			throw; //!
-		} finally {
-			// Restore invariants even if c.add() threw
-			if (i > 0) {
-				// assert h.item == null;
-				head = h;
-				signalNotFull_ = (count.getAndAdd(-i) == capacity_);
-			}
-			takeLock.unlock(); //unlock!
-			if (signalNotFull_)
-				signalNotFull();
-		}
-		return n;
-	}
 	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -572,11 +506,8 @@ public:
 	 * @throws IllegalArgumentException if some property of this element
 	 *         prevents it from being added to this queue
 	 */
-	virtual boolean add(E* e) {
-		return EAbstractConcurrentQueue<E>::add(e);
-	}
 	virtual boolean add(sp<E> e) {
-		return EAbstractConcurrentQueue<E>::add(e);
+		return EAbstractQueue<sp<E> >::add(e);
 	}
 
 	/**
@@ -591,7 +522,7 @@ public:
 	 * @throws NoSuchElementException if this queue is empty
 	 */
 	virtual sp<E> remove() {
-		return EAbstractConcurrentQueue<E>::remove();
+		return EAbstractQueue<sp<E> >::remove();
 	}
 
 	/**
@@ -606,7 +537,7 @@ public:
 	 * @throws NoSuchElementException if this queue is empty
 	 */
 	virtual sp<E> element() {
-		return EAbstractConcurrentQueue<E>::element();
+		return EAbstractQueue<sp<E> >::element();
 	}
 
 	/**
@@ -615,7 +546,7 @@ public:
 	 * @return <tt>true</tt> if this collection contains no elements
 	 */
 	virtual boolean isEmpty() {
-		return EAbstractConcurrentCollection<E>::isEmpty();
+		return EAbstractCollection<sp<E> >::isEmpty();
 	}
 
 	/**
@@ -681,7 +612,7 @@ public:
 	 *
 	 * @return an <tt>Iterator</tt> over the elements in this collection
 	 */
-	virtual sp<EConcurrentIterator<E> > iterator() {
+	virtual sp<EIterator<sp<E> > > iterator(int index=0) {
 		return new Itr(this);
 	}
 
@@ -823,7 +754,7 @@ private:
 		putLock.unlock();
 	}
 
-	class Itr : public EConcurrentIterator<E> {
+	class Itr : public EIterator<sp<E> > {
 	private:
 		ELinkedBlockingQueue<E>* self;
 
@@ -866,11 +797,11 @@ private:
 			self->fullyUnlock();
 		}
 
-		boolean hasNext() {
+		virtual boolean hasNext() {
 			return current != null;
 		}
 
-		sp<E> next() {
+		virtual sp<E> next() {
 			sp<E> x;
 			self->fullyLock();
 			try {
@@ -889,7 +820,7 @@ private:
 			return x;
 		}
 
-		void remove() {
+		virtual void remove() {
 			if (lastRet == null)
 				throw EIllegalStateException(__FILE__, __LINE__);
 			self->fullyLock();
@@ -911,6 +842,9 @@ private:
 				self->fullyUnlock();
 			}
 		}
+        virtual sp<E> moveOut() {
+            throw EUnsupportedOperationException(__FILE__, __LINE__);
+        }
 	};
 };
 

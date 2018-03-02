@@ -326,7 +326,7 @@ public:
      *
      * @return  a string representation of this <code>Throwable</code>.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
     
     /**
      * Prints this <code>Throwable</code> and its backtrace to the

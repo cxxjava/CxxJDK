@@ -97,6 +97,8 @@ protected:
      */
 	EInputStream* volatile _in;
 
+	boolean _owned;
+
     /**
      * Creates a <code>FilterInputStream</code>
      * by assigning the  argument <code>in</code>
@@ -106,7 +108,7 @@ protected:
      * @param   in   the underlying input stream, or <code>null</code> if 
      *          this instance is to be created without an underlying stream.
      */
-    EFilterInputStream(EInputStream *in);
+    EFilterInputStream(EInputStream *in,  boolean owned=false);
 };
 
 } /* namespace efc */

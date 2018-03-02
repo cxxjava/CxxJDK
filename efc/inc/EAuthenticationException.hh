@@ -30,8 +30,6 @@ namespace efc {
  *
  * @since 1.5
  *
- * @author Rosanna Lee
- * @author Rob Weltman
  */
 
 class EAuthenticationException: public ESaslException {

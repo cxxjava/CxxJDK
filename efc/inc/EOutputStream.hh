@@ -8,7 +8,8 @@
 #ifndef EOutputStream_HH_
 #define EOutputStream_HH_
 
-#include "EObject.hh"
+#include "ECloseable.hh"
+#include "EFlushable.hh"
 #include "EIOException.hh"
 
 namespace efc {
@@ -32,7 +33,7 @@ namespace efc {
  * @since   JDK1.0
  */
 
-abstract class EOutputStream : virtual public EObject {
+abstract class EOutputStream : virtual public ECloseable, virtual public EFlushable {
 public:
 	virtual ~EOutputStream(){}
 

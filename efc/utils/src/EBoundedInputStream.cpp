@@ -11,10 +11,12 @@ namespace efc {
 namespace utils {
 
 EBoundedInputStream::~EBoundedInputStream() {
+	/* 20180207: removed for destroy error when owned object freed before!
 	try {
 		close();
 	} catch (...) {
 	}
+	*/
 	if (in && owned) {
 		delete in;
 	}
@@ -109,7 +111,7 @@ boolean EBoundedInputStream::markSupported() {
 	return in->markSupported();
 }
 
-EStringBase EBoundedInputStream::toString() {
+EString EBoundedInputStream::toString() {
 	return in->toString();
 }
 

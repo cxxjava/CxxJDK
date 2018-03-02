@@ -100,7 +100,7 @@ public:
 	 *             than zero, or if the load factor is nonpositive
 	 */
 	explicit
-	EHashSet(int initialCapacity, float loadFactor/*0.75*/) {
+	EHashSet(int initialCapacity, float loadFactor = 0.75) {
 		map_ = new EHashMap<E, EObject*>(initialCapacity, loadFactor);
 	}
 
@@ -436,7 +436,7 @@ public:
 	 *             than zero, or if the load factor is nonpositive
 	 */
 	explicit
-	EHashSet(int initialCapacity, float loadFactor/*0.75*/) {
+	EHashSet(int initialCapacity, float loadFactor = 0.75) {
 		map_ = new EHashMap<E, sp<EObject> >(initialCapacity, loadFactor);
 	}
 

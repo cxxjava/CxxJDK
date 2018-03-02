@@ -9,7 +9,7 @@
 #define ESYNCHRONOUSQUEUE_HH_
 
 #include "./EBlockingQueue.hh"
-#include "./EAbstractConcurrentQueue.hh"
+#include "../EAbstractQueue.hh"
 #include "../EInterruptedException.hh"
 #include "../ENullPointerException.hh"
 
@@ -59,9 +59,12 @@ namespace efc {
  * @param <E> the type of elements held in this collection
  */
 
-template<typename E>
-class ESynchronousQueue: virtual public EAbstractConcurrentQueue<E>,
-		virtual public EBlockingQueue<E> {
+template<typename E_>
+class ESynchronousQueue: virtual public EAbstractQueue<sp<E_> >,
+		virtual public EBlockingQueue<E_> {
+public:
+	typedef sp<E_> E;
+
 private:
 	/**
 	 * Nodes each maintain an item and handle waits and signals for
@@ -77,15 +80,15 @@ private:
 		static const int CANCEL = -1;
 	public:
 		/** The item being transferred */
-		sp<E> item;
+		E item;
 		/** Next node in wait queue */
 		sp<Node> next;
 
 		/** Creates a node with initial item */
-		Node(sp<E> x) : next(null) { item = x; }
+		Node(E x) : next(null) { item = x; }
 
 		/** Creates a node with initial item and next */
-		Node(sp<E> x, sp<Node> n) { item = x; next = n; }
+		Node(E x, sp<Node> n) { item = x; next = n; }
 
 		/**
 		 * Implements AQS base acquire to succeed if not in WAITING state
@@ -104,8 +107,8 @@ private:
 		/**
 		 * Takes item and nulls out field (for sake of GC)
 		 */
-		sp<E> extract() {
-			sp<E> x = item;
+		E extract() {
+			E x = item;
 			item = null;
 			return x;
 		}
@@ -125,7 +128,7 @@ private:
 		 * Fills in the slot created by the consumer and signal consumer to
 		 * continue.
 		 */
-		boolean setItem(sp<E> x) {
+		boolean setItem(E x) {
 			item = x; // can place in slot even if cancelled
 			return release(ACK);
 		}
@@ -134,7 +137,7 @@ private:
 		 * Removes item from slot created by producer and signal producer
 		 * to continue.
 		 */
-		sp<E> getItem() {
+		E getItem() {
 			return (release(ACK))? extract() : null;
 		}
 
@@ -152,7 +155,7 @@ private:
 		/**
 		 * Waits for a producer to put item placed by consumer.
 		 */
-		sp<E> waitForPut() THROWS(EInterruptedException) {
+		E waitForPut() THROWS(EInterruptedException) {
 			try {
 				acquireInterruptibly(0);
 			} catch (EInterruptedException& ie) {
@@ -178,7 +181,7 @@ private:
 		/**
 		 * Waits for a producer to put item placed by consumer, or time out.
 		 */
-		sp<E> waitForPut(llong nanos) THROWS(EInterruptedException) {
+		E waitForPut(llong nanos) THROWS(EInterruptedException) {
 			try {
 				if (!tryAcquireNanos(0, nanos) &&
 					release(CANCEL))
@@ -197,7 +200,7 @@ private:
 	 */
 	interface WaitQueue : public EObject {
 		/** Create, add, and return node for x */
-		virtual sp<Node> enq(sp<E> x) = 0;
+		virtual sp<Node> enq(E x) = 0;
 		/** Remove and return node, or null if empty */
 		virtual sp<Node> deq() = 0;
 	};
@@ -214,7 +217,7 @@ private:
         FifoWaitQueue() : head(null), last(null) {
         }
 
-        sp<Node> enq(sp<E> x) {
+        sp<Node> enq(E x) {
         	sp<Node> p = new Node(x);
             if (last == null)
                 last = head = p;
@@ -244,7 +247,7 @@ private:
         LifoWaitQueue() : head(null) {
         }
 
-        sp<Node> enq(sp<E> x) {
+        sp<Node> enq(E x) {
             return head = new Node(x, head);
         }
 
@@ -316,11 +319,7 @@ public:
 	 * @throws InterruptedException {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual void put(E* e) THROWS(EInterruptedException) {
-		sp<E> x(e);
-		put(x);
-	}
-	virtual void put(sp<E> o) THROWS(EInterruptedException) {
+	virtual void put(E o) THROWS(EInterruptedException) {
 		if (o == null) throw ENullPointerException(__FILE__, __LINE__);
 		for (;;) {
 			sp<Node> node;
@@ -354,16 +353,7 @@ public:
 	 * @throws InterruptedException {@inheritDoc}
 	 * @throws NullPointerException {@inheritDoc}
 	 */
-	virtual boolean offer(E* e, llong timeout, ETimeUnit* unit)
-			THROWS(EInterruptedException) {
-		sp<E> x(e);
-		boolean r = offer(x, timeout, unit);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-	}
-	virtual boolean offer(sp<E> o, llong timeout, ETimeUnit* unit)
+	virtual boolean offer(E o, llong timeout, ETimeUnit* unit)
 			THROWS(EInterruptedException) {
 		if (o == null) throw ENullPointerException(__FILE__, __LINE__);
 		llong nanos = unit->toNanos(timeout);
@@ -398,15 +388,7 @@ public:
 	 *         <tt>false</tt>
 	 * @throws NullPointerException if the specified element is null
 	 */
-	virtual boolean offer(E* e) {
-		sp<E> x(e);
-		boolean r = offer(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-	}
-	virtual boolean offer(sp<E> e) {
+	virtual boolean offer(E e) {
 		if (e == null) throw ENullPointerException(__FILE__, __LINE__);
 		for (;;) {
 			sp<Node> node;
@@ -429,7 +411,7 @@ public:
 	 * @return the head of this queue
 	 * @throws InterruptedException {@inheritDoc}
 	 */
-	virtual sp<E> take() THROWS(EInterruptedException) {
+	virtual E take() THROWS(EInterruptedException) {
 		for (;;) {
 			sp<Node> node;
 			boolean mustWait;
@@ -445,7 +427,7 @@ public:
 				return node->waitForPut();
 			}
 			else {
-				sp<E> x = node->getItem();
+				E x = node->getItem();
 				if (x != null) {
 					return x;
 				}
@@ -463,7 +445,7 @@ public:
 	 *         specified waiting time elapses before an element is present.
 	 * @throws InterruptedException {@inheritDoc}
 	 */
-	virtual sp<E> poll(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
+	virtual E poll(llong timeout, ETimeUnit* unit) THROWS(EInterruptedException) {
 		llong nanos = unit->toNanos(timeout);
 
 		for (;;) {
@@ -478,11 +460,11 @@ public:
             }}
 
 			if (mustWait) {
-				sp<E> x = node->waitForPut(nanos);
+				E x = node->waitForPut(nanos);
 				return x;
 			}
 			else {
-				sp<E> x = node->getItem();
+				E x = node->getItem();
 				if (x != null) {
 					return x;
 				}
@@ -498,7 +480,7 @@ public:
 	 * @return the head of this queue, or <tt>null</tt> if no
 	 *         element is available.
 	 */
-	virtual sp<E> poll() {
+	virtual E poll() {
 		for (;;) {
 			sp<Node> node;
 			SYNCBLOCK(qlock) {
@@ -508,7 +490,7 @@ public:
 				return null;
 
 			else {
-				sp<E> x = node->getItem();
+				E x = node->getItem();
 				if (x != null) {
 					return x;
 				}
@@ -537,11 +519,8 @@ public:
 	 * @throws IllegalArgumentException if some property of this element
 	 *         prevents it from being added to this queue
 	 */
-	virtual boolean add(E* e) {
-		return EAbstractConcurrentQueue<E>::add(e);
-	}
-	virtual boolean add(sp<E> e) {
-		return EAbstractConcurrentQueue<E>::add(e);
+	virtual boolean add(E e) {
+		return EAbstractQueue<E>::add(e);
 	}
 
 	/**
@@ -588,7 +567,7 @@ public:
 	 * @param o the element
 	 * @return <tt>false</tt>
 	 */
-	virtual boolean contains(E* o) {
+	virtual boolean contains(E_* o) {
 		return false;
 	}
 
@@ -599,8 +578,22 @@ public:
 	 * @param o the element to remove
 	 * @return <tt>false</tt>
 	 */
-	virtual boolean remove(E* o) {
+	virtual boolean remove(E_* o) {
 		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual E remove() {
+		return null;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual EA<E> toArray() {
+		return EA<E>(0);
 	}
 
 	/**
@@ -610,7 +603,7 @@ public:
 	 * @param c the collection
 	 * @return <tt>false</tt> unless given collection is empty
 	 */
-	virtual boolean containsAll(EConcurrentCollection<E>* c) {
+	virtual boolean containsAll(ECollection<E>* c) {
 		return c->isEmpty();
 	}
 
@@ -621,7 +614,7 @@ public:
 	 * @param c the collection
 	 * @return <tt>false</tt>
 	 */
-	virtual boolean removeAll(EConcurrentCollection<E> *c) {
+	virtual boolean removeAll(ECollection<E> *c) {
 		return false;
 	}
 
@@ -632,7 +625,7 @@ public:
 	 * @param c the collection
 	 * @return <tt>false</tt>
 	 */
-	virtual boolean retainAll(EConcurrentCollection<E> *c) {
+	virtual boolean retainAll(ECollection<E> *c) {
 		return false;
 	}
 
@@ -643,7 +636,7 @@ public:
 	 *
 	 * @return <tt>null</tt>
 	 */
-	virtual sp<E> peek() {
+	virtual E peek() {
 		return null;
 	}
 
@@ -653,7 +646,7 @@ public:
 	 *
 	 * @return an empty iterator
 	 */
-	virtual sp<EConcurrentIterator<E> > iterator() {
+	virtual sp<EIterator<E> > iterator(int index=0) {
 		return null;//Collections.emptyIterator();
 	}
 
@@ -663,24 +656,11 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c) {
-		if (c == null)
-			throw ENullPointerException(__FILE__, __LINE__);
-		if (c == this)
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		int n = 0;
-		sp<E> e;
-		while ( (e = poll()) != null) {
-			c->add(e);
-			++n;
-		}
-		return n;
-	}
-	virtual int drainTo(ECollection<sp<E> >* c) {
+	virtual int drainTo(ECollection<E>* c) {
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		int n = 0;
-		sp<E> e;
+		E e;
 		while ( (e = poll()) != null) {
 			c->add(e);
 			++n;
@@ -694,24 +674,11 @@ public:
 	 * @throws NullPointerException          {@inheritDoc}
 	 * @throws IllegalArgumentException      {@inheritDoc}
 	 */
-	virtual int drainTo(EConcurrentCollection<E>* c, int maxElements) {
-		if (c == null)
-			throw ENullPointerException(__FILE__, __LINE__);
-		if (c == this)
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		int n = 0;
-		sp<E> e;
-		while (n < maxElements && (e = poll()) != null) {
-			c->add(e);
-			++n;
-		}
-		return n;
-	}
-	virtual int drainTo(ECollection<sp<E> >* c, int maxElements) {
+	virtual int drainTo(ECollection<E>* c, int maxElements) {
 		if (c == null)
 			throw ENullPointerException(__FILE__, __LINE__);
 		int n = 0;
-		sp<E> e;
+		E e;
 		while (n < maxElements && (e = poll()) != null) {
 			c->add(e);
 			++n;

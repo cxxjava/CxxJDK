@@ -254,7 +254,7 @@ public:
 	 *
 	 * @return a string identifying this latch, as well as its state
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 private:
 	cdl::Sync *sync;

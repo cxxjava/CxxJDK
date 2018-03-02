@@ -94,7 +94,7 @@ namespace nio {
  * @see Selector
  */
 
-class ESelectionKey : public ESynchronizeable {
+class ESelectionKey : public ESynchronizeable, public enable_shared_from_this<ESelectionKey> {
 public:
 	virtual ~ESelectionKey();
 
@@ -106,7 +106,7 @@ public:
 	 *
 	 * @return  This key's channel
 	 */
-	ESelectableChannel* channel();
+	sp<ESelectableChannel> channel();
 
 	/**
 	 * Returns the selector for which this key was created.  This method will
@@ -178,7 +178,7 @@ public:
 	 * @throws  CancelledKeyException
 	 *          If this key has been cancelled
 	 */
-	ESelectionKey* interestOps(int ops);
+	void interestOps(int ops);
 
 	/**
 	 * Retrieves this key's ready-operation set.
@@ -349,7 +349,7 @@ public:
 	 * @return  The previously-attached object, if any,
 	 *          otherwise <tt>null</tt>
 	 */
-	void* attach(void* ob);
+	EObject* attach(EObject* ob);
 
 	/**
 	 * Retrieves the current attachment.  </p>
@@ -357,7 +357,7 @@ public:
 	 * @return  The object currently attached to this key,
 	 *          or <tt>null</tt> if there is no attachment
 	 */
-	void* attachment();
+	EObject* attachment();
 
 public:
 	/**
@@ -367,19 +367,19 @@ public:
 	void setIndex(int i);
 	void nioReadyOps(int ops);
 	int nioReadyOps();
-	ESelectionKey* nioInterestOps(int ops);
+	void nioInterestOps(int ops);
 	int nioInterestOps();
 	void invalidate();
 
 protected:
 	friend class ESelector;
 
-	ESelectionKey(ESelectableChannel* ch, ESelector* sel);
+	ESelectionKey(sp<ESelectableChannel> ch, ESelector* sel);
 
 private:
-	ESelectableChannel* channel_;
+	sp<ESelectableChannel> channel_;
 	ESelector* selector_;
-	EAtomicReference<void> attachment_;
+	EAtomicReference<EObject*> attachment_;
 	volatile boolean valid_;// = true;
 	volatile int interestOps_;
 	int readyOps_;

@@ -10,7 +10,6 @@
 
 #include "./EChannel.hh"
 #include "./EByteChannel.hh"
-#include "./EMembershipKey.hh"
 #include "../../inc/ESocketOptions.hh"
 #include "../../inc/EInetAddress.hh"
 #include "../../inc/ENetworkInterface.hh"
@@ -104,6 +103,8 @@ namespace nio {
  *
  * @since 1.7
  */
+
+class EMembershipKey;
 
 interface EMulticastChannel: virtual public EChannel,
 		virtual public EByteChannel,

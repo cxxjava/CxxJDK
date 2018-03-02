@@ -87,6 +87,8 @@ namespace efc {
 template<typename E>
 interface ESortedSet : virtual public ESet<E>
 {
+    typedef typename ETraits<E>::indexType idxE;
+
 	virtual ~ESortedSet(){}
 
 	/**
@@ -98,7 +100,7 @@ interface ESortedSet : virtual public ESet<E>
 	 *         or <tt>null</tt> if this set uses the natural ordering
 	 *         of its elements
 	 */
-	virtual EComparator<E>* comparator() = 0;
+	virtual EComparator<idxE>* comparator() = 0;
 
 	/**
 	 * Returns a view of the portion of this set whose elements range
@@ -131,7 +133,7 @@ interface ESortedSet : virtual public ESet<E>
 	 *         has a restricted range, and <tt>fromElement</tt> or
 	 *         <tt>toElement</tt> lies outside the bounds of the range
 	 */
-	virtual ESortedSet<E>* subSet(E fromElement, E toElement) = 0;
+	virtual ESortedSet<E>* subSet(idxE fromElement, idxE toElement) = 0;
 
 	/**
 	 * Returns a view of the portion of this set whose elements are
@@ -158,7 +160,7 @@ interface ESortedSet : virtual public ESet<E>
 	 *         restricted range, and <tt>toElement</tt> lies outside the
 	 *         bounds of the range
 	 */
-	virtual ESortedSet<E>* headSet(E toElement) = 0;
+	virtual ESortedSet<E>* headSet(idxE toElement) = 0;
 
 	/**
 	 * Returns a view of the portion of this set whose elements are
@@ -185,7 +187,7 @@ interface ESortedSet : virtual public ESet<E>
 	 *         restricted range, and <tt>fromElement</tt> lies outside the
 	 *         bounds of the range
 	 */
-	virtual ESortedSet<E>* tailSet(E fromElement) = 0;
+	virtual ESortedSet<E>* tailSet(idxE fromElement) = 0;
 
 	/**
 	 * Returns the first (lowest) element currently in this set.

@@ -171,7 +171,7 @@ public:
      *
      * @return  a string representation of this object.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
 
     /**
      * Compares this object against the specified object.

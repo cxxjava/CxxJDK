@@ -95,11 +95,6 @@ namespace efc {
  * encoding. For more information on Unicode terminology, refer to the
  * <a href="http://www.unicode.org/glossary/">Unicode Glossary</a>.
  *
- * @author  Lee Boynton
- * @author  Guy Steele
- * @author  Akira Tanaka
- * @author  Martin Buchholz
- * @author  Ulf Zibis
  * @since   1.0
  */
 
@@ -184,7 +179,7 @@ public:
 	 *
 	 * @return  a string representation of this object.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Determines if the specified character is a lowercase character.

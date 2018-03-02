@@ -21,7 +21,6 @@ namespace efc {
  * Checked exception thrown to indicate that a string could not be parsed as a
  * URI reference.
  *
- * @author Mark Reinhold
  * @see URI
  * @since 1.4
  */

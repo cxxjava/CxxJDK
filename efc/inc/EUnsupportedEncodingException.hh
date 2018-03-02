@@ -18,7 +18,6 @@ namespace efc {
 /**
  * The Character Encoding is not supported.
  *
- * @author  Asmus Freytag
  * @since   JDK1.1
  */
 

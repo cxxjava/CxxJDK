@@ -88,7 +88,7 @@ public:
 
 	void save(const char *fname, const char *node) THROWS2(EIOException,ERuntimeException);
 
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	static es_status_t nodeDelete(es_bson_node_t *node);
 	static es_bson_node_t* childFind(es_bson_node_t *node, const char *path);

@@ -47,6 +47,26 @@ struct ETraits<sp<T> >
     typedef T* indexType;
 };
 
+
+//=============================================================================
+
+
+template<typename T> inline boolean obj_is_null(T o) { return false; }
+template<typename T> inline boolean obj_is_null(sp<T> o) { return o==null; }
+template<typename T> inline boolean obj_is_null(T* o) { return o==null; }
+
+template<typename T> inline boolean obj_is_equals(T o1, T o2) { return o1==o2; }
+template<typename T> inline boolean obj_is_equals(T* o1, sp<T> o2) { return o1->equals(o2.get()); }
+template<typename T> inline boolean obj_is_equals(T* o1, T* o2) { return o1->equals(o2); }
+
+template<typename T> inline T obj_get_index(T o) { return o; }
+template<typename T> inline T* obj_get_index(sp<T> o) { return o.get(); }
+
+template<typename T> inline EString obj_get_string(T o) { return EString(o); }
+template<typename T> inline EString obj_get_string(sp<T> o) { return o->toString(); }
+template<typename T> inline EString obj_get_string(T* o) { return o->toString(); }
+
+
 } /* namespace efc */
 
 #endif //!__ETraits_H__

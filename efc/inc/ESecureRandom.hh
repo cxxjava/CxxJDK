@@ -65,8 +65,6 @@ namespace efc {
  * @see java.security.SecureRandomSpi
  * @see java.util.Random
  *
- * @author Benjamin Renaud
- * @author Josh Bloch
  */
 
 class ESecureRandom: public ERandom {

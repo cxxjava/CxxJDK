@@ -374,7 +374,7 @@ public:
 	EBigInteger toBigInteger();
 
 	virtual int hashCode();
-	virtual EStringBase toString();
+	virtual EString toString();
 	virtual int compareTo(EBigDecimal* val);
 	virtual boolean equals(EObject* obj);
 

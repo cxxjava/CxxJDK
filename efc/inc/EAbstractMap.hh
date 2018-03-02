@@ -169,7 +169,12 @@ protected:
 
 public:
 	virtual ~EAbstractMap() {
-		//
+		if (_keySet) {
+			delete _keySet;
+		}
+		if (_values) {
+			delete _values;
+		}
 	}
 
 	// Query Operations
@@ -356,7 +361,7 @@ public:
 	 * is performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same set.
 	 */
-	virtual sp<ESet<K> > keySet() {
+	virtual ESet<K>* keySet() {
 		if (_keySet == null) {
 			_keySet = new KeySet(this);
 		}
@@ -378,7 +383,7 @@ public:
 	 * performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same collection.
 	 */
-	virtual sp<ECollection<V> > values() {
+	virtual ECollection<V>* values() {
 		if (_values == null) {
 			_values = new ValueCollection(this);
 		}
@@ -422,13 +427,13 @@ public:
 	 *
 	 * @return a string representation of this map
 	 */
-	virtual EStringBase toString() {
+	virtual EString toString() {
 		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
 			return "{}";
 		}
 
-		EStringBase sb;
+		EString sb;
 		sb.append('{');
 		for (;;) {
 			EMapEntry<K,V>* e = i->next();
@@ -445,7 +450,7 @@ public:
 		return sb;
 	}
 
-	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
+	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
 
 protected:
 	/**
@@ -453,8 +458,8 @@ protected:
 	 * appropriate view the first time this view is requested.  The views are
 	 * stateless, so there's no reason to create more than one of each.
 	 */
-	sp<ESet<K> > _keySet;
-	sp<ECollection<V> > _values;
+	ESet<K>* _keySet;
+	ECollection<V>* _values;
 };
 
 //=============================================================================
@@ -580,7 +585,12 @@ protected:
 
 public:
 	virtual ~EAbstractMap() {
-		//
+		if (_keySet) {
+			delete _keySet;
+		}
+		if (_values) {
+			delete _values;
+		}
 	}
 
 	// Query Operations
@@ -771,7 +781,7 @@ public:
 	 * is performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same set.
 	 */
-	virtual sp<ESet<K> > keySet() {
+	virtual ESet<K>* keySet() {
 		if (_keySet == null) {
 			_keySet = new KeySet(this);
 		}
@@ -793,7 +803,7 @@ public:
 	 * performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same collection.
 	 */
-	virtual sp<ECollection<V> > values() {
+	virtual ECollection<V>* values() {
 		if (_values == null) {
 			_values = new ValueCollection(this);
 		}
@@ -837,13 +847,13 @@ public:
 	 *
 	 * @return a string representation of this map
 	 */
-	virtual EStringBase toString() {
+	virtual EString toString() {
 		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
 			return "{}";
 		}
 
-		EStringBase sb;
+		EString sb;
 		sb.append('{');
 		for (;;) {
 			EMapEntry<K,V>* e = i->next();
@@ -860,7 +870,7 @@ public:
 		return sb;
 	}
 
-	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
+	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
 
 protected:
 	/**
@@ -868,8 +878,8 @@ protected:
 	 * appropriate view the first time this view is requested.  The views are
 	 * stateless, so there's no reason to create more than one of each.
 	 */
-	sp<ESet<K> > _keySet;
-	sp<ECollection<V> > _values;
+	ESet<K>* _keySet;
+	ECollection<V>* _values;
 };
 
 //=============================================================================
@@ -1191,7 +1201,7 @@ public:
 	 * is performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same set.
 	 */
-	virtual sp<ESet<K> > keySet() {
+	virtual ESet<K>* keySet() {
 		if (_keySet == null) {
 			_keySet = new KeySet(this);
 		}
@@ -1213,7 +1223,7 @@ public:
 	 * performed, so there is a slight chance that multiple calls to this
 	 * method will not all return the same collection.
 	 */
-	virtual sp<ECollection<V> > values() {
+	virtual ECollection<V>* values() {
 		if (_values == null) {
 			_values = new ValueCollection(this);
 		}
@@ -1257,13 +1267,13 @@ public:
 	 *
 	 * @return a string representation of this map
 	 */
-	virtual EStringBase toString() {
+	virtual EString toString() {
 		sp<EIterator<EMapEntry<K,V>*> > i = entrySet()->iterator();
 		if (! i->hasNext()) {
 			return "{}";
 		}
 
-		EStringBase sb;
+		EString sb;
 		sb.append('{');
 		for (;;) {
 			EMapEntry<K,V>* e = i->next();
@@ -1280,7 +1290,7 @@ public:
 		return sb;
 	}
 
-	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
+	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
 
 protected:
 	/**
@@ -1288,8 +1298,8 @@ protected:
 	 * appropriate view the first time this view is requested.  The views are
 	 * stateless, so there's no reason to create more than one of each.
 	 */
-	sp<ESet<K> > _keySet;
-	sp<ECollection<V> > _values;
+	ESet<K>* _keySet;
+	ECollection<V>* _values;
 };
 
 } /* namespace efc */

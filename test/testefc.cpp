@@ -14,7 +14,7 @@
 #include "es_main.h"
 #include "Efc.hh"
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
 namespace efc {
 es_alogger_t* alogger;
@@ -23,6 +23,9 @@ es_alogger_t* alogger;
 
 static EAtomicLLong gLockTestCount1;
 static EAtomicLLong gLockTestCount2;
+
+static EAtomicLLong gSumAdd;
+static EAtomicLLong gSumPull;
 
 static llong gDeadlineTimestamp = 0L;
 
@@ -180,102 +183,142 @@ static void f_string(const EString& s) {
 }
 
 static void test_string() {
-	ullong v = -1;
-	EString vs(v);
-	LOG(vs.c_str());
+	{
+		EString s("0123456789");
+		int n = s.indexOf('\0');
+		LOG("n=%d", n);
+		ES_ASSERT(n==-1);
+		n = s.lastIndexOf('\0');
+		LOG("n=%d", n);
+		ES_ASSERT(n==-1);
+
+		n = s.indexOf("\0");
+		LOG("n=%d", n);
+		ES_ASSERT(n==-1);
+		n = s.lastIndexOf("\0");
+		LOG("n=%d", n);
+		ES_ASSERT(n==-1);
+	}
+
+	{
+		ullong v = -1;
+		EString vs(v);
+		LOG(vs.c_str());
+	}
+
+	LOG((EString("xxx") + 2 + '\t' + "xxxxxxxxx").c_str());
 
 	//string join
-	EString x_y("xxx" + EString("|") + 10 + "yyy");
-	LOG(x_y.c_str());
-	x_y = "ccc" + EString("yyy");
-	LOG(x_y.c_str());
-	x_y = EString("yyy") + "ccc";
-	LOG(x_y.c_str());
-	x_y = EString("yyy") + 9;
-	LOG(x_y.c_str());
-	x_y = EString("yyy") + 'c';
-	LOG(x_y.c_str());
-	EString x_y2("222 | ");
-	x_y2 << &x_y << " | ";
-	x_y2 += &x_y;
-	EString xx_yy(x_y + "| " + &x_y2);
-	LOG(xx_yy.c_str());
+	{
+		EString x_y("xxx" + EString("|") + 10 + "yyy");
+		LOG(x_y.c_str());
+		x_y = "ccc" + EString("yyy");
+		LOG(x_y.c_str());
+		x_y = EString("yyy") + "ccc";
+		LOG(x_y.c_str());
+		x_y = EString("yyy") + 9;
+		LOG(x_y.c_str());
+		x_y = EString("yyy") + 'c';
+		LOG(x_y.c_str());
+		EString x_y2("222 | ");
+		x_y2 << &x_y << " | ";
+		x_y2 += &x_y;
+		EString xx_yy(x_y + "| " + &x_y2);
+		LOG(xx_yy.c_str());
 
-	EString s_1("s");
-	s_1 << 'x';
-	s_1 << 10;
-	EString s_2 = s_1 + 'y' + 9;
-	LOG(s_2.c_str());
+		EString s_1("s");
+		s_1 << 'x';
+		s_1 << 10;
+		EString s_2 = s_1 + 'y' + 9;
+		LOG(s_2.c_str());
+	}
 
 	//as hex
-	byte buf[10];
-	eso_memcpy(buf + 5, "\5", 1);
-	EString hex = EString::toHexString(buf, sizeof(buf));
-	LOG("hex=%s", hex.c_str());
+	{
+		byte buf[10];
+		eso_memcpy(buf + 5, "\5", 1);
+		EString hex = EString::toHexString(buf, sizeof(buf));
+		LOG("hex=%s", hex.c_str());
+	}
 
 	f_string("sssssssssssssss");
 
 	EString str("127.0.0.1");
 
-	EString x1("x");
-	x1<<"y"<<1020;
-	LOG("x1=%s", x1.c_str());
+	{
+		EString x1("x");
+		x1<<"y"<<1020;
+		LOG("x1=%s", x1.c_str());
+	}
 
 	int i;
 
 	//1.
-	EArray<EString*> arr = EPattern::split("\\.", str.c_str(), 0);
-	LOG("arr.size=%d", arr.size());
-	for (i=0; i<arr.size(); i++) {
-		LOG("s=%s", arr[i]->c_str());
-	}
+	{
+		EArray<EString*> arr = EPattern::split("\\.", str.c_str(), 0);
+		LOG("arr.size=%d", arr.size());
+		for (i=0; i<arr.size(); i++) {
+			LOG("s=%s", arr[i]->c_str());
+		}
 
-	EString a = str.splitAt(".", 1);
-	LOG("a=%s", a.c_str());
-	EString b = str.splitAt(".", 4);
-	LOG("b=%s", b.c_str());
+		EString a = str.splitAt(".", 1);
+		LOG("a=%s", a.c_str());
+		EString b = str.splitAt(".", 4);
+		LOG("b=%s", b.c_str());
 
-	EPattern pattern("\\.");
-	EArray<EString*> arr2 = pattern.split(str.c_str());
-	LOG("arr2.size=%d", arr2.size());
-	for (i = 0; i < arr2.size(); i++) {
-		LOG("s=%s", arr2[i]->c_str());
+		EPattern pattern("\\.");
+		EArray<EString*> arr2 = pattern.split(str.c_str());
+		LOG("arr2.size=%d", arr2.size());
+		for (i = 0; i < arr2.size(); i++) {
+			LOG("s=%s", arr2[i]->c_str());
+		}
 	}
 
 	//2.
-	EString str2("AAAAAAAAA");
-	str << "++++++" << "abc" << str2 << 'X';
-	LOG("s=%s", str.c_str());
+	{
+		EString str2("AAAAAAAAA");
+		str << "++++++" << "abc" << str2 << 'X';
+		LOG("s=%s", str.c_str());
+	}
 
 	//3.
-	str.append(88823728, 16);
-	LOG("s=%s", str.c_str());
-	str.append(9.88327832);
-	LOG("s=%s", str.c_str());
+	{
+		str.append(88823728, 16);
+		LOG("s=%s", str.c_str());
+		str.append(9.88327832);
+		LOG("s=%s", str.c_str());
 
-	EString s = "abcd'efg +++fdjska";
-	s = s.substring(0, 10);
-	int n = s.lastIndexOf("cd", 2);
-	LOG(s.substring(n).c_str());
+		EString s = "abcd'efg +++fdjska";
+		s = s.substring(0, 10);
+		int n = s.lastIndexOf("cd", 2);
+		LOG(s.substring(n).c_str());
 
-	boolean r = s.regionMatches(true, 2, "Cd", 0, 2);
-	if (r) {
-		LOG("matched 'Cd'!");
+		boolean r = s.regionMatches(true, 2, "Cd", 0, 2);
+		if (r) {
+			LOG("matched 'Cd'!");
+		}
 	}
 
 	//4.
-	EString x("xxx");
-	for (int i=0; i<10000; i++) {
-		x.append("xxxxxx");
+	{
+		EString x("xxx");
+		for (int i=0; i<10000; i++) {
+			x.append("xxxxxx");
+		}
 	}
 
 	//5. null
-	EString n5(null);
-	LOG("n5=%s", n5.c_str());
+	{
+		EString n5(null);
+		LOG("n5=%s", n5.c_str());
+	}
 
 	//6. pointer
-	EString p6(&s);
-	LOG("p6=%s", p6.c_str());
+	{
+		EString s = "x";
+		EString p6(&s);
+		LOG("p6=%s", p6.c_str());
+	}
 }
 
 static void test_simpleMap() {
@@ -708,20 +751,22 @@ static void test_thread2() {
 
 		}
 		virtual void run() {
-			for (int i=0; i<10000; i++) {
-				printf("i=%d\n", i);
-//				EThread::sleep(10000);
+			for (int i=0; i<100; i++) {
+				LOG("i=%d", i);
+				EThread::sleep(10);
 			}
 		}
 	};
 
-	AAAA *t = new AAAA();
+	sp<AAAA> t = new AAAA();
+	EThread::setDaemon(t, true); //success!
 	t->start();
+	//EThread::setDaemon(t, true); //error!
 
 	t->join();
 //	EThread::sleep(10);
 
-	delete t;
+	LOG("end of test_thread2()");
 }
 
 static void test_thread3() {
@@ -883,9 +928,9 @@ static void test_thread4() {
 
 	x.state = 0;
 	for (int i=0; i<5; i++) {
-		AAAA *t = new AAAA(x);
+		AAAA* t = new AAAA(x);
 		t->injectExitCallback(AAAA::test_thread3_exit_callback, t);
-		t->setDaemon(true);
+		EThread::setDaemon(t, true);
 		x.aliveCount0++;
 		t->start();
 	}
@@ -907,7 +952,44 @@ static void test_thread4() {
 		EThread::sleep(10);
 	}
 
-	LOG("end of test_thread3()...");
+	LOG("end of test_thread4()...");
+}
+
+static void test_thread5() {
+	class MyThread : public EThread, public enable_shared_from_this<MyThread> {
+	public:
+		virtual ~MyThread() {
+			LOG("%012s", getName());
+		}
+		virtual void run() {
+			sp<MyThread> self = shared_from_this();
+
+			class MyThread2 : public EThread {
+			public:
+				sp<MyThread> self;
+				virtual ~MyThread2() {
+					LOG("%012s", getName());
+				}
+				MyThread2(sp<MyThread> s) : self(s) {
+				}
+				virtual void run() {
+					self->getName();
+				}
+			};
+			sp<MyThread2> thread = new MyThread2(self);
+
+			thread->setName(EString(gSumAdd.addAndGet(1)).c_str());
+			EThread::setDaemon(thread, true); //!!!
+			thread->start();
+		}
+	};
+
+	sp<MyThread> ths1 = new MyThread();
+	ths1->setName(EString(gSumAdd.addAndGet(1)).c_str());
+	EThread::setDaemon(ths1, true); //!!!
+	ths1->start();
+
+	LOG("end of test_thread5().");
 }
 
 static void test_threadJoin() {
@@ -1118,7 +1200,7 @@ static void test_exception()
 		}
 
 		EPrintStream ps(&sm);
-		ps.println("don't support this mode(%s) for memory stream!", "X");
+		ps.printfln("don't support this mode(%s) for memory stream!", "X");
 		ps.write((void*) "jjjjjjjjjjjjjjjjjjjjjxxxg", 25);
 		sm.close();
 	} catch (EIOException &e) {
@@ -1719,6 +1801,18 @@ static void test_system()
 	LOG("%d", ESystem::identityHashCode(&b));
 	LOG("%d", a.hashCode());
 	LOG("%d", b.hashCode());
+
+	{
+		sp<EString> v = ESystem::setProperty("xxx", "XXX");
+		LOG("0 %s", (v==null) ? "v is null" : v->c_str());
+
+		v = ESystem::setProperty("xxx", "YYY");
+		LOG("1 %s", (v==null) ? "v is null" : v->c_str());
+
+		v = ESystem::setProperty("xxx", "ZZZ");
+		LOG("2 %s", (v==null) ? "v is null" : v->c_str());
+		LOG("3 %s", ESystem::getProperty("xxx"));
+	}
 }
 
 static void test_strToken() {
@@ -2493,6 +2587,31 @@ static void test_file() {
 
 	file_ = file01;
 	LOG("file_.path=%s", file_.getCanonicalPath().c_str());
+
+	//6.
+	EFile file06("/tmp");
+	LOG("file06 is link: %s", file06.isLink() ? "true" : "false");
+
+	EFile file07("/tmp/all.log");
+	LOG("file07 can write: %s", file07.canWrite() ? "true" : "false");
+	boolean e = file07.canExecute();
+	LOG("file07 can execute: %s", e ? "true" : "false");
+	file07.setExecutable(!e, true);
+	e = file07.canExecute();
+	LOG("file07 can execute: %s", e ? "true" : "false");
+
+	//7.
+	class FileFilter : public EFileFilter {
+	public:
+		virtual boolean accept(EFile *pathname) {
+			return (pathname->getName().endsWith(".log"));
+		}
+	};
+	FileFilter filter;
+	EArray<EFile*> logsfile = file06.listFiles(&filter);
+	for (int i=0; i<logsfile.size(); i++) {
+		LOG("file=%s", logsfile.getAt(i)->toString().c_str());
+	}
 }
 
 class Class : public EObject {
@@ -2754,7 +2873,7 @@ static void test_hashmap() {
 	{
 		EHashMap<EString*, EString*> hashmap_(hashmap);
 
-		sp<ECollection<EString*> > values = hashmap.values();
+		ECollection<EString*>* values = hashmap.values();
 		sp<EIterator<EString*> > iterS = values->iterator();
 		while(iterS->hasNext()) {
 			LOG("v=%s", iterS->next()->c_str());
@@ -2767,7 +2886,7 @@ static void test_hashmap() {
 		}
 		hashmap__ = hashmap_;
 		{
-			sp<ECollection<EString*> > values = hashmap__.values();
+			ECollection<EString*>* values = hashmap__.values();
 			sp<EIterator<EString*> > iterS = values->iterator();
 			while(iterS->hasNext()) {
 				LOG("v=%s", iterS->next()->c_str());
@@ -2791,13 +2910,13 @@ static void test_hashmap() {
 	EString *v1 = hashmap.get(&t3);
 	LOG(v1->c_str());
 
-	sp<ECollection<EString*> > values = hashmap.values();
+	ECollection<EString*>* values = hashmap.values();
 	sp<EIterator<EString*> > iterS = values->iterator();
 	while(iterS->hasNext()) {
 		LOG("v=%s", iterS->next()->c_str());
 	}
 
-	sp<ESet<EMapEntry<EString*, EString*>*> > set = hashmap.entrySet();
+	ESet<EMapEntry<EString*, EString*>*>* set = hashmap.entrySet();
 	LOG("set size=%d", set->size());
 	sp<EIterator<EMapEntry<EString*, EString*>*> > iter = set->iterator();
 	while(iter->hasNext()) {
@@ -2833,7 +2952,7 @@ static void test_hashmap() {
 
 	LOG("hashmapi.toString():%s", hashmapi.toString().c_str());
 
-	sp<ESet<EMapEntry<int, EString*>*> > setI = hashmapi.entrySet();
+	ESet<EMapEntry<int, EString*>*>* setI = hashmapi.entrySet();
 	LOG("set size=%d", setI->size());
 	sp<EIterator<EMapEntry<int, EString*>*> > iterI = setI->iterator();
 	while(iterI->hasNext()) {
@@ -2849,7 +2968,7 @@ static void test_hashmap() {
 
 	LOG("hashmapL size=%d", hashmapL.size());
 
-	sp<ESet<EMapEntry<llong, EString*>*> > setL = hashmapL.entrySet();
+	ESet<EMapEntry<llong, EString*>*>* setL = hashmapL.entrySet();
 	LOG("set size=%d", setL->size());
 	sp<EIterator<EMapEntry<llong, EString*>*> > iterL = setL->iterator();
 	while(iterL->hasNext()) {
@@ -2953,7 +3072,7 @@ static void test_treemap() {
 		}
 	}
 
-	sp<ESet<EMapEntry<EInteger*,EString*>*> > es = tm.entrySet();
+	ESet<EMapEntry<EInteger*,EString*>*>* es = tm.entrySet();
 	sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter = es->iterator();
 	while (iter->hasNext()) {
 		EMapEntry<EInteger*,EString*>* me = iter->next();
@@ -3251,11 +3370,13 @@ static void test_array() {
 
 static void test_buffer() {
 	EByteBuffer buf__;
-	int len;
+	int len = 0;
 
 	{
 	EByteBuffer buf;
-	len = buf.append("1234567890");
+	len = buf.append('c');
+	len += buf.append(81);
+	len += buf.append("1234567890");
 	for (int i=0; i<5; i++) {
 		len += buf.append("1234567890");
 	}
@@ -3741,10 +3862,35 @@ static void test_serversocket() {
 	serverSocket->setReuseAddress(true);
 	serverSocket->bind(8787);
 	LOG("serverSocket=%s", serverSocket->toString().c_str());
+
+#if 0
+	// test accept interrupt.
+	class CloseThread: public EThread {
+	public:
+		CloseThread(EServerSocket *ss): serverSocket(ss) {}
+		virtual void run() {
+			EThread::sleep(3000);
+			serverSocket->close();
+			LOG("accept socket closed.");
+		}
+	private:
+		EServerSocket *serverSocket;
+	};
+	CloseThread ct(serverSocket);
+	ct.start();
+#endif
+
+	// accept
 	int count = 0;
 	char buffer[11];
 	while (count < 10) {
-		ESocket *clientSocket = serverSocket->accept();
+		ESocket *clientSocket;
+		try {
+			clientSocket = serverSocket->accept();
+		} catch (EIOException& e) {
+			LOG("accept error.");
+			break;
+		}
 		count++;
 		EInetSocketAddress *isar = clientSocket->getRemoteSocketAddress();
 		EInetSocketAddress *isal = clientSocket->getLocalSocketAddress();
@@ -4098,7 +4244,7 @@ static void test_pattern() {
 class CountAtomicThread: public EThread
 {
 public:
-	CountAtomicThread(const char *name, EAtomicInteger *ai, EAtomicReference<EInteger>* arp, EAtomicDouble* adp) : EThread(name){
+	CountAtomicThread(const char *name, EAtomicInteger *ai, EAtomicReference<EInteger*>* arp, EAtomicDouble* adp) : EThread(name){
 		v = 0;
 		a = ai;
 		ar = arp;
@@ -4144,13 +4290,13 @@ public:
 private:
 	int v;
 	EAtomicInteger *a;
-	EAtomicReference<EInteger>* ar;
+	EAtomicReference<EInteger*>* ar;
 	EAtomicDouble* ad;
 };
 
 static void test_atomic() {
 	EAtomicInteger ai(1);
-	EAtomicReference<EInteger> ar;
+	EAtomicReference<EInteger*> ar;
 	EAtomicDouble ad(0.00091);
 
 	CountAtomicThread t1("#1", &ai, &ar, &ad), t2("#2", &ai, &ar, &ad), t3("#3", &ai, &ar, &ad);
@@ -4161,8 +4307,6 @@ static void test_atomic() {
 	t1.join();
 	t2.join();
 	t3.join();
-
-	delete ar.get(); //delete last one!
 
 	LOG("after thread join. ai value=%d", ai.get());
 }
@@ -4332,6 +4476,43 @@ static void test_atomic2() {
 	delete tsp;
 }
 
+static void test_atomicReference_sp() {
+	EAtomicReference<EInteger> ar;
+	ar.set(new EInteger(0));
+
+	class Thread : public EThread {
+	private:
+		EAtomicReference<EInteger>* ar;
+	public:
+		Thread(EAtomicReference<EInteger>* ar, const char* name) : EThread(name), ar(ar) {
+		}
+		virtual void run() {
+			for (int i=0; i<1000; i++) {
+				if (EString("#1").equals(getName())) {
+					sp<EInteger> old = ar->getAndSet(new EInteger(10000+i));
+					LOG("#1 i=%d", old->intValue());
+				}
+
+				if (EString("#2").equals(getName())) {
+					sp<EInteger> old = ar->getAndSet(new EInteger(20000+i));
+					LOG("#2 i=%d", old->intValue());
+				}
+			}
+		}
+	};
+
+	Thread thread1(&ar, "#1");
+	Thread thread2(&ar, "#2");
+
+	thread1.start();
+	thread2.start();
+
+	thread1.join();
+	thread2.join();
+
+	LOG("end of test_atomicreference_sp().");
+}
+
 class CB;
 class CA {
 public:
@@ -4411,10 +4592,19 @@ static void test_collections() {
 		ECollection<int> *l = ECollections::synchronizedCollection(&ll,
 				null, false );
 		l->add(100);
-		l->add(200);
 		l->add(300);
+		l->add(200);
 
 		sp<EIterator<int> > iter = l->iterator();
+		while (iter->hasNext()) {
+			int n = iter->next();
+			printf("n=%d\n", n);
+		}
+
+		printf("\n");
+		ECollections::sort(&ll);
+
+		iter = l->iterator();
 		while (iter->hasNext()) {
 			int n = iter->next();
 			printf("n=%d\n", n);
@@ -4450,7 +4640,7 @@ static void test_collections() {
 		m->put(new EInteger(2), new EString("#2"));
 		m->put(new EInteger(3), new EString("#3"));
 
-		sp<ESet<EMapEntry<EInteger*,EString*>*> > me = m->entrySet();
+		ESet<EMapEntry<EInteger*,EString*>*>* me = m->entrySet();
 		sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter = me->iterator();
 		while (iter->hasNext()) {
 			EMapEntry<EInteger*,EString*>*mi = iter->next();
@@ -4459,7 +4649,7 @@ static void test_collections() {
 
 		//test unmodifiable wrappers
 		ECollections::UnmodifiableMap<EInteger*,EString*> um(&hm);
-		sp<ESet<EMapEntry<EInteger*,EString*>*> > me2 = um.entrySet();
+		ESet<EMapEntry<EInteger*,EString*>*>* me2 = um.entrySet();
 		sp<EIterator<EMapEntry<EInteger*,EString*>*> > iter2 = me2->iterator();
 		while (iter2->hasNext()) {
 			EMapEntry<EInteger*,EString*>*mi = iter2->next();
@@ -5014,7 +5204,7 @@ static void test_copyOnWrite2() {
 
 		col.addIfAbsent(new EInteger(4));
 
-		sp<EConcurrentIterator<EInteger> > iter = col.listIterator(1);
+		sp<EIterator<sp<EInteger> > > iter = col.listIterator(1);
 		while (iter->hasNext()) {
 			sp<EInteger> i = iter->next();
 			LOG("i=%d", i->intValue());
@@ -5082,16 +5272,19 @@ static void test_copyOnWrite2() {
 
 //				while (true) {
 				for (i=0; i<20000; i++) {
-					sp<EInteger> si = list->getAt(0);
-//					LOG("get si=%d", si->intValue());
+					try {
+						sp<EInteger> si = list->getAt(0);
+//						LOG("get si=%d", si->intValue());
+					} catch (EIndexOutOfBoundsException& e) {
+					}
 
-					sp<EConcurrentIterator<EInteger> > iter = list->iterator();
+					sp<EIterator<sp<EInteger> > > iter = list->iterator();
 					while (iter->hasNext()) {
 						sp<EInteger> x = iter->next();
 //						LOG("i=%d", x->intValue());
 					}
 
-					sp<EConcurrentListIterator<EInteger> > listiter = list->listIterator();
+					sp<EListIterator<sp<EInteger> > > listiter = list->listIterator();
 					while (listiter->hasNext()) {
 						sp<EInteger> x = listiter->next();
 						LOG("i=%d", x->intValue());
@@ -5129,7 +5322,10 @@ static void test_copyOnWrite2() {
 				EThread::sleep(10);
 //				while (true) {
                 for (int i=0; i<2000; i++) {
-					sp<EInteger> si = list->removeAt(0);
+                	try {
+						sp<EInteger> si = list->removeAt(0);
+                	} catch (EIndexOutOfBoundsException& e) {
+					}
 //                    list->removeAt(1);
 //					LOG("get si=%d", si->intValue());
 				}
@@ -5516,8 +5712,8 @@ static void test_concurrentHashmap()
 		delete k;
 	}
 
-    sp<EConcurrentSet<EConcurrentMapEntry<EString,EString> > > set = chm->entrySet();
-    sp<EConcurrentIterator<EConcurrentMapEntry<EString,EString> > > it = set->iterator();
+    ESet<sp<EConcurrentMapEntry<EString,EString> > >* set = chm->entrySet();
+    sp<EIterator<sp<EConcurrentMapEntry<EString,EString> > > > it = set->iterator();
 	while (it->hasNext()) {
 		sp<EConcurrentMapEntry<EString,EString> > me = it->next();
 		sp<EString> ki = me->getKey();
@@ -5623,8 +5819,8 @@ static void test_concurrentHashmap()
 					}
 
 					//test iterator
-                    sp<EConcurrentSet<EConcurrentMapEntry<EInteger,EInteger> > > set = chm->entrySet();
-                    sp<EConcurrentIterator<EConcurrentMapEntry<EInteger,EInteger> > > it = set->iterator();
+                    ESet<sp<EConcurrentMapEntry<EInteger,EInteger> > >* set = chm->entrySet();
+                    sp<EIterator<sp<EConcurrentMapEntry<EInteger,EInteger> > > > it = set->iterator();
 					while (it->hasNext()) {
 						sp<EConcurrentMapEntry<EInteger,EInteger> > me = it->next();
 						sp<EInteger> ki = me->getKey();
@@ -5839,8 +6035,8 @@ static void test_concurrentHashmap2()
 					}
 
 					//test iterator
-                    sp<EConcurrentSet<EConcurrentMapEntry<K,EInteger> > > set = chm->entrySet();
-					sp<EConcurrentIterator<EConcurrentMapEntry<K,EInteger> > > it = set->iterator();
+                    ESet<sp<EConcurrentMapEntry<K,EInteger> > >* set = chm->entrySet();
+					sp<EIterator<sp<EConcurrentMapEntry<K,EInteger> > > > it = set->iterator();
 					while (it->hasNext()) {
 						sp<EConcurrentMapEntry<K,EInteger> > me = it->next();
 						K ki = me->getKey();
@@ -6143,8 +6339,8 @@ static void test_concurrentIntrusiveDeque() {
 		void run() {
 			int i = 1;
 			try {
-				while (true) {
-//				for (i=0; i<10000; i++) {
+//				while (true) {
+				for (i=0; i<10000; i++) {
 					boolean r = queue->add(new XXX(i));
 					if (!r) {
 						LOG("add fail...");
@@ -6155,6 +6351,7 @@ static void test_concurrentIntrusiveDeque() {
 
 //					EThread::sleep(500);
 				}
+//				queue->add(null);
 			} catch (EException& e) {
 				e.printStackTrace();
 			}
@@ -6178,9 +6375,9 @@ static void test_concurrentIntrusiveDeque() {
 			try {
 				while (true) {
 					sp<XXX> si = queue->poll();
-//					if (si == null) {
-//						break;
-//					}
+					if (si == null) {
+						break;
+					}
 //					LOG("poll si=%d", si->intValue());
 
 					if (i % 50) {
@@ -6188,7 +6385,10 @@ static void test_concurrentIntrusiveDeque() {
 						queue->remove(si.get()); // mast be element self!
 					}
 					if (i % 100) {
-						queue->remove();
+						try {
+							queue->remove();
+						} catch (ENoSuchElementException& e) {
+						}
 					}
 
 					c->addcount2(); // poll
@@ -6252,6 +6452,231 @@ static void test_concurrentIntrusiveDeque() {
 			arr.add(gct);
 		}
 
+//		ProbeThread* pt = new ProbeThread(c); //
+//		pt->start();
+//		arr.add(pt);
+
+		for (i = 0; i < arr.length(); i++) {
+			arr.getAt(i)->join();
+		}
+
+		delete queue;
+		delete c;
+
+		LOG("test_concurrentIntrusiveDeque...");
+
+//		EThread::sleep(3000);
+	} catch (EException& e) {
+		e.printStackTrace();
+	}
+}
+
+static void test_mutexLinkedQueue() {
+	EArrayList<sp<EInteger> > list;
+	list.add(new EInteger(-1));
+
+	EMutexLinkedQueue<EInteger> queue(&list);
+
+	for (int i=0; i<10; i++) {
+		queue.add(new EInteger(i));
+	}
+
+	LOG("queue size=%d", queue.size());
+
+	for (sp<EIterator<sp<EInteger> > > iter = queue.iterator(); iter->hasNext();) {
+		sp<EInteger> e = iter->next();
+		LOG("iter i=%d", e->intValue());
+	}
+
+	sp<EInteger> e = queue.peek();
+	LOG("peek i=%d", e->intValue());
+
+	EInteger x(8);
+	if (queue.contains(&x)) {
+		LOG("contains 8!");
+	}
+
+	if (queue.remove(&x)) {
+		LOG("remove 8!");
+	}
+
+	LOG("queue size=%d", queue.size());
+
+	queue.remove();
+
+	LOG("queue size=%d", queue.size());
+
+	for (int i=0; i<12; i++) {
+		sp<EInteger> e = queue.poll();
+		if (e == null) {
+			LOG("poll null!");
+			break;
+		}
+		LOG("poll i=%d", e->intValue());
+	}
+
+	LOG("queue size=%d", queue.size());
+
+	e = queue.peek();
+	if (e == null) {
+		LOG("peek null!");
+	}
+
+	for (int i=0; i<10; i++) {
+		queue.add(new EInteger(i));
+	}
+
+	for (sp<EIterator<sp<EInteger> > > iter = queue.iterator(5); iter->hasNext();) {
+		iter->remove();
+	}
+
+	LOG("queue size=%d", queue.size());
+
+	for (sp<EIterator<sp<EInteger> > > iter = queue.iterator(); iter->hasNext();) {
+		sp<EInteger> e = iter->next();
+		LOG("iter i=%d", e->intValue());
+	}
+
+	LOG("test_mutexLinkedQueue...");
+}
+
+static void test_mutexLinkedQueue2() {
+	class addCQueueThread : public EThread {
+	private:
+		EMutexLinkedQueue<EInteger>* queue;// = null;
+		Count* c;// = null;
+
+	public:
+		addCQueueThread(EMutexLinkedQueue<EInteger>* queue, Count* c) {
+			this->queue = queue;
+			this->c = c;
+		}
+
+		void run() {
+			int i = 1;
+			try {
+				while (true) {
+//				for (i=0; i<1000; i++) {
+#if 0
+					if ((long)eso_os_thread_current() % 3 == 0) {
+						sp<EIterator<sp<EInteger> > > iter = queue->iterator();
+						while (iter->hasNext()) {
+							sp<EInteger> i = iter->next();
+							LOG("i=%d", i->intValue());
+						}
+						LOG("+++++++++++++++++++++++++++++++++++++++++++++++");
+					}
+#endif
+					boolean r = queue->add(new EInteger(i));
+					if (!r) {
+						LOG("add fail...");
+					}
+
+					c->addcount1(); // add
+					i++;
+
+//					EThread::sleep(500);
+				}
+
+				queue->add(new EInteger(-1));
+
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of add thread run().");
+		}
+	};
+
+	class pollCQueueThread : public EThread {
+	private:
+		EMutexLinkedQueue<EInteger>* queue;// = null;
+		Count* c;// = null;
+
+	public:
+		pollCQueueThread(EMutexLinkedQueue<EInteger>* queue, Count* c) {
+			this->queue = queue;
+			this->c = c;
+		}
+
+		void run() {
+			int i = 0;
+			try {
+				while (true) {
+					sp<EInteger> si = queue->poll();
+//					if (si == null || si->intValue() == -1) {
+//						break;
+//					}
+//					LOG("poll si=%d", si->intValue());
+
+//					if (i % 50) {
+//						sp<EInteger> pi(new EInteger(i-1));
+//						queue->remove(pi.get());
+//					}
+//					if (i % 100) {
+//						queue->remove();
+//					}
+
+					c->addcount2(); // poll
+					i++;
+
+//					EThread::sleep(500);
+				}
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of poll thread run(), i=%d.", i);
+		}
+	};
+
+	class ProbeThread : public EThread { //
+	private:
+		boolean run_;// = true;
+		Count* cc;
+
+	public:
+		ProbeThread(Count* cc) : run_(true) {
+			this->cc = cc;
+		}
+
+		void run() {
+			int c1 = 0, c2 = 0;
+			int cc1 = 0, cc2 = 0;
+			while (this->run_) {
+				c2 = cc->getcount1();
+				cc2 = cc->getcount2();
+				LOG("put:[%d/%d]  get:[%d/%d]",
+						(c2 - c1) / 2, c2,
+						(cc2 - cc1) / 2, cc2);
+				c1 = c2;
+				cc1 = cc2;
+
+				try {
+					EThread::sleep(1000 * 2 - 1);
+				} catch (EException& ex) {
+					LOG("Error[ProbeThread.run]:%s", ex.getMessage());
+				}
+			}
+		}
+	};
+
+	try {
+		Count* c = new Count();
+		EMutexLinkedQueue<EInteger>* queue = new EMutexLinkedQueue<EInteger>();
+
+		EArray<EThread*> arr;
+		int i;
+		for (i = 0; i < 5; i++) {
+			addCQueueThread* pct = new addCQueueThread(queue, c);
+			pct->start();// put
+			arr.add(pct);
+		}
+
+		for (i = 0; i < 5; i++) {
+			pollCQueueThread* gct = new pollCQueueThread(queue, c);
+			gct->start(); // get
+			arr.add(gct);
+		}
+
 		ProbeThread* pt = new ProbeThread(c); //
 		pt->start();
 		arr.add(pt);
@@ -6263,7 +6688,253 @@ static void test_concurrentIntrusiveDeque() {
 		delete queue;
 		delete c;
 
-		LOG("test_concurrentIntrusiveDeque...");
+		LOG("test_mutexLinkedQueue2...");
+	} catch (EException& e) {
+		e.printStackTrace();
+	}
+}
+
+static void test_concurrentLinkedQueue() {
+#if 0 //c11, for test this bug: http://bugs.java.com/view_bug.do?bug_id=6785442
+	{
+		EConcurrentLinkedQueue<EString> queue;
+		volatile boolean removeWorked = false;
+
+		EString x("B");
+
+		queue.add(new EString("A"));
+		queue.add(new EString("B"));
+
+		sp<EThread> t1 = EThread::executeX([&]() {
+			removeWorked = queue.remove(&x);
+		});
+
+//		EThread::sleep(100);
+		auto a = queue.poll();
+		LOG("First poll returned: %s", (!!a) ? a->toString().c_str() : "null");
+		auto b = queue.poll();
+		LOG("Second poll returned: %s", (!!b) ?  b->toString().c_str() : "null");
+
+		t1->join();
+
+		LOG(("Async remove(\"B\") returned: " + EString(removeWorked)).c_str());
+		if (removeWorked ^ x.equals(b.get())) {
+			LOG("PASS");
+		} else {
+			LOG("FAIL");
+			ES_ASSERT(false);
+		}
+
+//		return ;
+	}
+#endif
+
+#if 1
+	{
+		EConcurrentLinkedQueue<EString> queue;
+		queue.add(new EString("111111"));
+		LOG("size=%d", queue.size());
+		LOG("empty=%s", queue.isEmpty() ? "true" : "false");
+		sp<EString> x = queue.poll();
+		LOG("poll: %s", x->c_str());
+		LOG("size=%d", queue.size());
+		LOG("empty=%s", queue.isEmpty() ? "true" : "false");
+		//queue.add(null);
+		queue.add(new EString("222222"));
+		x = queue.peek();
+		LOG("peek=%s", x->c_str());
+		LOG("size=%d", queue.size());
+		LOG("poll: %s", x->c_str());
+		EString z("111111");
+		boolean r = queue.remove(&z);
+		LOG("remove=%s", r ? "true" : "false");
+		queue.add(new EString("111111"));
+		r = queue.contains(&z);
+		LOG("contains=%s", r ? "true" : "false");
+		r = queue.remove(&z);
+		LOG("remove=%s", r ? "true" : "false");
+
+//		return;
+	}
+#endif
+
+	//=====================================================
+
+	#define ADD_SIZE 5
+	#define POLL_SIZE 5
+
+	class addCQueueThread : public EThread {
+	private:
+		EConcurrentLinkedQueue<EInteger>* queue;// = null;
+		Count* c;// = null;
+
+	public:
+		addCQueueThread(EConcurrentLinkedQueue<EInteger>* queue, Count* c) {
+			this->queue = queue;
+			this->c = c;
+		}
+
+		void run() {
+			int i = 1;
+			try {
+#if 0
+				if ((long)eso_os_thread_current() % 3 == 0) {
+					sp<EIterator<sp<EInteger> > > iter = queue->iterator();
+					while (iter->hasNext()) {
+						sp<EInteger> i = iter->next();
+						LOG("i=%d", i->intValue());
+					}
+				}
+#endif
+
+//				while (true) {
+				for (i=0; i<10000; i++) {
+					gSumAdd.addAndGet(i);
+					boolean r = queue->add(new EInteger(i));
+					if (!r) {
+						LOG("add fail...");
+					}
+
+					c->addcount1(); // add
+					i++;
+
+//					EThread::sleep(500);
+				}
+
+				queue->add(new EInteger(-1));
+
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of add thread run().");
+		}
+	};
+
+	class pollCQueueThread : public EThread {
+	private:
+		EConcurrentLinkedQueue<EInteger>* queue;// = null;
+		Count* c;// = null;
+
+	public:
+		pollCQueueThread(EConcurrentLinkedQueue<EInteger>* queue, Count* c) {
+			this->queue = queue;
+			this->c = c;
+		}
+
+		void run() {
+			int i = 0;
+			try {
+				while (true) {
+					sp<EInteger> si = queue->poll();
+					if (!!si && si->intValue() == -1) {
+						break;
+					}
+
+					if (!!si) {
+						gSumPull.addAndGet(si->intValue());
+					}
+
+//					LOG("poll si=%d", si->intValue());
+
+//					if (i % 50) {
+//						sp<EInteger> pi(new EInteger(i-1));
+//						queue->remove(pi.get());
+//					}
+//					if (i % 100) {
+//						queue->remove();
+//					}
+
+					c->addcount2(); // poll
+					i++;
+
+//					EThread::sleep(500);
+				}
+			} catch (EException& e) {
+				e.printStackTrace();
+			}
+			LOG("end of poll thread run(), i=%d.", i);
+		}
+	};
+
+	class ProbeThread : public EThread { //
+	private:
+		boolean run_;// = true;
+		Count* cc;
+
+	public:
+		ProbeThread(Count* cc) : run_(true) {
+			this->cc = cc;
+		}
+
+		void run() {
+			int c1 = 0, c2 = 0;
+			int cc1 = 0, cc2 = 0;
+			while (this->run_) {
+				c2 = cc->getcount1();
+				cc2 = cc->getcount2();
+				LOG("put:[%d/%d]  get:[%d/%d]",
+						(c2 - c1) / 2, c2,
+						(cc2 - cc1) / 2, cc2);
+				c1 = c2;
+				cc1 = cc2;
+
+				try {
+					EThread::sleep(1000 * 2 - 1);
+				} catch (EException& ex) {
+					LOG("Error[ProbeThread.run]:%s", ex.getMessage());
+				}
+			}
+		}
+	};
+
+	try {
+		Count* c = new Count();
+		EConcurrentLinkedQueue<EInteger>* queue = new EConcurrentLinkedQueue<EInteger>();
+
+		EArray<EThread*> arr;
+		int i;
+		for (i = 0; i < ADD_SIZE; i++) {
+			addCQueueThread* pct = new addCQueueThread(queue, c);
+			pct->start();// put
+			arr.add(pct);
+		}
+
+		for (i = 0; i < POLL_SIZE; i++) {
+			pollCQueueThread* gct = new pollCQueueThread(queue, c);
+			gct->start(); // get
+			arr.add(gct);
+		}
+
+//		ProbeThread* pt = new ProbeThread(c); //
+//		pt->start();
+//		arr.add(pt);
+
+		for (i = 0; i < arr.length(); i++) {
+			arr.getAt(i)->join();
+		}
+
+		ES_ASSERT(gSumAdd.llongValue() == gSumPull.llongValue());
+		gSumAdd.set(0);
+		gSumPull.set(0);
+
+
+//		LOG("queue size=%d", queue->size());
+//
+//		sp<EIterator<sp<EInteger> > > iter = queue->iterator();
+//		while (iter->hasNext()) {
+//			sp<EInteger> i = iter->next();
+//			LOG("i=%d", i->intValue());
+//		}
+//
+//		sp<EInteger> I;
+//		while ((I = queue->poll()) != null) {
+//			LOG("I=%d", I->intValue());
+//		}
+
+		delete queue;
+		delete c;
+
+		LOG("test_concurrentLinkedQueue...");
 
 //		EThread::sleep(3000);
 	} catch (EException& e) {
@@ -6345,183 +7016,6 @@ static void test_concurrentLinkedQueue2() {
 	LOG("%lld", ts2-ts1);
 }
 
-static void test_concurrentLinkedQueue() {
-#if 1
-	{
-		EConcurrentLinkedQueue<EString> queue;
-		queue.add(new EString("111111"));
-		sp<EString> x = queue.poll();
-		LOG("poll: %s", x->c_str());
-	}
-#endif
-
-	//=====================================================
-
-	class addCQueueThread : public EThread {
-	private:
-		EConcurrentLinkedQueue<EInteger>* queue;// = null;
-		Count* c;// = null;
-
-	public:
-		addCQueueThread(EConcurrentLinkedQueue<EInteger>* queue, Count* c) {
-			this->queue = queue;
-			this->c = c;
-		}
-
-		void run() {
-			int i = 1;
-			try {
-#if 0
-				if ((long)eso_os_thread_current() % 3 == 0) {
-					sp<EConcurrentIterator<EInteger> > iter = queue->iterator();
-					while (iter->hasNext()) {
-						sp<EInteger> i = iter->next();
-						LOG("i=%d", i->intValue());
-					}
-				}
-#endif
-
-				while (true) {
-//				for (i=0; i<10000; i++) {
-					boolean r = queue->add(new EInteger(i));
-					if (!r) {
-						LOG("add fail...");
-					}
-
-					c->addcount1(); // add
-					i++;
-
-//					EThread::sleep(500);
-				}
-			} catch (EException& e) {
-				e.printStackTrace();
-			}
-			LOG("end of add thread run().");
-		}
-	};
-
-	class pollCQueueThread : public EThread {
-	private:
-		EConcurrentLinkedQueue<EInteger>* queue;// = null;
-		Count* c;// = null;
-
-	public:
-		pollCQueueThread(EConcurrentLinkedQueue<EInteger>* queue, Count* c) {
-			this->queue = queue;
-			this->c = c;
-		}
-
-		void run() {
-			int i = 0;
-			try {
-				while (true) {
-					sp<EInteger> si = queue->poll();
-//					if (si == null) {
-//						break;
-//					}
-//					LOG("poll si=%d", si->intValue());
-
-					if (i % 50) {
-						sp<EInteger> pi(new EInteger(i-1));
-						queue->remove(pi.get());
-					}
-					if (i % 100) {
-						queue->remove();
-					}
-
-					c->addcount2(); // poll
-					i++;
-
-//					EThread::sleep(500);
-				}
-			} catch (EException& e) {
-				e.printStackTrace();
-			}
-			LOG("end of poll thread run(), i=%d.", i);
-		}
-	};
-
-	class ProbeThread : public EThread { //
-	private:
-		boolean run_;// = true;
-		Count* cc;
-
-	public:
-		ProbeThread(Count* cc) : run_(true) {
-			this->cc = cc;
-		}
-
-		void run() {
-			int c1 = 0, c2 = 0;
-			int cc1 = 0, cc2 = 0;
-			while (this->run_) {
-				c2 = cc->getcount1();
-				cc2 = cc->getcount2();
-				LOG("put:[%d/%d]  get:[%d/%d]",
-						(c2 - c1) / 2, c2,
-						(cc2 - cc1) / 2, cc2);
-				c1 = c2;
-				cc1 = cc2;
-
-				try {
-					EThread::sleep(1000 * 2 - 1);
-				} catch (EException& ex) {
-					LOG("Error[ProbeThread.run]:%s", ex.getMessage());
-				}
-			}
-		}
-	};
-
-	try {
-		Count* c = new Count();
-		EConcurrentLinkedQueue<EInteger>* queue = new EConcurrentLinkedQueue<EInteger>();
-
-		EArray<EThread*> arr;
-		int i;
-		for (i = 0; i < 5; i++) {
-			addCQueueThread* pct = new addCQueueThread(queue, c);
-			pct->start();// put
-			arr.add(pct);
-		}
-
-		for (i = 0; i < 5; i++) {
-			pollCQueueThread* gct = new pollCQueueThread(queue, c);
-			gct->start(); // get
-			arr.add(gct);
-		}
-
-		ProbeThread* pt = new ProbeThread(c); //
-		pt->start();
-		arr.add(pt);
-
-		for (i = 0; i < arr.length(); i++) {
-			arr.getAt(i)->join();
-		}
-
-//		LOG("queue size=%d", queue->size());
-//
-//		sp<EConcurrentIterator<EInteger> > iter = queue->iterator();
-//		while (iter->hasNext()) {
-//			sp<EInteger> i = iter->next();
-//			LOG("i=%d", i->intValue());
-//		}
-//
-//		sp<EInteger> I;
-//		while ((I = queue->poll()) != null) {
-//			LOG("I=%d", I->intValue());
-//		}
-
-		delete queue;
-		delete c;
-
-		LOG("test_concurrentLinkedQueue...");
-
-//		EThread::sleep(3000);
-	} catch (EException& e) {
-		e.printStackTrace();
-	}
-}
-
 static void test_concurrentSkipListMap() {
 	EConcurrentSkipListMap<EString, EString> slm;
 
@@ -6536,22 +7030,22 @@ static void test_concurrentSkipListMap() {
 	sp<EString> v = slm.get(k2.get());
 	LOG("v=%s", v->c_str());
 
-	sp<EConcurrentSet<EString> > keyset = slm.keySet();
-	sp<EConcurrentIterator<EString> > iter1 = keyset->iterator();
+	ESet<sp<EString> >* keyset = slm.keySet();
+	sp<EIterator<sp<EString> > > iter1 = keyset->iterator();
 	while (iter1->hasNext()) {
 		sp<EString> s = iter1->next();
 //		LOG("k=%s", s->c_str());
 	}
 
-	sp<EConcurrentCollection<EString> > values = slm.values();
-	sp<EConcurrentIterator<EString> > iter2 = values->iterator();
+	ECollection<sp<EString> >* values = slm.values();
+	sp<EIterator<sp<EString> > > iter2 = values->iterator();
 	while (iter2->hasNext()) {
 		sp<EString> s = iter2->next();
 //		LOG("v=%s", s->c_str());
 	}
 
-	sp<EConcurrentSet<EConcurrentMapEntry<EString,EString> > > entrySet = slm.entrySet();
-	sp<EConcurrentIterator<EConcurrentMapEntry<EString,EString> > > iter3 = entrySet->iterator();
+	ESet<sp<EConcurrentMapEntry<EString,EString> > >* entrySet = slm.entrySet();
+	sp<EIterator<sp<EConcurrentMapEntry<EString,EString> > > > iter3 = entrySet->iterator();
 	while (iter3->hasNext()) {
 		sp<EConcurrentMapEntry<EString,EString> > e = iter3->next();
 //		LOG("k=%s, v=%s", e->getKey()->c_str(), e->getValue()->c_str());
@@ -6572,8 +7066,8 @@ static void test_concurrentSkipListMap() {
 		if (0) {
 			EConcurrentSkipListMap<EInteger, EString> slm_from_sortedmap(&tm);
 
-			sp<EConcurrentSet<EConcurrentMapEntry<EInteger,EString> > > entrySet = slm_from_sortedmap.entrySet();
-			sp<EConcurrentIterator<EConcurrentMapEntry<EInteger,EString> > > iter = entrySet->iterator();
+			ESet<sp<EConcurrentMapEntry<EInteger,EString> > >* entrySet = slm_from_sortedmap.entrySet();
+			sp<EIterator<sp<EConcurrentMapEntry<EInteger,EString> > > > iter = entrySet->iterator();
 			while (iter->hasNext()) {
 				sp<EConcurrentMapEntry<EInteger,EString> > e = iter->next();
 				LOG("ki=%d, vs=%s", e->getKey()->intValue(), e->getValue()->c_str());
@@ -6583,8 +7077,8 @@ static void test_concurrentSkipListMap() {
 			EMap<EInteger*,EString*>* map = dynamic_cast<EMap<EInteger*,EString*>*>(&tm);
 			EConcurrentSkipListMap<EInteger, EString> slm_from_map(map);
 
-			sp<EConcurrentSet<EConcurrentMapEntry<EInteger,EString> > > entrySet = slm_from_map.entrySet();
-			sp<EConcurrentIterator<EConcurrentMapEntry<EInteger,EString> > > iter = entrySet->iterator();
+			ESet<sp<EConcurrentMapEntry<EInteger,EString> > >* entrySet = slm_from_map.entrySet();
+			sp<EIterator<sp<EConcurrentMapEntry<EInteger,EString> > > > iter = entrySet->iterator();
 			while (iter->hasNext()) {
 				sp<EConcurrentMapEntry<EInteger,EString> > e = iter->next();
 				LOG("ki_=%d, vs_=%s", e->getKey()->intValue(), e->getValue()->c_str());
@@ -6714,8 +7208,8 @@ static void test_concurrentSkipListMap2() {
 					}
 #if 1
 					//test iterator
-					sp<EConcurrentSet<EConcurrentMapEntry<EInteger,EInteger> > > set = chm->entrySet();
-					sp<EConcurrentIterator<EConcurrentMapEntry<EInteger,EInteger> > > it = set->iterator();
+					ESet<sp<EConcurrentMapEntry<EInteger,EInteger> > >* set = chm->entrySet();
+					sp<EIterator<sp<EConcurrentMapEntry<EInteger,EInteger> > > > it = set->iterator();
 					while (it->hasNext()) {
 						sp<EConcurrentMapEntry<EInteger,EInteger> > me = it->next();
 						sp<EInteger> ki = me->getKey();
@@ -7433,20 +7927,20 @@ static void test_identityHashMap() {
 	LOG("containsKey(xx) = %d", ihm->containsKey(&kxx));
 	LOG("get(xx) = %s", ihm->get(&kxx));
 
-	sp<ESet<EString*> > kset = ihm->keySet();
+	ESet<EString*>* kset = ihm->keySet();
 	LOG("set size=%d", kset->size());
 	sp<EIterator<EString*> > iterK = kset->iterator();
 	while(iterK->hasNext()) {
 		LOG("key=%s", iterK->next()->c_str());
 	}
 
-	sp<ECollection<EString*> > vset = ihm->values();
+	ECollection<EString*>* vset = ihm->values();
 	sp<EIterator<EString*> > iterV = vset->iterator();
 	while(iterV->hasNext()) {
 		LOG("val=%s", iterV->next()->c_str());
 	}
 
-	sp<ESet<EMapEntry<EString*, EString*>*> > eset = ihm->entrySet();
+	ESet<EMapEntry<EString*, EString*>*>* eset = ihm->entrySet();
 	LOG("set size=%d", eset->size());
 	sp<EIterator<EMapEntry<EString*, EString*>*> > iterE = eset->iterator();
 	while(iterE->hasNext()) {
@@ -8004,16 +8498,17 @@ static void test_exchanger() {
 	class RunnerA : public ERunnable {
 	public:
 		EExchanger<EInteger>* exchanger;
-		EAtomicReference<EInteger>* last;
+		EAtomicReference<EInteger*>* last;
 		EInteger* ei;
 
 		RunnerA(EExchanger<EInteger>* exchanger) {
 			this->exchanger = exchanger;
 			ei = new EInteger(5);
-			last = new EAtomicReference<EInteger>(ei);
+			last = new EAtomicReference<EInteger*>(ei);
 		}
 
 		~RunnerA() {
+			last->set(null); // clear the last one!
 			delete last;
 			delete ei;
 		}
@@ -8041,16 +8536,17 @@ static void test_exchanger() {
 	class RunnerB : public ERunnable {
 	public:
 		EExchanger<EInteger>* exchanger;
-		EAtomicReference<EInteger>* last;
+		EAtomicReference<EInteger*>* last;
 		EInteger* ei;
 
 		RunnerB(EExchanger<EInteger>* exchanger) {
 			this->exchanger = exchanger;
 			ei = new EInteger(10);
-			last = new EAtomicReference<EInteger>(ei);
+			last = new EAtomicReference<EInteger*>(ei);
 		}
 
 		~RunnerB() {
+			last->set(null); // clear the last one!
 			delete last;
 			delete ei;
 		}
@@ -8193,7 +8689,6 @@ static void test_timer() {
 	}
 
 	EThread::sleep(2000);
-//	timer->join();
 //	timer->cancel();
 //	EThread::sleep(1000);
 
@@ -9236,12 +9731,16 @@ static void test_multicastSocket(void) {
 static void* execute_c_thread(es_thread_t* t) {
 	sp<EThread> cxxthread = EThread::c_init();
 
-	EThread* thread = EThread::currentThread();
-	LOG("current is %s thread, name: %s", thread->isMainThread() ? "main" : "sub", thread->getName());
-	LOG("current is %s thread, name: %s", thread->isCThread() ? "c" : "c++", thread->getName());
+	try {
+		EThread* thread = EThread::currentThread();
+		LOG("current is %s thread, name: %s", thread->isMainThread() ? "main" : "sub", thread->getName());
+		LOG("current is %s thread, name: %s", thread->isCThread() ? "c" : "c++", thread->getName());
 
-	for (int i=0; i<100; i++) {
-		test_executors();
+		for (int i=0; i<100; i++) {
+			test_executors();
+		}
+	} catch (EThrowable& t) {
+		LOG(t.getStackTrace());
 	}
 
 	return NULL;
@@ -9669,6 +10168,169 @@ static void test_bigdecimal() {
 	}
 }
 
+static void test_pushbackInputStream() {
+	EString str = "www.baidu.com";
+	EByteArrayInputStream bai((void*)str.c_str(), str.length());
+	EPushbackInputStream push(&bai);
+	int temp = 0;
+	while ((temp = push.read()) != -1) {
+		if (temp == '.') {
+			push.unread(temp);
+			temp = push.read();
+			printf("%c", (char) temp);
+		} else {
+			printf("%c", (char) temp);
+		}
+	}
+
+	LOG("\nend of test_pushbackInputStream().");
+}
+
+static void test_proterties() {
+	EProperties defaults;
+
+	defaults.setProperty("a", "11");
+	defaults.setProperty("b", "22");
+	defaults.setProperty("c", "33");
+
+	EProperties prop(&defaults);
+
+	prop.setProperty("a", "中文");
+	prop.setProperty("b", "2");
+
+	sp<EString> v;
+	v = prop.getProperty("a");
+	if (v != null) {
+		LOG("v=%s", v->c_str());
+	}
+	v = prop.getProperty("c");
+	if (v != null) {
+		LOG("v=%s", v->c_str());
+	}
+
+	LOG("===");
+
+	prop.load("./log4e.properties");
+
+	prop.list(ESystem::out);
+
+	LOG("===");
+
+	sp<ESet<sp<EString> > > keys = prop.propertyNames();
+	LOG(keys->toString().c_str());
+
+	LOG("===");
+
+	prop.store("./prop.txt", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+}
+
+static void test_arrays() {
+	{
+		EA<long> la(10);
+		EArrays::fill(&la, (long)9);
+		la[5] = 8;
+		EString las = EArrays::toString(&la);
+		LOG(las.c_str());
+
+		EArrays::sort(&la);
+
+		ES_ASSERT(EArrays::binarySearch(&la, (long)7) < 0);
+		ES_ASSERT(EArrays::binarySearch(&la, (long)8) >= 0);
+		ES_ASSERT(EArrays::binarySearch(&la, (long)9) >= 0);
+	}
+
+	{
+		EA<double> la(10);
+		EArrays::fill(&la, 9.98888);
+		la[5] = 8.08;
+		EString las = EArrays::toString(&la);
+		LOG(las.c_str());
+
+		EArrays::sort(&la);
+
+		ES_ASSERT(EArrays::binarySearch(&la, 7) < 0);
+		ES_ASSERT(EArrays::binarySearch(&la, 8.08) >= 0);
+		ES_ASSERT(EArrays::binarySearch(&la, 9.98888) >= 0);
+	}
+
+	{
+		EA<EComparable<EString*>*> la(10);
+		for (int i=0; i<la.length(); i++) {
+			la.setAt(i, new EString(i));
+		}
+		EString las = EArrays::toString(&la);
+		LOG(las.c_str());
+	}
+
+}
+
+static void test_arrayBlockingQueue() {
+	EArrayBlockingQueue<EInteger> abq(3);
+
+	class PutThread : public EThread {
+	private:
+		EArrayBlockingQueue<EInteger>& queue;
+	public:
+		PutThread(EArrayBlockingQueue<EInteger>& abq) : queue(abq) {
+		}
+		virtual void run() {
+			while (true) {
+				try {
+					int millis = (int)(EMath::random()*10);
+					EThread::sleep(millis);
+					LOG((EString(EThread::currentThread()->getName()) + " put ready.").c_str());
+					queue.put(new EInteger(millis)); //blocked if queue full.
+					LOG((EString(EThread::currentThread()->getName()) + " putted, " + "queue size=" + queue.size()).c_str());
+				} catch (EInterruptedException& e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	};
+
+	class GetThread : public EThread {
+	private:
+		EArrayBlockingQueue<EInteger>& queue;
+	public:
+		GetThread(EArrayBlockingQueue<EInteger>& abq) : queue(abq) {
+		}
+		virtual void run() {
+			while (true) {
+				try {
+					EThread::sleep(10);
+					LOG((EString(EThread::currentThread()->getName()) + " get ready.").c_str());
+					queue.take();
+					LOG((EString(EThread::currentThread()->getName()) + " getted, " + "queue size=" + queue.size()).c_str());
+				} catch (EInterruptedException& e) {
+					e.printStackTrace();
+				}
+
+				sp<EIterator<sp<EInteger> > > iter = queue.iterator();
+				while (iter->hasNext()) {
+					sp<EInteger> i = iter->next();
+					LOG("i=%d", i->intValue());
+				}
+			}
+		}
+	};
+
+	PutThread pt1(abq);
+	PutThread pt2(abq);
+	PutThread pt3(abq);
+	GetThread gt1(abq);
+	GetThread gt2(abq);
+	pt1.start();
+	pt2.start();
+	pt3.start();
+	gt1.start();
+	gt2.start();
+	pt1.join();
+	pt2.join();
+	pt3.join();
+	gt1.join();
+	gt2.join();
+}
+
 static void test_test(int argc, const char** argv) {
 //	test_null();
 //	test_cmpxchg();
@@ -9685,6 +10347,7 @@ static void test_test(int argc, const char** argv) {
 //	test_thread2();
 //	test_thread3();
 //	test_thread4();
+	test_thread5();
 //	test_threadlocal1();
 //	test_threadlocal2();
 //	test_threadlocal3();
@@ -9702,7 +10365,7 @@ static void test_test(int argc, const char** argv) {
 //	test_exception();
 //	test_number_int();
 //	test_number_long();
-	test_filepath();
+//	test_filepath();
 //	test_config();
 //	test_system();
 //	test_strToken();
@@ -9747,6 +10410,7 @@ static void test_test(int argc, const char** argv) {
 //	test_pattern();
 //	test_atomic();
 //	test_atomic2();
+//	test_atomicReference_sp();
 //	test_collections();
 //	test_instanceof();
 //	test_NEWRC();
@@ -9762,6 +10426,8 @@ static void test_test(int argc, const char** argv) {
 //	test_concurrent_queue();
 //	test_concurrentLiteQueue();
 //	test_concurrentIntrusiveDeque();
+//	test_mutexLinkedQueue();
+//	test_mutexLinkedQueue2();
 //	test_concurrentLinkedQueue();
 //	test_concurrentLinkedQueue2();
 //	test_concurrentSkipListMap();
@@ -9795,6 +10461,10 @@ static void test_test(int argc, const char** argv) {
 //	test_c_thread();
 //	test_biginteger();
 //	test_bigdecimal();
+//	test_pushbackInputStream();
+//	test_proterties();
+//	test_arrays();
+//	test_arrayBlockingQueue();
 //
 //	EThread::sleep(3000);
 }
@@ -9816,7 +10486,7 @@ MAIN_IMPL(testefc) {
 
 
 //		} while (++i < 5);
-		} while (0);
+		} while (1);
 	}
 	catch (EException& e) {
 //		LOG("e=%s", e.toString().c_str());

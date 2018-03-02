@@ -9,15 +9,13 @@
 #define ECONCURRENTLINKEDQUEUE_HH_
 
 #include "../EInteger.hh"
-#include "../EArrayList.hh"
-#include "./EConcurrentQueue.hh"
+#include "../EQueue.hh"
 #include "../ENoSuchElementException.hh"
 #include "../ENullPointerException.hh"
 #include "../EIllegalStateException.hh"
+#include "../EUnsupportedOperationException.hh"
 
 namespace efc {
-
-//@see bug: http://bugs.java.com/view_bug.do?bug_id=6785442
 
 /**
  * An unbounded thread-safe {@linkplain Queue queue} based on linked nodes.
@@ -28,24 +26,38 @@ namespace efc {
  * queue the shortest time. New elements
  * are inserted at the tail of the queue, and the queue retrieval
  * operations obtain elements at the head of the queue.
- * A <tt>ConcurrentLinkedQueue</tt> is an appropriate choice when
+ * A {@code ConcurrentLinkedQueue} is an appropriate choice when
  * many threads will share access to a common collection.
- * This queue does not permit <tt>null</tt> elements.
+ * Like most other concurrent collection implementations, this class
+ * does not permit the use of {@code null} elements.
  *
- * <p>This implementation employs an efficient &quot;wait-free&quot;
+ * <p>This implementation employs an efficient <em>non-blocking</em>
  * algorithm based on one described in <a
  * href="http://www.cs.rochester.edu/u/michael/PODC96.html"> Simple,
  * Fast, and Practical Non-Blocking and Blocking Concurrent Queue
  * Algorithms</a> by Maged M. Michael and Michael L. Scott.
  *
- * <p>Beware that, unlike in most collections, the <tt>size</tt> method
+ * <p>Iterators are <i>weakly consistent</i>, returning elements
+ * reflecting the state of the queue at some point at or since the
+ * creation of the iterator.  They do <em>not</em> throw {@link
+ * java.util.ConcurrentModificationException}, and may proceed concurrently
+ * with other operations.  Elements contained in the queue since the creation
+ * of the iterator will be returned exactly once.
+ *
+ * <p>Beware that, unlike in most collections, the {@code size} method
  * is <em>NOT</em> a constant-time operation. Because of the
  * asynchronous nature of these queues, determining the current number
- * of elements requires a traversal of the elements.
+ * of elements requires a traversal of the elements, and so may report
+ * inaccurate results if this collection is modified during traversal.
+ * Additionally, the bulk operations {@code addAll},
+ * {@code removeAll}, {@code retainAll}, {@code containsAll},
+ * {@code equals}, and {@code toArray} are <em>not</em> guaranteed
+ * to be performed atomically. For example, an iterator operating
+ * concurrently with an {@code addAll} operation might view only some
+ * of the added elements.
  *
- * <p>This class and its iterator implement all of the
- * <em>optional</em> methods of the {@link Collection} and {@link
- * Iterator} interfaces.
+ * <p>This class and its iterator implement all of the <em>optional</em>
+ * methods of the {@link Queue} and {@link Iterator} interfaces.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a
@@ -60,174 +72,242 @@ namespace efc {
  *
  * @since 1.5
  * @param <E> the type of elements held in this collection
- *
  */
 
 template<typename E>
-class EConcurrentLinkedQueue: public EConcurrentQueue<E> {
+class EConcurrentLinkedQueue: public EQueue<sp<E> > {
 private:
-    /*
-     * This is a straight adaptation of Michael & Scott algorithm.
-     * For explanation, read the paper.  The only (minor) algorithmic
-     * difference is that this version supports lazy deletion of
-     * internal nodes (method remove(Object)) -- remove CAS'es item
-     * fields to null. The normal queue operations unlink but then
-     * pass over nodes with null item fields. Similarly, iteration
-     * methods ignore those with nulls.
-     *
-     * Also note that like most non-blocking algorithms in this
-     * package, this implementation relies on the fact that in garbage
-     * collected systems, there is no possibility of ABA problems due
-     * to recycled nodes, so there is no need to use "counted
-     * pointers" or related techniques seen in versions used in
-     * non-GC'ed settings.
-     */
+	/*
+	 * This is a modification of the Michael & Scott algorithm,
+	 * adapted for a garbage-collected environment, with support for
+	 * interior node deletion (to support remove(Object)).  For
+	 * explanation, read the paper.
+	 *
+	 * Note that like most non-blocking algorithms in this package,
+	 * this implementation relies on the fact that in garbage
+	 * collected systems, there is no possibility of ABA problems due
+	 * to recycled nodes, so there is no need to use "counted
+	 * pointers" or related techniques seen in versions used in
+	 * non-GC'ed settings.
+	 *
+	 * The fundamental invariants are:
+	 * - There is exactly one (last) Node with a null next reference,
+	 *   which is CASed when enqueueing.  This last Node can be
+	 *   reached in O(1) time from tail, but tail is merely an
+	 *   optimization - it can always be reached in O(N) time from
+	 *   head as well.
+	 * - The elements contained in the queue are the non-null items in
+	 *   Nodes that are reachable from head.  CASing the item
+	 *   reference of a Node to null atomically removes it from the
+	 *   queue.  Reachability of all elements from head must remain
+	 *   true even in the case of concurrent modifications that cause
+	 *   head to advance.  A dequeued Node may remain in use
+	 *   indefinitely due to creation of an Iterator or simply a
+	 *   poll() that has lost its time slice.
+	 *
+	 * The above might appear to imply that all Nodes are GC-reachable
+	 * from a predecessor dequeued Node.  That would cause two problems:
+	 * - allow a rogue Iterator to cause unbounded memory retention
+	 * - cause cross-generational linking of old Nodes to new Nodes if
+	 *   a Node was tenured while live, which generational GCs have a
+	 *   hard time dealing with, causing repeated major collections.
+	 * However, only non-deleted Nodes need to be reachable from
+	 * dequeued Nodes, and reachability does not necessarily have to
+	 * be of the kind understood by the GC.  We use the trick of
+	 * linking a Node that has just been dequeued to itself.  Such a
+	 * self-link implicitly means to advance to head.
+	 *
+	 * Both head and tail are permitted to lag.  In fact, failing to
+	 * update them every time one could is a significant optimization
+	 * (fewer CASes). As with LinkedTransferQueue (see the internal
+	 * documentation for that class), we use a slack threshold of two;
+	 * that is, we update head/tail when the current pointer appears
+	 * to be two or more steps away from the first/last node.
+	 *
+	 * Since head and tail are updated concurrently and independently,
+	 * it is possible for tail to lag behind head (why not)?
+	 *
+	 * CASing a Node's item reference to null atomically removes the
+	 * element from the queue.  Iterators skip over Nodes with null
+	 * items.  Prior implementations of this class had a race between
+	 * poll() and remove(Object) where the same element would appear
+	 * to be successfully removed by two concurrent operations.  The
+	 * method remove(Object) also lazily unlinks deleted Nodes, but
+	 * this is merely an optimization.
+	 *
+	 * When constructing a Node (before enqueuing it) we avoid paying
+	 * for a volatile write to item by using Unsafe.putObject instead
+	 * of a normal write.  This allows the cost of enqueue to be
+	 * "one-and-a-half" CASes.
+	 *
+	 * Both head and tail may or may not point to a Node with a
+	 * non-null item.  If the queue is empty, all items must of course
+	 * be null.  Upon creation, both head and tail refer to a dummy
+	 * Node with null item.  Both head and tail are only updated using
+	 * CAS, so they never regress, although again this is merely an
+	 * optimization.
+	 */
 
     class Node {
     public:
-    	sp<E> item; //volatile?
-        sp<Node> next; //volatile?
+    	sp<E> item;
+        sp<Node> next;
 
     public:
-        Node(E* x) { item = x; }
         Node(sp<E> x) { item = x; }
 
-        Node(E* x, Node* n) { item = x; next = n; }
-        Node(sp<E> x, sp<Node> n) { item = x; next = n; }
-        Node(es_nullptr_t x, es_nullptr_t n) { }
+        ALWAYS_INLINE boolean casItem(sp<E>& cmp, sp<E>& val) {
+        	//@see: return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+        	return atomic_compare_exchange(&item, &cmp, val);
+        }
+        ALWAYS_INLINE boolean casItem(sp<E>& cmp, es_nullptr_t) {
+			//@see: return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
+        	sp<E> val;
+			return atomic_compare_exchange(&item, &cmp, val);
+		}
 
-        sp<E> getItem() {
+        ALWAYS_INLINE void lazySetNext(sp<Node>& val) {
+        	//@see: UNSAFE.putOrderedObject(this, nextOffset, val);
+        	atomic_store(&next, val);
+        }
+
+        ALWAYS_INLINE boolean casNext(sp<Node>& cmp, sp<Node>& val) {
+        	//@see: return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+        	return atomic_compare_exchange(&next, &cmp, val);
+        }
+        ALWAYS_INLINE boolean casNext(es_nullptr_t, sp<Node>& val) {
+			//@see: return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
+        	sp<Node> cmp;
+			return atomic_compare_exchange(&next, &cmp, val);
+		}
+
+        ALWAYS_INLINE sp<E> getItem() {
             return atomic_load(&item);
         }
 
-        boolean casItem(sp<E> cmp, sp<E> val) {
-        	return atomic_compare_exchange(&item, &cmp, val);
-        }
-
-        void setItem(E* val) {
-        	sp<E> t(val);
-        	atomic_store(&item, t);
-        }
-		void setItem(es_nullptr_t) {
+        ALWAYS_INLINE void setItem(es_nullptr_t) {
 			sp<E> t;
 			atomic_store(&item, t);
 		}
-        void setItem(sp<E> val) {
+        ALWAYS_INLINE void setItem(sp<E> val) {
         	atomic_store(&item, val);
         }
-        
-        sp<Node> getNext() {
+
+        ALWAYS_INLINE sp<Node> getNext() {
         	return atomic_load(&next);
         }
 
-        boolean casNext(sp<Node> cmp, sp<Node> val) {
-        	return atomic_compare_exchange(&next, &cmp, val);
-        }
-
-        void setNext(Node* val) {
-        	sp<Node> t(val);
-        	atomic_store(&next, t);
-        }
-        void setNext(sp<Node> val) {
+        ALWAYS_INLINE void setNext(sp<Node> val) {
         	atomic_store(&next, val);
         }
-        void setNext(es_nullptr_t) {
+        ALWAYS_INLINE void setNext(es_nullptr_t) {
         	sp<Node> t;
 			atomic_store(&next, t);
 		}
     };
 
 public:
-    ~EConcurrentLinkedQueue() {
+    virtual ~EConcurrentLinkedQueue() {
     	// node unlink for recursion
     	sp<Node> node = head;
     	while (node != null) {
-    		sp<Node> next = node->getNext();
+    		sp<Node> next = node->next;
     		node->next = null;
     		node = next;
     	}
     }
 
     /**
-     * Creates a <tt>ConcurrentLinkedQueue</tt> that is initially empty.
-     */
+	 * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
+	 */
     EConcurrentLinkedQueue() {
-    	head = new Node(null, null);
+    	head = new Node(null);
     	tail = head;
+
+    	xxxx = new Node(null);
     }
 
     // Have to override just to update the javadoc
 
-    /**
-     * Inserts the specified element at the tail of this queue.
-     *
-     * @return <tt>true</tt> (as specified by {@link Collection#add})
-     * @throws NullPointerException if the specified element is null
-     */
-    boolean add(E* e) {
-        return offer(e);
-    }
+	/**
+	 * Inserts the specified element at the tail of this queue.
+	 * As the queue is unbounded, this method will never throw
+	 * {@link IllegalStateException} or return {@code false}.
+	 *
+	 * @return {@code true} (as specified by {@link Collection#add})
+	 * @throws NullPointerException if the specified element is null
+	 */
     boolean add(sp<E> e) {
 		return offer(e);
 	}
 
     /**
-     * Inserts the specified element at the tail of this queue.
-     *
-     * @return <tt>true</tt> (as specified by {@link Queue#offer})
-     * @throws NullPointerException if the specified element is null
-     */
-    boolean offer(E* e) {
-        sp<E> x(e);
-        boolean r = offer(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-    }
+	 * Inserts the specified element at the tail of this queue.
+	 * As the queue is unbounded, this method will never return {@code false}.
+	 *
+	 * @return {@code true} (as specified by {@link Queue#offer})
+	 * @throws NullPointerException if the specified element is null
+	 */
     boolean offer(sp<E> e) {
     	if (e == null) throw ENullPointerException(__FILE__, __LINE__);
-		sp<Node> n(new Node(e));
-		for (;;) {
-			sp<Node> t = atomic_load(&tail);
-			sp<Node> s = t->getNext();
-			if (t == atomic_load(&tail)) {
-				if (s == null) {
-					if (t->casNext(s, n)) {
-						casTail(t, n);
-						return true;
-					}
-				} else {
-					casTail(t, s);
+
+    	sp<Node> newNode(new Node(e));
+
+    	sp<Node> t = atomic_load(&tail);
+    	sp<Node> p = t;
+    	for (;;) {
+			sp<Node> q = p->getNext();
+			if (q == null) {
+				// p is last node
+				if (p->casNext(null, newNode)) {
+					// Successful CAS is the linearization point
+					// for e to become an element of this queue,
+					// and for newNode to become "live".
+					if (p != t) // hop two nodes at a time
+						casTail(t, newNode);  // Failure is OK.
+					return true;
 				}
+				// Lost CAS race to another thread; re-read next
 			}
+			else if (q == xxxx)
+				// We have fallen off list.  If tail is unchanged, it
+				// will also be off-list, in which case we need to
+				// jump to head, from which all live nodes are always
+				// reachable.  Else the new tail is a better bet.
+				p = (t != (t = atomic_load(&tail))) ? t : atomic_load(&head);
+			else
+				// Check for tail updates after two hops.
+				p = (p != t && t != (t = atomic_load(&tail))) ? t : q;
 		}
 		//always not reach here.
 		return true;
     }
 
     sp<E> poll() {
-        for (;;) {
-            sp<Node> h = atomic_load(&head);
-            sp<Node> t = atomic_load(&tail);
-            sp<Node> first = h->getNext();
-            if (h == atomic_load(&head)) {
-                if (h == t) {
-                    if (first == null)
-                        return null;
-                    else
-                        casTail(t, first);
-                } else if (casHead(h, first)) {
-                    sp<E> item = first->getItem();
-                    if (item != null) {
-                        h->setNext(null);
-                        first->setItem(null);
-                        return item;
-                    }
-                    // else skip over deleted item, continue loop,
-                }
-            }
-        }
+    	restartFromHead:
+		for (;;) {
+			sp<Node> h = atomic_load(&head);
+			sp<Node> p = h, q;
+			for (;;) {
+				sp<E> item = p->getItem();
+
+				if (item != null && p->casItem(item, null)) {
+					// Successful CAS is the linearization point
+					// for item to be removed from this queue.
+					if (p != h) // hop two nodes at a time
+						updateHead(h, ((q = p->getNext()) != null) ? q : p);
+					return item;
+				}
+				else if ((q = p->getNext()) == null) {
+					updateHead(h, p);
+					return null;
+				}
+				else if (q == xxxx)
+					goto restartFromHead;
+				else
+					p = q;
+			}
+		}
         //always not reach here.
         return null;
     }
@@ -240,57 +320,52 @@ public:
 			throw ENoSuchElementException(__FILE__, __LINE__);
     }
 
-    sp<E> peek() { // same as poll except don't remove item
-        for (;;) {
-            sp<Node> h = atomic_load(&head);
-            sp<Node> t = atomic_load(&tail);
-            sp<Node> first = h->getNext();
-            if (h == atomic_load(&head)) {
-                if (h == t) {
-                    if (first == null)
-                        return null;
-                    else
-                        casTail(t, first);
-                } else {
-                    sp<E> item = first->getItem();
-                    if (item != null) {
-                    	first->setNext(null);
-                        return item;
-                    }
-                    else // remove deleted node and continue
-                        casHead(h, first);
-                }
-            }
-        }
+    sp<E> peek() {
+    	restartFromHead:
+		for (;;) {
+			sp<Node> h = atomic_load(&head);
+			sp<Node>& p = h, q;
+			for (;;) {
+				sp<E> item = p->getItem();
+				if (item != null || (q = p->getNext()) == null) {
+					updateHead(h, p);
+					return item;
+				}
+				else if (q == xxxx)
+					goto restartFromHead;
+				else
+					p = q;
+			}
+		}
         //always not reach here.
         return null;
     }
 
     /**
-     * Returns the first actual (non-header) node on list.  This is yet
-     * another variant of poll/peek; here returning out the first
-     * node, not element (so we cannot collapse with peek() without
-     * introducing race.)
-     */
+	 * Returns the first live (non-deleted) node on list, or null if none.
+	 * This is yet another variant of poll/peek; here returning the
+	 * first node, not element.  We could make peek() a wrapper around
+	 * first(), but that would cost an extra volatile read of item,
+	 * and the need to add a retry loop to deal with the possibility
+	 * of losing a race to a concurrent poll().
+	 */
     sp<Node> first() {
-        for (;;) {
-        	sp<Node> h = atomic_load(&head);
-        	sp<Node> t = atomic_load(&tail);
-        	sp<Node> first = h->getNext();
-            if (h == atomic_load(&head)) {
-                if (h == t) {
-                    if (first == null)
-                        return null;
-                    else
-                        casTail(t, first);
-                } else {
-                    if (first->getItem() != null)
-                        return first;
-                    else // remove deleted node and continue
-                        casHead(h, first);
-                }
-            }
-        }
+    	restartFromHead:
+		for (;;) {
+			sp<Node> h = atomic_load(&head);
+			sp<Node>& p = h, q;
+			for (;;) {
+				boolean hasItem = (p->getItem() != null);
+				if (hasItem || (q = p->getNext()) == null) {
+					updateHead(h, p);
+					return hasItem ? p : null;
+				}
+				else if (q == xxxx)
+					goto restartFromHead;
+				else
+					p = q;
+			}
+		}
         //always not reach here.
         return null;
     }
@@ -306,20 +381,24 @@ public:
     }
 
     /**
-     * Returns the number of elements in this queue.  If this queue
-     * contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-     * <tt>Integer.MAX_VALUE</tt>.
-     *
-     * <p>Beware that, unlike in most collections, this method is
-     * <em>NOT</em> a constant-time operation. Because of the
-     * asynchronous nature of these queues, determining the current
-     * number of elements requires an O(n) traversal.
-     *
-     * @return the number of elements in this queue
-     */
+	 * Returns the number of elements in this queue.  If this queue
+	 * contains more than {@code Integer.MAX_VALUE} elements, returns
+	 * {@code Integer.MAX_VALUE}.
+	 *
+	 * <p>Beware that, unlike in most collections, this method is
+	 * <em>NOT</em> a constant-time operation. Because of the
+	 * asynchronous nature of these queues, determining the current
+	 * number of elements requires an O(n) traversal.
+	 * Additionally, if elements are added or removed during execution
+	 * of this method, the returned result may be inaccurate.  Thus,
+	 * this method is typically not very useful in concurrent
+	 * applications.
+	 *
+	 * @return the number of elements in this queue
+	 */
     int size() {
         int count = 0;
-        for (sp<Node> p = first(); p != null; p = p->getNext()) {
+        for (sp<Node> p = first(); p != null; p = succ(p)) {
             if (p->getItem() != null) {
                 // Collections.size() spec says to max out
                 if (++count == EInteger::MAX_VALUE)
@@ -330,45 +409,43 @@ public:
     }
 
     /**
-     * Returns <tt>true</tt> if this queue contains the specified element.
-     * More formally, returns <tt>true</tt> if and only if this queue contains
-     * at least one element <tt>e</tt> such that <tt>o.equals(e)</tt>.
-     *
-     * @param o object to be checked for containment in this queue
-     * @return <tt>true</tt> if this queue contains the specified element
-     */
+	 * Returns {@code true} if this queue contains the specified element.
+	 * More formally, returns {@code true} if and only if this queue contains
+	 * at least one element {@code e} such that {@code o.equals(e)}.
+	 *
+	 * @param o object to be checked for containment in this queue
+	 * @return {@code true} if this queue contains the specified element
+	 */
     boolean contains(E* o) {
         if (o == null) return false;
-        for (sp<Node> p = first(); p != null; p = p->getNext()) {
+        for (sp<Node> p = first(); p != null; p = succ(p)) {
             sp<E> item = p->getItem();
-            if (item != null &&
-                o->equals(item.get()))
+            if (item != null && o->equals(item.get()))
                 return true;
         }
         return false;
     }
 
     /**
-     * Removes a single instance of the specified element from this queue,
-     * if it is present.  More formally, removes an element <tt>e</tt> such
-     * that <tt>o.equals(e)</tt>, if this queue contains one or more such
-     * elements.
-     * Returns <tt>true</tt> if this queue contained the specified element
-     * (or equivalently, if this queue changed as a result of the call).
-     *
-     * @param o element to be removed from this queue, if present
-     * @return <tt>true</tt> if this queue changed as a result of the call
-     */
+	 * Removes a single instance of the specified element from this queue,
+	 * if it is present.  More formally, removes an element {@code e} such
+	 * that {@code o.equals(e)}, if this queue contains one or more such
+	 * elements.
+	 * Returns {@code true} if this queue contained the specified element
+	 * (or equivalently, if this queue changed as a result of the call).
+	 *
+	 * @param o element to be removed from this queue, if present
+	 * @return {@code true} if this queue changed as a result of the call
+	 */
     boolean remove(E* o) {
         if (o == null) return false;
         sp<Node> pred = null;
-        for (sp<Node> p = first(); p != null; p = p->getNext()) {
+        for (sp<Node> p = first(); p != null; p = succ(p)) {
             sp<E> item = p->getItem();
             if (item != null &&
                 o->equals(item.get()) &&
                 p->casItem(item, null)) {
-            	//@see: java8
-            	sp<Node> next = p->getNext();
+            	sp<Node> next = succ(p);
             	if (pred != null && next != null)
 					pred->casNext(p, next);
             	return true;
@@ -389,7 +466,7 @@ public:
 	 * @return the head of this queue
 	 * @throws NoSuchElementException if this queue is empty
 	 */
-	sp <E> remove() {
+	sp<E> remove() {
 		sp<E> x = poll();
 		if (x != null)
 			return x;
@@ -419,7 +496,7 @@ public:
      *
      * @return an iterator over the elements in this queue in proper sequence
      */
-    sp<EConcurrentIterator<E> > iterator() {
+    sp<EIterator<sp<E> > > iterator(int index=0) {
         return new Itr(this);
     }
 
@@ -447,17 +524,59 @@ public:
 		return al.toArray();
 	}
 
-private:
-    /**
-	 * Pointer to header node, initialized to a dummy node.  The first
-	 * actual node is at head.getNext().
+	/**
+	 * {@inheritDoc}
 	 */
-	sp<Node> head;//(new Node(null, null));
+	virtual boolean containsAll(ECollection<sp<E> > *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
 
-	/** Pointer to last node on list **/
-	sp<Node> tail;// = head;
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean removeAll(ECollection<sp<E> > *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
 
-    class Itr : public EConcurrentIterator<E> {
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean retainAll(ECollection<sp<E> > *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+private:
+	/**
+	 * A node from which the first live (non-deleted) node (if any)
+	 * can be reached in O(1) time.
+	 * Invariants:
+	 * - all live nodes are reachable from head via succ()
+	 * - head != null
+	 * - (tmp = head).next != tmp || tmp != head
+	 * Non-invariants:
+	 * - head.item may or may not be null.
+	 * - it is permitted for tail to lag behind head, that is, for tail
+	 *   to not be reachable from head!
+	 */
+	sp<Node> head;
+
+	/**
+	 * A node from which the last node on list (that is, the unique
+	 * node with node.next == null) can be reached in O(1) time.
+	 * Invariants:
+	 * - the last node is always reachable from tail via succ()
+	 * - tail != null
+	 * Non-invariants:
+	 * - tail.item may or may not be null.
+	 * - it is permitted for tail to lag behind head, that is, for tail
+	 *   to not be reachable from head!
+	 * - tail.next may or may not be self-pointing to tail.
+	 */
+	sp<Node> tail;
+
+	sp<Node> xxxx;
+
+    class Itr : public EIterator<sp<E> > {
     private:
     	EConcurrentLinkedQueue* queue;
 
@@ -487,7 +606,15 @@ private:
             lastRet = nextNode;
             sp<E> x = nextItem;
 
-            sp<Node> p = (nextNode == null) ? queue->first() : nextNode->getNext();
+            sp<Node> pred, p;
+			if (nextNode == null) {
+				p = queue->first();
+				pred = null;
+			} else {
+				pred = nextNode;
+				p = queue->succ(nextNode);
+			}
+
             for (;;) {
                 if (p == null) {
                     nextNode = null;
@@ -499,8 +626,13 @@ private:
                     nextNode = p;
                     nextItem = item;
                     return x;
-                } else // skip over nulls
-                    p = p->getNext();
+                } else {
+                	// skip over nulls
+                	sp<Node> next = queue->succ(p);
+					if (pred != null && next != null)
+						pred->casNext(p, next);
+					p = next;
+                }
             }
             //always not reach here.
             return null;
@@ -527,15 +659,38 @@ private:
             l->setItem(null);
             lastRet = null;
         }
+
+        sp<E> moveOut() {
+        	throw EUnsupportedOperationException(__FILE__, __LINE__);
+        }
     };
 
-    boolean casTail(sp<Node>& cmp, sp<Node>& val) {
+    ALWAYS_INLINE boolean casTail(sp<Node>& cmp, sp<Node>& val) {
     	return atomic_compare_exchange(&tail, &cmp, val);
     }
 
-    boolean casHead(sp<Node>& cmp, sp<Node>& val) {
+    ALWAYS_INLINE boolean casHead(sp<Node>& cmp, sp<Node>& val) {
     	return atomic_compare_exchange(&head, &cmp, val);
     }
+
+    /**
+	 * Tries to CAS head to p. If successful, repoint old head to itself
+	 * as sentinel for succ(), below.
+	 */
+    ALWAYS_INLINE void updateHead(sp<Node>& h, sp<Node>& p) {
+		if (h != p && casHead(h, p))
+			h->lazySetNext(xxxx);
+	}
+
+    /**
+	 * Returns the successor of p, or the head node if p.next has been
+	 * linked to self, which will only be true if traversing with a
+	 * stale pointer that is now off the list.
+	 */
+    ALWAYS_INLINE sp<Node> succ(sp<Node>& p) {
+		sp<Node> next = p->getNext();
+		return (next == xxxx) ? atomic_load(&head) : next;
+	}
 };
 
 } /* namespace efc */

@@ -180,6 +180,7 @@ public:
 		}
 		rangeCheck(off, off + len);
 
+		// Insertion sort on smallest arrays
 		if (len < INSERTIONSORT_THRESHOLD) {
 			for (int i = off; i < len + off; i++)
 				for (int j = i; j > off && _array[j - 1] > _array[j]; j--)
@@ -187,6 +188,7 @@ public:
 			return;
 		}
 
+		// Choose a partition element, v
 		int m = off + (len >> 1);
 		if (len > INSERTIONSORT_THRESHOLD) {
 			int l = off;
@@ -251,6 +253,10 @@ private:
 	MEMType _type;
 	E _defval;
 
+	/**
+	 * Check that fromIndex and toIndex are in range, and throw an
+	 * appropriate exception if they aren't.
+	 */
 	void rangeCheck(int fromIndex, int toIndex) {
 		EString msg;
 		if (fromIndex > toIndex) {
@@ -269,6 +275,9 @@ private:
 		}
 	}
 
+	/**
+	 * Swaps x[a] with x[b].
+	 */
 	void swap(int a, int b) {
 		if (a == b) return;
 		E t = _array[a];
@@ -276,11 +285,17 @@ private:
 		_array[b] = t;
 	}
 
+	/**
+	 * Swaps x[a .. (a+n-1)] with x[b .. (b+n-1)].
+	 */
 	void vecswap(int a, int b, int n) {
 		for (int i = 0; i < n; i++, a++, b++)
 			swap(a, b);
 	}
 
+	/**
+	 * Returns the index of the median of the three indexed integers.
+	 */
 	int med3(int a, int b, int c) {
 		return (_array[a] < _array[b] ?
 				(_array[b] < _array[c] ? b : _array[a] < _array[c] ? c : a) :

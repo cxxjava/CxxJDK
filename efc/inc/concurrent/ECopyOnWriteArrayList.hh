@@ -8,8 +8,8 @@
 #ifndef ECOPYONWRITEARRAYLIST_HH_
 #define ECOPYONWRITEARRAYLIST_HH_
 
-#include "./EConcurrentList.hh"
-#include "./EConcurrentListIterator.hh"
+#include "../EList.hh"
+#include "../EListIterator.hh"
 #include "./EReentrantLock.hh"
 #include "../EArrayList.hh"
 #include "../ENoSuchElementException.hh"
@@ -53,10 +53,13 @@ namespace efc {
  * @param <E> the type of elements held in this collection
  */
 
-template<typename E>
-class ECopyOnWriteArrayList: public EConcurrentList<E>
+template<typename E_>
+class ECopyOnWriteArrayList: public EList<sp<E_> >
 {
 public:
+	typedef sp<E_> E;
+	typedef typename ETraits<E>::indexType idxE;
+
 	virtual ~ECopyOnWriteArrayList() {
 		DELRC(array_);
 	}
@@ -65,7 +68,7 @@ public:
 	 * Creates an empty list.
 	 */
 	ECopyOnWriteArrayList() {
-		array_ = NEWRC(EA<sp<E> >)(0);
+		array_ = NEWRC(EA<E>)(0);
 	}
 
 	/**
@@ -76,11 +79,11 @@ public:
 	 * @param c the collection of initially held elements
 	 * @throws NullPointerException if the specified collection is null
 	 */
-	ECopyOnWriteArrayList(EConcurrentCollection<E>* c) {
-		EA<sp<E> >* elements = NEWRC(EA<sp<E> >)(c->size());
+	ECopyOnWriteArrayList(ECollection<E>* c) {
+		EA<E>* elements = NEWRC(EA<E>)(c->size());
 
 		int i = 0;
-		sp<EConcurrentIterator<E> > iter = c->iterator();
+		sp<EIterator<E> > iter = c->iterator();
 		while (iter->hasNext()) {
 			(*elements)[i++] = iter->next();
 		}
@@ -95,7 +98,7 @@ public:
 	 *        internal array)
 	 * @throws NullPointerException if the specified array is null
 	 */
-	ECopyOnWriteArrayList(EA<sp<E> >* toCopyIn) {
+	ECopyOnWriteArrayList(EA<E>* toCopyIn) {
 		array_ = arrayClone(toCopyIn);
 	}
 
@@ -106,7 +109,7 @@ public:
 	 */
 	int size() {
 		int n;
-		EA<sp<E> >* elements = GETRC(array_);
+		EA<E>* elements = GETRC(array_);
 		n = elements->length();
 		DELRC(elements);
 		return n;
@@ -130,8 +133,8 @@ public:
 	 * @param o element whose presence in this list is to be tested
 	 * @return <tt>true</tt> if this list contains the specified element
 	 */
-	boolean contains(E* o) {
-		EA<sp<E> >* elements = GETRC(array_);
+	boolean contains(idxE o) {
+		EA<E>* elements = GETRC(array_);
 		boolean b = (indexOf(o, elements, 0, elements->length()) >= 0);
 		DELRC(elements);
 		return b;
@@ -140,8 +143,8 @@ public:
 	/**
 	 * {@inheritDoc}
 	 */
-	int indexOf(E* o) {
-		EA<sp<E> >* elements = GETRC(array_);
+	int indexOf(idxE o) {
+		EA<E>* elements = GETRC(array_);
 		int i = indexOf(o, elements, 0, elements->length());
 		DELRC(elements);
 		return i;
@@ -162,8 +165,8 @@ public:
 	 *         <tt>-1</tt> if the element is not found.
 	 * @throws IndexOutOfBoundsException if the specified index is negative
 	 */
-	int indexOf(E* e, int index) {
-		EA<sp<E> >* elements = GETRC(array_);
+	int indexOf(idxE e, int index) {
+		EA<E>* elements = GETRC(array_);
 		int i = indexOf(e, elements, index, elements->length());
 		DELRC(elements);
 		return i;
@@ -172,8 +175,8 @@ public:
 	/**
 	 * {@inheritDoc}
 	 */
-	int lastIndexOf(E* o) {
-		EA<sp<E> >* elements = GETRC(array_);
+	int lastIndexOf(idxE o) {
+		EA<E>* elements = GETRC(array_);
 		int i = lastIndexOf(o, elements, elements->length() - 1);
 		DELRC(elements);
 		return i;
@@ -195,8 +198,8 @@ public:
 	 * @throws IndexOutOfBoundsException if the specified index is greater
 	 *         than or equal to the current size of this list
 	 */
-	int lastIndexOf(E* e, int index) {
-		EA<sp<E> >* elements = GETRC(array_);
+	int lastIndexOf(idxE e, int index) {
+		EA<E>* elements = GETRC(array_);
 		int i = lastIndexOf(e, elements, index);
 		DELRC(elements);
 		return i;
@@ -208,8 +211,8 @@ public:
 	 *
 	 * @return a clone of this list
 	 */
-	ECopyOnWriteArrayList<E>* clone() {
-		return new ECopyOnWriteArrayList<E>((EConcurrentCollection<E>*)(this));
+	ECopyOnWriteArrayList<E_>* clone() {
+		return new ECopyOnWriteArrayList<E_>((ECollection<E>*)(this));
 	}
 
 	/**
@@ -225,9 +228,9 @@ public:
 	 *
 	 * @return an array containing all the elements in this list
 	 */
-	EA<sp<E> > toArray() {
-		EA<sp<E> >* elements = GETRC(array_);
-		EArrayList<sp<E> > r(elements->length());
+	EA<E> toArray() {
+		EA<E>* elements = GETRC(array_);
+		EArrayList<E> r(elements->length());
 		for (int i=0; i<elements->length(); i++) {
 			r.add((*elements)[i]);
 		}
@@ -240,9 +243,9 @@ public:
 	 *
 	 * @throws IndexOutOfBoundsException {@inheritDoc}
 	 */
-	sp<E> getAt(int index) {
-		sp<E> e;
-		EA<sp<E> >* elements = GETRC(array_);
+	E getAt(int index) {
+		E e;
+		EA<E>* elements = GETRC(array_);
 		e = getAt(elements, index);
 		DELRC(elements);
 		return e;
@@ -254,18 +257,14 @@ public:
 	     *
 	     * @throws IndexOutOfBoundsException {@inheritDoc}
 	     */
-	sp<E> setAt(int index, E* element) {
-		sp<E> e(element);
-		return setAt(index, e);
-	}
-	sp<E> setAt(int index, sp<E> element) {
+	E setAt(int index, E element) {
 		SYNCBLOCK(&lock_) {
-			EA<sp<E> >* elements = GETRC(array_);
+			EA<E>* elements = GETRC(array_);
 
-			sp<E> oldValue = getAt(elements, index);
+			E oldValue = getAt(elements, index);
 
 			if (oldValue != element) {
-				EA<sp<E> >* newElements = arrayClone(elements);
+				EA<E>* newElements = arrayClone(elements);
 				(*newElements)[index] = element;
 				setArray(newElements);
 			} else {
@@ -285,16 +284,12 @@ public:
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
-	boolean add(E* e) {
-		sp<E> x(e);
-		return add(x);
-	}
-    boolean add(sp<E> e) {
+    boolean add(E e) {
     	SYNCBLOCK(&lock_) {
-    		EA<sp<E> >* elements = GETRC(array_);
+    		EA<E>* elements = GETRC(array_);
 
 			int len = elements->length();
-			EA<sp<E> >* newElements = arrayClone(elements, 0, len + 1);
+			EA<E>* newElements = arrayClone(elements, 0, len + 1);
 			(*newElements)[len] = e;
 			setArray(newElements);
 
@@ -311,24 +306,19 @@ public:
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-	void addAt(int index, E* element) {
-		sp<E> e(element);
-		addAt(index, e);
-	}
-
-	void addAt(int index, sp<E> element) {
+	void addAt(int index, E element) {
 		SYNCBLOCK(&lock_) {
-			EA<sp<E> >* elements = GETRC(array_);
+			EA<E>* elements = GETRC(array_);
 
 			int len = elements->length();
 			if (index > len || index < 0)
 				throw EIndexOutOfBoundsException(__FILE__, __LINE__);
-			EA<sp<E> >* newElements;
+			EA<E>* newElements;
 			int numMoved = len - index;
 			if (numMoved == 0)
 				newElements = arrayClone(elements, 0, len + 1);
 			else {
-				newElements = NEWRC(EA<sp<E> >)(len + 1);
+				newElements = NEWRC(EA<E>)(len + 1);
 				/* @see:
 				System.arraycopy(elements, 0, newElements, 0, index);
 				System.arraycopy(elements, index, newElements, index + 1, numMoved);
@@ -354,10 +344,10 @@ public:
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    sp<E> removeAt(int index) {
+    E removeAt(int index) {
     	SYNCBLOCK(&lock_) {
-    		sp<E> oldValue;
-    		EA<sp<E> >* elements = GETRC(array_);
+    		E oldValue;
+    		EA<E>* elements = GETRC(array_);
     		try {
 				oldValue = getAt(elements, index);
 				int len = elements->length();
@@ -365,7 +355,7 @@ public:
 				if (numMoved == 0)
 					setArray(arrayClone(elements, 0, len - 1));
 				else {
-					EA<sp<E> >* newElements = NEWRC(EA<sp<E> >)(len - 1);
+					EA<E>* newElements = NEWRC(EA<E>)(len - 1);
 					/* @see:
 	                System.arraycopy(elements, 0, newElements, 0, index);
 	                System.arraycopy(elements, index + 1, newElements, index, numMoved);
@@ -402,18 +392,18 @@ public:
      * @param o element to be removed from this list, if present
      * @return <tt>true</tt> if this list contained the specified element
      */
-    boolean remove(E* o) {
+    boolean remove(idxE o) {
     	SYNCBLOCK(&lock_) {
     		boolean result = false;
 
-    	    EA<sp<E> >* elements = GETRC(array_);
+    	    EA<E>* elements = GETRC(array_);
 
             int len = elements->length();
             if (len != 0) {
                 // Copy while searching for element to remove
                 // This wins in the normal case of element being present
                 int newlen = len - 1;
-                EA<sp<E> >* newElements = NEWRC(EA<sp<E> >)(newlen);
+                EA<E>* newElements = NEWRC(EA<E>)(newlen);
 
                 for (int i = 0; i < newlen; ++i) {
                     if (eq(o, (*elements)[i].get())) {
@@ -448,19 +438,15 @@ public:
      * @param e element to be added to this list, if absent
      * @return <tt>true</tt> if the element was added
      */
-    boolean addIfAbsent(E* e) {
-    	sp<E> x(e);
-    	return addIfAbsent(x);
-    }
-    boolean addIfAbsent(sp<E> e) {
+    boolean addIfAbsent(E e) {
     	SYNCBLOCK(&lock_) {
             // Copy while checking if already present.
             // This wins in the most common case where it is not present
 
-    		EA<sp<E> >* elements = GETRC(array_);
+    		EA<E>* elements = GETRC(array_);
 
             int len = elements->length();
-            EA<sp<E> >* newElements = NEWRC(EA<sp<E> >)(len + 1);
+            EA<E>* newElements = NEWRC(EA<E>)(len + 1);
             for (int i = 0; i < len; ++i) {
                 if (eq(e.get(), (*elements)[i].get())) {
                 	DELRC(elements);
@@ -485,7 +471,7 @@ public:
      */
     void clear() {
     	SYNCBLOCK(&lock_) {
-    		EA<sp<E> >* elements = NEWRC(EA<sp<E> >)(0);
+    		EA<E>* elements = NEWRC(EA<E>)(0);
     		setArray(elements);
         }}
     }
@@ -500,9 +486,9 @@ public:
 	 *
 	 * @return an iterator over the elements in this list in proper sequence
 	 */
-    sp<EConcurrentIterator<E> > iterator() {
-    	EA<sp<E> >* elements = GETRC(array_);
-    	EConcurrentIterator<E>* iter = new COWIterator(elements, 0);
+    sp<EIterator<E> > iterator(int index=0) {
+    	EA<E>* elements = GETRC(array_);
+    	EIterator<E>* iter = new COWIterator(elements, 0);
     	DELRC(elements);
     	return iter;
     }
@@ -517,19 +503,40 @@ public:
      *
      * @throws IndexOutOfBoundsException {@inheritDoc}
      */
-    sp<EConcurrentListIterator<E> > listIterator(int index = 0) {
-    	EA<sp<E> >* elements = GETRC(array_);
-    	EConcurrentListIterator<E>* iter = new COWIterator(elements, index);
+    sp<EListIterator<E> > listIterator(int index = 0) {
+    	EA<E>* elements = GETRC(array_);
+    	EListIterator<E>* iter = new COWIterator(elements, index);
 		DELRC(elements);
 		return iter;
     }
+
+    /**
+	 * {@inheritDoc}
+	 */
+	virtual boolean containsAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean removeAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean retainAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
 
 protected:
 	/**
 	 * Sets the array.
 	 */
-	void setArray(EA<sp<E> >* a) {
-		EA<sp<E> >* oa = GETRC(array_);
+	void setArray(EA<E>* a) {
+		EA<E>* oa = GETRC(array_);
 		array_ = a;
 		DELRC(oa); //!
 		DELRC(oa); //!
@@ -540,7 +547,7 @@ private:
 	EReentrantLock lock_;
 
 	/** The array, accessed only via getArray/setArray. */
-	EA<sp<E> >* volatile array_;
+	EA<E>* volatile array_;
 
 	/**
 	 * Test for equality, coping with nulls.
@@ -558,7 +565,7 @@ private:
 	 * @param fence one past last index to search
 	 * @return index of element, or -1 if absent
 	 */
-	static int indexOf(E* o, EA<sp<E> >* elements,
+	static int indexOf(idxE o, EA<E>* elements,
 							   int index, int fence) {
 		if (o == null) {
 			for (int i = index; i < fence; i++)
@@ -579,7 +586,7 @@ private:
 	 * @param index first index to search
 	 * @return index of element, or -1 if absent
 	 */
-	static int lastIndexOf(E* o, EA<sp<E> >* elements, int index) {
+	static int lastIndexOf(idxE o, EA<E>* elements, int index) {
 		if (o == null) {
 			for (int i = index; i >= 0; i--)
 				if ((*elements)[i] == null)
@@ -592,11 +599,11 @@ private:
 		return -1;
 	}
 
-	sp<E> getAt(EA<sp<E> >* a, int index) {
+	E getAt(EA<E>* a, int index) {
 		return (*a)[index];
 	}
 
-	EA<sp<E> >* arrayClone(EA<sp<E> >* array, int offset=0, int newLength=-1) {
+	EA<E>* arrayClone(EA<E>* array, int offset=0, int newLength=-1) {
 		int oldLength = array->length();
 		if (offset < 0 || offset > oldLength) {
 			throw EIndexOutOfBoundsException(__FILE__, __LINE__);
@@ -606,7 +613,7 @@ private:
 			newLength = oldLength - offset;
 		}
 
-		EA<sp<E> >* newEA = NEWRC(EA<sp<E> >)(newLength);
+		EA<E>* newEA = NEWRC(EA<E>)(newLength);
 		int n = ES_MIN(oldLength - offset, newLength);
 		for (int i=0; i<n; i++) {
 			(*newEA)[i] = (*array)[i+offset];
@@ -615,13 +622,13 @@ private:
 		return newEA;
 	}
 
-	class COWIterator: public EConcurrentListIterator<E> {
+	class COWIterator: public EListIterator<E> {
 	public:
 		virtual ~COWIterator() {
 			DELRC(snapshot); //!
 		}
 
-		COWIterator(EA<sp<E> >* elements, int initialCursor) {
+		COWIterator(EA<E>* elements, int initialCursor) {
 			cursor = initialCursor;
 			snapshot = GETRC(elements);
 		}
@@ -634,13 +641,13 @@ private:
 			return cursor > 0;
 		}
 
-		sp<E> next() {
+		E next() {
 			if (! hasNext())
 				throw ENoSuchElementException(__FILE__, __LINE__);
 			return (*snapshot)[cursor++];
 		}
 
-		sp<E> previous() {
+		E previous() {
 			if (! hasPrevious())
 				throw ENoSuchElementException(__FILE__, __LINE__);
 			return (*snapshot)[--cursor];
@@ -663,12 +670,16 @@ private:
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
+		virtual E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+
 		/**
 		 * Not supported. Always throws UnsupportedOperationException.
 		 * @throws UnsupportedOperationException always; <tt>set</tt>
 		 *         is not supported by this iterator.
 		 */
-		void set(sp<E> e) {
+		void set(E e) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
@@ -677,13 +688,13 @@ private:
 		 * @throws UnsupportedOperationException always; <tt>add</tt>
 		 *         is not supported by this iterator.
 		 */
-		void add(sp<E> e) {
+		void add(E e) {
 			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 
 	private:
 		/** Snapshot of the array **/
-		EA<sp<E> >* snapshot;
+		EA<E>* snapshot;
 		/** Index of element to be returned by subsequent call to next.  */
 		int cursor;
 	};

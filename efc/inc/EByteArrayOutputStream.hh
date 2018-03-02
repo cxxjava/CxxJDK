@@ -45,7 +45,7 @@ public:
      * @param   size   the initial size.
      * @exception  IllegalArgumentException if size is negative.
      */
-    EByteArrayOutputStream(int size=32);
+    EByteArrayOutputStream(int size=32, boolean lock=true);
 
     //TODO...
     EByteArrayOutputStream(const EByteArrayOutputStream& that);
@@ -127,7 +127,7 @@ public:
      * @return String decoded from the buffer's contents.
      * @since  JDK1.1
      */
-	virtual synchronized EStringBase toString();
+	virtual synchronized EString toString();
     
 protected:
     /**
@@ -140,6 +140,11 @@ protected:
 	 * The number of valid bytes in the buffer.
 	 */
 	int count;
+
+	/**
+	 * If false then no synchronized!
+	 */
+	boolean lock;
 
 private:
 	int defaultCapacity;

@@ -10,6 +10,7 @@
 
 #include "EObject.hh"
 #include "EString.hh"
+#include "EFileFilter.hh"
 #include "EFilenameFilter.hh"
 #include "EArray.hh"
 #include "EIOException.hh"
@@ -436,30 +437,9 @@ public:
 	 */
 	boolean isFile();
 
-	//
-	boolean isSystem();
-
-	/**
-	 * Tests whether the file named by this abstract pathname is a hidden
-	 * file.  The exact definition of <em>hidden</em> is system-dependent.  On
-	 * UNIX systems, a file is considered to be hidden if its name begins with
-	 * a period character (<code>'.'</code>).  On Microsoft Windows systems, a file is
-	 * considered to be hidden if it has been marked as such in the filesystem.
-	 *
-	 * @return  <code>true</code> if and only if the file denoted by this
-	 *          abstract pathname is hidden according to the conventions of the
-	 *          underlying platform
-	 *
-	 * @throws  SecurityException
-	 *          If a security manager exists and its <code>{@link
-	 *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
-	 *          method denies read access to the file
-	 *
-	 * @since 1.2
+	/*
+	 * Determines whether the \c File represents a symbolic link.
 	 */
-	boolean isHidden();
-
-	//
 	boolean isLink();
 
 	/**
@@ -495,9 +475,67 @@ public:
 	llong length();
 
 	/**
+	 * Returns the uniquely identifies of a file.
 	 *
+	 * @return a inode number of the given file
 	 */
 	llong inode();
+
+	/**
+	 * Tests whether the application can read the file denoted by this
+	 * abstract pathname. On some platforms it may be possible to start the
+	 * Java virtual machine with special privileges that allow it to read
+	 * files that are marked as unreadable. Consequently this method may return
+	 * {@code true} even though the file does not have read permissions.
+	 *
+	 * @return  <code>true</code> if and only if the file specified by this
+	 *          abstract pathname exists <em>and</em> can be read by the
+	 *          application; <code>false</code> otherwise
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
+	 *          method denies read access to the file
+	 */
+	boolean canRead();
+
+	/**
+	 * Tests whether the application can modify the file denoted by this
+	 * abstract pathname. On some platforms it may be possible to start the
+	 * Java virtual machine with special privileges that allow it to modify
+	 * files that are marked read-only. Consequently this method may return
+	 * {@code true} even though the file is marked read-only.
+	 *
+	 * @return  <code>true</code> if and only if the file system actually
+	 *          contains a file denoted by this abstract pathname <em>and</em>
+	 *          the application is allowed to write to the file;
+	 *          <code>false</code> otherwise.
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the file
+	 */
+	boolean canWrite();
+
+	/**
+	 * Tests whether the application can execute the file denoted by this
+	 * abstract pathname. On some platforms it may be possible to start the
+	 * Java virtual machine with special privileges that allow it to execute
+	 * files that are not marked executable. Consequently this method may return
+	 * {@code true} even though the file does not have execute permissions.
+	 *
+	 * @return  <code>true</code> if and only if the abstract pathname exists
+	 *          <em>and</em> the application is allowed to execute the file
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkExec(java.lang.String)}</code>
+	 *          method denies execute access to the file
+	 *
+	 * @since 1.6
+	 */
+	boolean canExecute();
 
 	/* -- File operations -- */
 
@@ -606,6 +644,37 @@ public:
 	void listFiles(EArray<EFile*> *result, EFilenameFilter *filter = null);
 
 	/**
+	 * Returns an array of abstract pathnames denoting the files and
+	 * directories in the directory denoted by this abstract pathname that
+	 * satisfy the specified filter.  The behavior of this method is the same
+	 * as that of the {@link #listFiles()} method, except that the pathnames in
+	 * the returned array must satisfy the filter.  If the given {@code filter}
+	 * is {@code null} then all pathnames are accepted.  Otherwise, a pathname
+	 * satisfies the filter if and only if the value {@code true} results when
+	 * the {@link FileFilter#accept FileFilter.accept(File)} method of the
+	 * filter is invoked on the pathname.
+	 *
+	 * @param  filter
+	 *         A file filter
+	 *
+	 * @return  An array of abstract pathnames denoting the files and
+	 *          directories in the directory denoted by this abstract pathname.
+	 *          The array will be empty if the directory is empty.  Returns
+	 *          {@code null} if this abstract pathname does not denote a
+	 *          directory, or if an I/O error occurs.
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its {@link
+	 *          SecurityManager#checkRead(String)} method denies read access to
+	 *          the directory
+	 *
+	 * @since  1.2
+	 * @see java.nio.file.Files#newDirectoryStream(Path,java.nio.file.DirectoryStream.Filter)
+	 */
+	EArray<EFile*> listFiles(EFileFilter *filter);
+	void listFiles(EArray<EFile*> *result, EFileFilter *filter);
+
+	/**
 	 * Creates the directory named by this abstract pathname.
 	 *
 	 * @return  <code>true</code> if and only if the directory was
@@ -665,6 +734,163 @@ public:
 	 */
 	boolean renameTo(EFile *dest);
 	boolean renameTo(const char *newName);
+
+	/**
+	 * Sets the last-modified time of the file or directory named by this
+	 * abstract pathname.
+	 *
+	 * <p> All platforms support file-modification times to the nearest second,
+	 * but some provide more precision.  The argument will be truncated to fit
+	 * the supported precision.  If the operation succeeds and no intervening
+	 * operations on the file take place, then the next invocation of the
+	 * <code>{@link #lastModified}</code> method will return the (possibly
+	 * truncated) <code>time</code> argument that was passed to this method.
+	 *
+	 * @param  time  The new last-modified time, measured in milliseconds since
+	 *               the epoch (00:00:00 GMT, January 1, 1970)
+	 *
+	 * @return <code>true</code> if and only if the operation succeeded;
+	 *          <code>false</code> otherwise
+	 *
+	 * @throws  IllegalArgumentException  If the argument is negative
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the named file
+	 *
+	 * @since 1.2
+	 */
+	boolean setLastModified(llong time);
+
+	/**
+	 * Marks the file or directory named by this abstract pathname so that
+	 * only read operations are allowed. After invoking this method the file
+	 * or directory will not change until it is either deleted or marked
+	 * to allow write access. On some platforms it may be possible to start the
+	 * Java virtual machine with special privileges that allow it to modify
+	 * files that are marked read-only. Whether or not a read-only file or
+	 * directory may be deleted depends upon the underlying system.
+	 *
+	 * @return <code>true</code> if and only if the operation succeeded;
+	 *          <code>false</code> otherwise
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the named file
+	 *
+	 * @since 1.2
+	 */
+	boolean setReadOnly();
+
+	/**
+	 * Sets the owner's or everybody's write permission for this abstract
+	 * pathname. On some platforms it may be possible to start the Java virtual
+	 * machine with special privileges that allow it to modify files that
+	 * disallow write operations.
+	 *
+	 * <p> The {@link java.nio.file.Files} class defines methods that operate on
+	 * file attributes including file permissions. This may be used when finer
+	 * manipulation of file permissions is required.
+	 *
+	 * @param   writable
+	 *          If <code>true</code>, sets the access permission to allow write
+	 *          operations; if <code>false</code> to disallow write operations
+	 *
+	 * @param   ownerOnly
+	 *          If <code>true</code>, the write permission applies only to the
+	 *          owner's write permission; otherwise, it applies to everybody.  If
+	 *          the underlying file system can not distinguish the owner's write
+	 *          permission from that of others, then the permission will apply to
+	 *          everybody, regardless of this value.
+	 *
+	 * @return  <code>true</code> if and only if the operation succeeded. The
+	 *          operation will fail if the user does not have permission to change
+	 *          the access permissions of this abstract pathname.
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the named file
+	 *
+	 * @since 1.6
+	 */
+	boolean setWritable(boolean writable, boolean ownerOnly=true);
+
+	/**
+	 * Sets the owner's or everybody's read permission for this abstract
+	 * pathname. On some platforms it may be possible to start the Java virtual
+	 * machine with special privileges that allow it to read files that are
+	 * marked as unreadable.
+	 *
+	 * <p> The {@link java.nio.file.Files} class defines methods that operate on
+	 * file attributes including file permissions. This may be used when finer
+	 * manipulation of file permissions is required.
+	 *
+	 * @param   readable
+	 *          If <code>true</code>, sets the access permission to allow read
+	 *          operations; if <code>false</code> to disallow read operations
+	 *
+	 * @param   ownerOnly
+	 *          If <code>true</code>, the read permission applies only to the
+	 *          owner's read permission; otherwise, it applies to everybody.  If
+	 *          the underlying file system can not distinguish the owner's read
+	 *          permission from that of others, then the permission will apply to
+	 *          everybody, regardless of this value.
+	 *
+	 * @return  <code>true</code> if and only if the operation succeeded.  The
+	 *          operation will fail if the user does not have permission to
+	 *          change the access permissions of this abstract pathname.  If
+	 *          <code>readable</code> is <code>false</code> and the underlying
+	 *          file system does not implement a read permission, then the
+	 *          operation will fail.
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the file
+	 *
+	 * @since 1.6
+	 */
+	boolean setReadable(boolean readable, boolean ownerOnly=true);
+
+	/**
+	 * Sets the owner's or everybody's execute permission for this abstract
+	 * pathname. On some platforms it may be possible to start the Java virtual
+	 * machine with special privileges that allow it to execute files that are
+	 * not marked executable.
+	 *
+	 * <p> The {@link java.nio.file.Files} class defines methods that operate on
+	 * file attributes including file permissions. This may be used when finer
+	 * manipulation of file permissions is required.
+	 *
+	 * @param   executable
+	 *          If <code>true</code>, sets the access permission to allow execute
+	 *          operations; if <code>false</code> to disallow execute operations
+	 *
+	 * @param   ownerOnly
+	 *          If <code>true</code>, the execute permission applies only to the
+	 *          owner's execute permission; otherwise, it applies to everybody.
+	 *          If the underlying file system can not distinguish the owner's
+	 *          execute permission from that of others, then the permission will
+	 *          apply to everybody, regardless of this value.
+	 *
+	 * @return  <code>true</code> if and only if the operation succeeded.  The
+	 *          operation will fail if the user does not have permission to
+	 *          change the access permissions of this abstract pathname.  If
+	 *          <code>executable</code> is <code>false</code> and the underlying
+	 *          file system does not implement an execute permission, then the
+	 *          operation will fail.
+	 *
+	 * @throws  SecurityException
+	 *          If a security manager exists and its <code>{@link
+	 *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
+	 *          method denies write access to the file
+	 *
+	 * @since 1.6
+	 */
+	boolean setExecutable(boolean executable, boolean ownerOnly=true);
 
 
 	/* -- Temporary files -- */
@@ -800,7 +1026,7 @@ public:
 	 *
 	 * @return  The string form of this abstract pathname
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 private:
 	/**

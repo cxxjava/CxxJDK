@@ -9,7 +9,7 @@
 #define ESOCKETCHANNEL_HH_
 
 #include "../../inc/EA.hh"
-#include "../../inc/ESocket.hh"
+#include "../../inc/ESocketOptions.hh"
 #include "../../inc/EInetSocketAddress.hh"
 #include "../../inc/concurrent/EReentrantLock.hh"
 #include "../../inc/ESynchronizeable.hh"
@@ -28,6 +28,7 @@
 #include "./EAsynchronousCloseException.hh"
 
 namespace efc {
+class ESocket;
 namespace nio {
 
 /**
@@ -105,8 +106,6 @@ namespace nio {
  * or write operation while an invocation of one of these methods is in
  * progress will block until that invocation is complete.  </p>
  *
- * @author Mark Reinhold
- * @author JSR-51 Expert Group
  * @since 1.4
  */
 
@@ -395,7 +394,7 @@ public:
 
 	virtual int getFDVal();
 
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/*
 	 * {@inheritDoc}
@@ -452,9 +451,6 @@ private:
 
 	// State, increases monotonically
 	byte _state;	// = ST_UNINITIALIZED;
-
-	// Safe free when _socket != null;
-	boolean _freeing;// = false;
 
 	/**
 	 * Initializes a new instance of this class.

@@ -336,7 +336,7 @@ private:
 		return list;
 	}
 
-	class KeySet : virtual public EConcurrentSet<K>, virtual public EConcurrentNavigableSet<K> {
+	class KeySet : virtual public EAbstractSet<sp<K> >, virtual public ENavigableSet<sp<K> > {
 	private:
 		EConcurrentNavigableMap<K,V>* m;
 	public:
@@ -361,7 +361,7 @@ private:
 			sp<EConcurrentMapEntry<K,V> > e = m->pollLastEntry();
 			return (e == null) ? null : e->getKey();
 		}
-		sp<EConcurrentIterator<K> > iterator() {
+		sp<EIterator<sp<K> > > iterator(int index=0) {
 			/*
 			if (m instanceof ConcurrentSkipListMap)
 				return ((ConcurrentSkipListMap<E,Object>)m)->keyIterator();
@@ -391,54 +391,48 @@ private:
 			*/
 			throw EToDoException(__FILE__, __LINE__);
 		}
-		sp<EConcurrentIterator<K> > descendingIterator() {
+		sp<EIterator<sp<K> > > descendingIterator() {
 			//@see: return descendingSet().iterator();
-			EConcurrentNavigableSet<K>* ns = descendingSet();
-			sp<EConcurrentIterator<K> > iter = ns->iterator();
+			ENavigableSet<sp<K> >* ns = descendingSet();
+			sp<EIterator<sp<K> > > iter = ns->iterator();
 			delete ns;
 			return iter;
 		}
-		EConcurrentNavigableSet<K>* subSet(K* fromElement,
+		ENavigableSet<sp<K> >* subSet(K* fromElement,
 									  boolean fromInclusive,
 									  K* toElement,
 									  boolean toInclusive) {
 			return new KeySet(m->subMap(fromElement, fromInclusive,
 										  toElement,   toInclusive));
 		}
-		EConcurrentNavigableSet<K>* headSet(K* toElement, boolean inclusive) {
+		ENavigableSet<sp<K> >* headSet(K* toElement, boolean inclusive) {
 			return new KeySet(m->headMap(toElement, inclusive));
 		}
-		EConcurrentNavigableSet<K>* tailSet(K* fromElement, boolean inclusive) {
+		ENavigableSet<sp<K> >* tailSet(K* fromElement, boolean inclusive) {
 			return new KeySet(m->tailMap(fromElement, inclusive));
 		}
-		EConcurrentNavigableSet<K>* subSet(K* fromElement, K* toElement) {
+		ENavigableSet<sp<K> >* subSet(K* fromElement, K* toElement) {
 			return subSet(fromElement, true, toElement, false);
 		}
-		EConcurrentNavigableSet<K>* headSet(K* toElement) {
+		ENavigableSet<sp<K> >* headSet(K* toElement) {
 			return headSet(toElement, false);
 		}
-		EConcurrentNavigableSet<K>* tailSet(K* fromElement) {
+		ENavigableSet<sp<K> >* tailSet(K* fromElement) {
 			return tailSet(fromElement, true);
 		}
-		EConcurrentNavigableSet<K>* descendingSet() {
+		ENavigableSet<sp<K> >* descendingSet() {
 			return new KeySet(m->descendingMap().get());
-		}
-		boolean add(K* e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
-		boolean add(sp<K> e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
 		}
 	};
 
-	class Values : public EAbstractConcurrentCollection<V> {
+	class Values : public EAbstractCollection<sp<V> > {
 	private:
 		EConcurrentNavigableMap<K, V>* m;
 	public:
 		Values(EConcurrentNavigableMap<K, V>* map) {
 			m = map;
 		}
-		sp<EConcurrentIterator<V> > iterator() {
+		sp<EIterator<sp<V> > > iterator(int index=0) {
 			/*
 			if (m instanceof ConcurrentSkipListMap)
 				return ((ConcurrentSkipListMap<Object,E>)m).valueIterator();
@@ -465,7 +459,7 @@ private:
 		}
 	};
 
-	class EntrySet : public EConcurrentSet<EConcurrentMapEntry<K,V> > {
+	class EntrySet : public EAbstractSet<sp<EConcurrentMapEntry<K,V> > > {
 	private:
 		EConcurrentNavigableMap<K, V>* m;
 	public:
@@ -473,7 +467,7 @@ private:
 			m = map;
 		}
 
-		sp<EConcurrentIterator<EConcurrentMapEntry<K,V> > > iterator() {
+		sp<EIterator<sp<EConcurrentMapEntry<K,V> > > > iterator(int index=0) {
 			/*
 			if (m instanceof ConcurrentSkipListMap)
 				return ((ConcurrentSkipListMap<K1,V1>)m).entryIterator();
@@ -521,18 +515,16 @@ private:
 			*/
 			throw EToDoException(__FILE__, __LINE__);
 		}
-		boolean add(EConcurrentMapEntry<K,V>* e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
-		boolean add(sp<EConcurrentMapEntry<K,V> > e) {
-			throw EUnsupportedOperationException(__FILE__, __LINE__);
-		}
 	};
 
 public:
 	virtual ~EConcurrentSkipListMap() {
 		delete head_->node;
 		delete head_;
+
+		delete entrySet_;
+		delete keySet_;
+		delete values_;
 	}
 
 	/* ---------------- Constructors -------------- */
@@ -650,11 +642,6 @@ public:
 	 *         with the keys currently in the map
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> put(K* key, V* value) {
-		sp<K> k(key);
-		sp<V> v(value);
-		return put(k, v);
-	}
 	sp<V> put(sp<K> key, sp<V> value) {
 		if (value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -772,18 +759,18 @@ public:
 	 *
 	 * @return a navigable set view of the keys in this map
 	 */
-	sp<EConcurrentSet<K> > keySet() {
+	ESet<sp<K> >* keySet() {
 		if (!keySet_) {
 			keySet_ = new KeySet(this);
 		}
-		return dynamic_pointer_cast<EConcurrentSet<K> >(keySet_);
+		return keySet_;
 	}
 
-	sp<EConcurrentNavigableSet<K> > navigableKeySet() {
+	ENavigableSet<sp<K> >* navigableKeySet() {
 		if (!keySet_) {
 			keySet_ = new KeySet(this);
 		}
-		return dynamic_pointer_cast<EConcurrentNavigableSet<K> >(keySet_);
+		return keySet_;
 	}
 
 	/**
@@ -804,11 +791,11 @@ public:
 	 * construction of the iterator, and may (but is not guaranteed to)
 	 * reflect any modifications subsequent to construction.
 	 */
-	sp<EConcurrentCollection<V> > values() {
+	ECollection<sp<V> >* values() {
 		if (!values_) {
 			values_ = new Values(this);
 		}
-		return dynamic_pointer_cast<EConcurrentCollection<V> >(values_);
+		return values_;
 	}
 
 	/**
@@ -835,11 +822,11 @@ public:
 	 * @return a set view of the mappings contained in this map,
 	 *         sorted in ascending key order
 	 */
-	sp<EConcurrentSet<EConcurrentMapEntry<K,V> > > entrySet() {
+	ESet<sp<EConcurrentMapEntry<K,V> > >* entrySet() {
 		if (!entrySet_) {
 			entrySet_ = new EntrySet(this);
 		}
-		return dynamic_pointer_cast<EConcurrentSet<EConcurrentMapEntry<K,V> > >(entrySet_);
+		return entrySet_;
 	}
 
 	sp<EConcurrentNavigableMap<K,V> > descendingMap() {
@@ -852,9 +839,9 @@ public:
 		throw EToDoException(__FILE__, __LINE__);
 	}
 
-	sp<EConcurrentNavigableSet<K> > descendingKeySet() {
-		sp<EConcurrentNavigableMap<K,V> > dm = descendingMap();
-		return dm->navigableKeySet();
+	ENavigableSet<sp<K> >* descendingKeySet() {
+		//@see: return descendingMap().navigableKeySet();
+		throw EToDoException(__FILE__, __LINE__);
 	}
 
 	/* ---------------- AbstractMap Overrides -------------- */
@@ -909,11 +896,6 @@ public:
 	 *         with the keys currently in the map
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> putIfAbsent(K* key, V* value) {
-		sp<K> k(key);
-		sp<V> v(value);
-		return putIfAbsent(k, v);
-	}
 	sp<V> putIfAbsent(sp<K> key, sp<V> value) {
 		if (value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -942,10 +924,6 @@ public:
 	 *         with the keys currently in the map
 	 * @throws NullPointerException if any of the arguments are null
 	 */
-	boolean replace(K* key, V* oldValue, V* newValue) {
-		sp<V> nv(newValue);
-		return replace(key, oldValue, nv);
-	}
 	boolean replace(K* key, V* oldValue, sp<V> newValue) {
 		if (key == null || oldValue == null || newValue == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -973,10 +951,6 @@ public:
 	 *         with the keys currently in the map
 	 * @throws NullPointerException if the specified key or value is null
 	 */
-	sp<V> replace(K* key, V* value) {
-		sp<V> v(value);
-		return replace(key, v);
-	}
 	sp<V> replace(K* key, sp<V> value) {
 		if (key == null || value == null)
 			throw ENullPointerException(__FILE__, __LINE__);
@@ -1257,6 +1231,9 @@ protected:
 	 */
 	void initialize() {
 		head_ = new HeadIndex(new Node(), null, null, 1);
+		entrySet_ = null;
+		keySet_ = null;
+		values_ = null;
 	}
 
 private:
@@ -2317,7 +2294,7 @@ protected:
 	 * Base of iterator classes:
 	 */
 	template<typename T>
-	abstract class Iter : public EConcurrentIterator<T> {
+	abstract class Iter : public EIterator<sp<T> > {
 	private:
 		EConcurrentSkipListMap<K,V>* m;
 	protected:
@@ -2368,6 +2345,9 @@ protected:
 			lastReturned = null;
 		}
 
+		sp<T> moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
 	};
 
 	class KeyIterator : public Iter<K> {
@@ -2406,15 +2386,15 @@ protected:
 
 	// Factory methods for iterators needed by ConcurrentSkipListSet etc
 
-	sp<EConcurrentIterator<K> > keyIterator() {
+	sp<EIterator<sp<K> > > keyIterator() {
 		return new KeyIterator(this);
 	}
 
-	sp<EConcurrentIterator<V> > valueIterator() {
+	sp<EIterator<sp<V> > > valueIterator() {
 		return new ValueIterator(this);
 	}
 
-	sp<EConcurrentIterator<EConcurrentMapEntry<K,V> > > entryIterator() {
+	sp<EIterator<sp<EConcurrentMapEntry<K,V> > > > entryIterator() {
 		return new EntryIterator(this);
 	}
 
@@ -2443,11 +2423,11 @@ private:
 	static const int DELETE_NODE = 3;
 
 	/** Lazily initialized entry set */
-	sp<EntrySet> entrySet_;
+	EntrySet* entrySet_;
 	/** Lazily initialized key set */
-	sp<KeySet> keySet_;
+	KeySet* keySet_;
 	/** Lazily initialized values collection */
-	sp<Values> values_;
+	Values* values_;
 	/** Lazily initialized descending key set */
 	sp<EConcurrentNavigableMap<K,V> > descendingMap_;
 

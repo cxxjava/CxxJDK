@@ -549,7 +549,7 @@ public:
 	 *
 	 * @return  a string representation of this calendar.
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/**
 	 * Return a string representation of this calendar.

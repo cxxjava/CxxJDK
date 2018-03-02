@@ -10,7 +10,7 @@
 
 #include "../ESpinLock.hh"
 #include "./EAtomicCounter.hh"
-#include "./EConcurrentQueue.hh"
+#include "../EQueue.hh"
 #include "../ENoSuchElementException.hh"
 #include "../ENullPointerException.hh"
 #include "../EIllegalStateException.hh"
@@ -36,18 +36,20 @@ namespace efc {
  *
  */
 
-template<typename E, typename LOCK=ESpinLock>
-class EConcurrentLiteQueue: public EConcurrentQueue<E> {
+template<typename E_, typename LOCK=ESpinLock>
+class EConcurrentLiteQueue: public EQueue<sp<E_> > {
 private:
+	typedef sp<E_> E;
+
 	typedef struct node_t {
-		sp<E> value;
+		E value;
 		node_t* volatile next;
 
 		node_t(): next(null) {}
 	} Node;
 
 public:
-    ~EConcurrentLiteQueue() {
+    virtual ~EConcurrentLiteQueue() {
     	// node unlink for recursion
     	Node* node = head;
 		while (node != null) {
@@ -73,10 +75,7 @@ public:
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      * @throws NullPointerException if the specified element is null
      */
-    boolean add(E* e) {
-        return offer(e);
-    }
-    boolean add(sp<E> e) {
+    boolean add(E e) {
 		return offer(e);
 	}
 
@@ -86,15 +85,7 @@ public:
      * @return <tt>true</tt> (as specified by {@link Queue#offer})
      * @throws NullPointerException if the specified element is null
      */
-    boolean offer(E* e) {
-        sp<E> x(e);
-        boolean r = offer(x);
-		if (!r) {
-			x.dismiss();
-		}
-		return r;
-    }
-    boolean offer(sp<E> e) {
+    boolean offer(E e) {
     	if (e == null) throw ENullPointerException(__FILE__, __LINE__);
     	Node* node = new Node();
 		node->value = e;
@@ -107,8 +98,8 @@ public:
 		return true;
     }
 
-    sp<E> poll() {
-    	sp<E> v;
+    E poll() {
+    	E v;
     	Node* node = null;
 		hl.lock();
 			node = head;
@@ -126,16 +117,16 @@ public:
 		return v;
     }
 
-    sp<E> element() {
-    	sp<E> x = peek();
+    E element() {
+    	E x = peek();
 		if (x != null)
 			return x;
 		else
 			throw ENoSuchElementException(__FILE__, __LINE__);
     }
 
-    sp<E> peek() { // same as poll except don't remove item
-    	sp<E> v;
+    E peek() { // same as poll except don't remove item
+    	E v;
 		hl.lock();
 			Node* node = head->next;
 			if (node == null) {
@@ -180,7 +171,7 @@ public:
 	 * @param o object to be checked for containment in this queue
 	 * @return <tt>true</tt> if this queue contains the specified element
 	 */
-	boolean contains(E* o) {
+	boolean contains(E_* o) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -195,7 +186,7 @@ public:
 	 * @param o element to be removed from this queue, if present
 	 * @return <tt>true</tt> if this queue changed as a result of the call
 	 */
-	boolean remove(E* o) {
+	boolean remove(E_* o) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -210,8 +201,8 @@ public:
 	 * @return the head of this queue
 	 * @throws NoSuchElementException if this queue is empty
 	 */
-	sp <E> remove() {
-		sp<E> x = poll();
+	E remove() {
+		E x = poll();
 		if (x != null)
 			return x;
 		else
@@ -240,7 +231,7 @@ public:
 	 *
 	 * @return an iterator over the elements in this queue in proper sequence
 	 */
-	sp<EConcurrentIterator<E> > iterator() {
+	sp<EIterator<E> > iterator(int index=0) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 
@@ -257,7 +248,28 @@ public:
 	 *
 	 * @return an array containing all of the elements in this queue
 	 */
-	EA<sp<E> > toArray() {
+	EA<E> toArray() {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean containsAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean removeAll(ECollection<E> *c) {
+		throw EUnsupportedOperationException(__FILE__, __LINE__);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	virtual boolean retainAll(ECollection<E> *c) {
 		throw EUnsupportedOperationException(__FILE__, __LINE__);
 	}
 

@@ -499,7 +499,7 @@ public:
 	 * @return  a <code>String</code> representation of this object.
 	 * @see java.lang.Float#toString(float)
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	virtual byte byteValue();
 	virtual short shortValue();

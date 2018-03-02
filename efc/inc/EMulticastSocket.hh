@@ -62,7 +62,6 @@ namespace efc {
  * <P>
  * Currently applets are not allowed to use multicast sockets.
  *
- * @author Pavani Diwanji
  * @since  JDK1.1
  */
 

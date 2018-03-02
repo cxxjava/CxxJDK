@@ -10,7 +10,7 @@
 
 #include "../../inc/EA.hh"
 #include "../../inc/EThread.hh"
-#include "../../inc/EServerSocket.hh"
+#include "../../inc/ESocketOptions.hh"
 #include "../../inc/EInetSocketAddress.hh"
 #include "../../inc/concurrent/EReentrantLock.hh"
 #include "../../inc/ESynchronizeable.hh"
@@ -24,6 +24,7 @@
 #include "./EClosedChannelException.hh"
 
 namespace efc {
+class EServerSocket;
 namespace nio {
 
 /**
@@ -60,8 +61,6 @@ namespace nio {
  * <p> Server-socket channels are safe for use by multiple concurrent threads.
  * </p>
  *
- * @author Mark Reinhold
- * @author JSR-51 Expert Group
  * @since 1.4
  */
 
@@ -187,7 +186,7 @@ public:
 	/**
 	 *
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	/*
 	 * {@inheritDoc}
@@ -239,9 +238,6 @@ private:
 	static const int ST_INUSE = 0;
 	static const int ST_KILLED = 1;
 	byte _state;	// = ST_UNINITIALIZED;
-
-	// Safe free when _socket != null;
-	boolean _freeing;// = false;
 
 	/**
 	 * Initializes a new instance of this class.

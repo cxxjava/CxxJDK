@@ -335,7 +335,7 @@ public:
      *
      * @return  a string representation of this IP address.
      */
-    virtual EStringBase toString();
+    virtual EString toString();
     
 	/*
      * Returns the InetAddress representing anyLocalAddress

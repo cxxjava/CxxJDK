@@ -1459,7 +1459,7 @@ template<class T> inline bool atomic_compare_exchange_explicit( sp<T> * p, sp<T>
 // wp
 
 template<class T>
-class wp
+class wp : public EObject
 {
 private:
 

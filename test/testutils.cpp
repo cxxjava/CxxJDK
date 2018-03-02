@@ -8,7 +8,7 @@
 #include "Efc.hh"
 #include "EUtils.hh"
 
-#define LOG(fmt,...) ESystem::out->println(fmt, ##__VA_ARGS__)
+#define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
 static void test_boundinputstream()
 {

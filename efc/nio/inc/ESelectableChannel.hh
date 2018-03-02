@@ -84,7 +84,9 @@ class ESelectionKey;
  * @see Selector
  */
 
-abstract class ESelectableChannel : public EInterruptibleChannel {
+abstract class ESelectableChannel :
+	public EInterruptibleChannel,
+	public enable_shared_from_this<ESelectableChannel> {
 public:
 	virtual ~ESelectableChannel();
 
@@ -111,7 +113,7 @@ public:
 	 *          given selector, or <tt>null</tt> if this channel is not
 	 *          currently registered with that selector
 	 */
-	ESelectionKey* keyFor(ESelector* sel);
+	sp<ESelectionKey> keyFor(ESelector* sel);
 	//
 	// sync(keySet) { return findKey(sel); }
 
@@ -175,8 +177,8 @@ public:
 	 * @return  A key representing the registration of this channel with
 	 *          the given selector
 	 */
-	ESelectionKey* register_(ESelector* sel, int ops,
-			void* att = null)
+	sp<ESelectionKey> register_(ESelector* sel, int ops,
+			EObject* att = null)
 					THROWS3(EClosedChannelException, EIllegalArgumentException, EIllegalBlockingModeException);
 	//
 	// sync(regLock) {
@@ -252,7 +254,7 @@ public:
 
 	//@see AbstractSelectableChannel.java
 
-	void removeKey(ESelectionKey* k);
+	void removeKey(sp<ESelectionKey> k);
 
 
 	//@see SelChImpl.java
@@ -358,7 +360,7 @@ private:
 	// They are saved because if this channel is closed the keys must be
 	// deregistered.  Protected by keyLock.
 	//
-	EArray<ESelectionKey*> *keys_;// = null;
+	EArray<sp<ESelectionKey> > *keys_;// = null;
 	int keyCount_;// = 0;
 
 	// Lock for key set and count
@@ -370,8 +372,8 @@ private:
 	// Blocking mode, protected by regLock
 	boolean blocking_;// = true;
 
-	ESelectionKey* findKey(ESelector* sel);
-	void addKey(ESelectionKey* k);
+	sp<ESelectionKey> findKey(ESelector* sel);
+	void addKey(sp<ESelectionKey> k);
 	boolean haveValidKeys();
 };
 

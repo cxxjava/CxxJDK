@@ -8,6 +8,7 @@
 #ifndef EDATAGRAMSOCKET_HH_
 #define EDATAGRAMSOCKET_HH_
 
+#include "ECloseable.hh"
 #include "ESocketOptions.hh"
 #include "ESynchronizeable.hh"
 #include "EDatagramPacket.hh"
@@ -16,6 +17,7 @@
 #include "EIOException.hh"
 #include "ESocketException.hh"
 #include "./concurrent/EReentrantLock.hh"
+#include "../nio/inc/EDatagramChannel.hh"
 
 namespace efc {
 
@@ -47,13 +49,12 @@ namespace efc {
  * Both cases will create a DatagramSocket able to receive broadcasts on
  * UDP port 8888.
  *
- * @author  Pavani Diwanji
  * @see     java.net.DatagramPacket
  * @see     java.nio.channels.DatagramChannel
  * @since JDK1.0
  */
 
-class EDatagramSocket: public ESynchronizeable, virtual public ESocketOptions {
+class EDatagramSocket: public ESynchronizeable, virtual public ESocketOptions, virtual public ECloseable {
 public:
 	virtual ~EDatagramSocket();
 
@@ -713,7 +714,7 @@ public:
 	 * @since 1.4
 	 * @spec JSR-51
 	 */
-	virtual void* getChannel() {return null;}
+	virtual sp<nio::EDatagramChannel> getChannel() {return null;}
 
 	/**
 	 * Returns the native OS socket handle.

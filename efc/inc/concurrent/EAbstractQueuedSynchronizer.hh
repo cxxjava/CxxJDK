@@ -957,7 +957,7 @@ public:
 	 *
 	 * @return a string identifying this synchronizer, as well as its state
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 	// Instrumentation methods for conditions
 

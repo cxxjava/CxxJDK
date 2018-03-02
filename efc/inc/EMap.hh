@@ -200,6 +200,73 @@ interface EMapEntry : virtual public EObject {
 };
 
 template<typename K, typename V>
+class EImmutableEntry: public EMapEntry<K, V> {
+private:
+	K key;
+	V value;
+
+	static boolean eq(EObject* o1, EObject* o2) {
+		return o1 == null ? o2 == null : o1->equals(o2);
+	}
+public:
+	virtual ~EImmutableEntry(){}
+
+	/**
+	 * Creates an entry representing a mapping from the specified
+	 * key to the specified value.
+	 *
+	 * @param key the key represented by this entry
+	 * @param value the value represented by this entry
+	 */
+	EImmutableEntry(K key, V value) {
+		this->key = key;
+		this->value = value;
+	}
+
+	/**
+	 * Returns the key corresponding to this entry.
+	 *
+	 * @return the key corresponding to this entry
+	 */
+	K getKey() {
+		return key;
+	}
+
+	/**
+	 * Returns the value corresponding to this entry.
+	 *
+	 * @return the value corresponding to this entry
+	 */
+	V getValue() {
+		return value;
+	}
+
+	/**
+	 * Set our entry's value and write through to the map. The
+	 * value to return is somewhat arbitrary here. Since a
+	 * WriteThroughEntry does not necessarily track asynchronous
+	 * changes, the most recent "previous" value could be
+	 * different from what we return (or could even have been
+	 * removed in which case the put will re-establish). We do not
+	 * and cannot guarantee more.
+	 */
+	V setValue(V value) {
+		throw EUNSUPPORTEDOPERATIONEXCEPTION;
+	}
+
+	boolean equals(EMapEntry<K, V>* o) {
+		return eq(key.get(), o->getKey().get()) && eq(value.get(), o->getValue().get());
+	}
+
+	virtual int hashCode() {
+		return (key   == null ? 0 : key->hashCode()) ^
+				(value == null ? 0 : value->hashCode());
+	}
+};
+
+//=============================================================================
+
+template<typename K, typename V>
 interface EMap : virtual public EObject {
 	typedef typename ETraits<K>::indexType idxK;
 	typedef typename ETraits<V>::indexType idxV;
@@ -369,7 +436,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a set view of the keys contained in this map
 	 */
-	virtual sp<ESet<K> > keySet() = 0;
+	virtual ESet<K>* keySet() = 0;
 
 	/**
 	 * Returns a {@link Collection} view of the values contained in this map.
@@ -386,7 +453,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a collection view of the values contained in this map
 	 */
-	virtual sp<ECollection<V> > values() = 0;
+	virtual ECollection<V>* values() = 0;
 
 	/**
 	 * Returns a {@link Set} view of the mappings contained in this map.
@@ -404,7 +471,7 @@ interface EMap : virtual public EObject {
 	 *
 	 * @return a set view of the mappings contained in this map
 	 */
-	virtual sp<ESet<EMapEntry<K, V>*> > entrySet() = 0;
+	virtual ESet<EMapEntry<K, V>*>* entrySet() = 0;
 };
 
 } /* namespace efc */

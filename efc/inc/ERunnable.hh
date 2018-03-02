@@ -66,7 +66,7 @@ class ERunnableTarget: virtual public ERunnable {
 public:
 	virtual ~ERunnableTarget(){}
 
-	ERunnableTarget(std::function<void()>& f) {
+	ERunnableTarget(std::function<void()> f) {
 		this->f = f;
 	}
 	virtual void run() {

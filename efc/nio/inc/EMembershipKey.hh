@@ -8,8 +8,9 @@
 #ifndef EMEMBERSHIPKEY_HH_
 #define EMEMBERSHIPKEY_HH_
 
+#include "./EMulticastChannel.hh"
 #include "../../inc/EHashSet.hh"
-#include "../../inc/EStringBase.hh"
+#include "../../inc/EString.hh"
 #include "../../inc/EInetAddress.hh"
 #include "../../inc/concurrent/EReentrantLock.hh"
 #include "../../inc/ENetworkInterface.hh"
@@ -42,8 +43,6 @@ namespace nio {
  *
  * @since 1.7
  */
-
-class EMulticastChannel;
 
 class EMembershipKey: public EObject {
 public:
@@ -134,7 +133,7 @@ public:
 	 *
 	 * @return  the channel
 	 */
-	virtual EMulticastChannel* channel();
+	virtual sp<EMulticastChannel> channel();
 
 	/**
 	 * Returns the multicast group for which this membership key was created.
@@ -163,7 +162,7 @@ public:
 	 */
 	virtual EInetAddress* sourceAddress();
 
-	virtual EStringBase toString();
+	virtual EString toString();
 
 protected:
 	friend class EDatagramChannel;
@@ -171,7 +170,7 @@ protected:
 	/**
 	 * Initializes a new instance of this class.
 	 */
-	EMembershipKey(EMulticastChannel* ch,
+	EMembershipKey(sp<EMulticastChannel> ch,
 				  EInetAddress* group,
 				  ENetworkInterface* interf,
 				  EInetAddress* source,
@@ -184,7 +183,7 @@ protected:
 	virtual int source();
 
 private:
-	EMulticastChannel* ch;
+	sp<EMulticastChannel> ch;
     EInetAddress* group_;
     ENetworkInterface* interf;
     EInetAddress* source_;

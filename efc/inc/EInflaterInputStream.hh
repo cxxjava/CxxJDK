@@ -32,7 +32,7 @@ public:
 	 * @param size the input buffer size
 	 * @param useDefault if false then need to call .setInflater(inf)
 	 */
-	EInflaterInputStream(EInputStream* in, int size=512, boolean useDefault=true);
+	EInflaterInputStream(EInputStream* in, int size=512, boolean useDefault=true, boolean owned=false);
 
 	//TODO:
 	EInflaterInputStream(const EInflaterInputStream& that);

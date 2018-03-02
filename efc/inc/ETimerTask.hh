@@ -145,5 +145,21 @@ protected:
 	ETimerTask();
 };
 
+#ifdef CPP11_SUPPORT
+class ETimerTaskTarget: public ETimerTask {
+public:
+	virtual ~ETimerTaskTarget(){}
+
+	ETimerTaskTarget(std::function<void()>& f) {
+		this->f = f;
+	}
+	virtual void run() {
+		f();
+	}
+private:
+	std::function<void()> f;
+};
+#endif
+
 } /* namespace efc */
 #endif /* ETIMERTASK_HH_ */

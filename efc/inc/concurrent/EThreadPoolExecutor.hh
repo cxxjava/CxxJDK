@@ -850,7 +850,7 @@ public:
 	 *
 	 * @return a string identifying this pool, as well as its state
 	 */
-	virtual EStringBase toString();
+	virtual EString toString();
 
 protected:
 	/**
