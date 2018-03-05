@@ -8,7 +8,7 @@ chinese version: [简体中文](README.zh_cn.md)
 
 
 ### Table of Contents
-- [Characteristics](characteristics)
+- [Characteristics](#characteristics)
 - [Example](#example)
 - [Performance](#performance)
 - [Features](#features)
