@@ -9,12 +9,12 @@ chinese version: [简体中文](README.zh_cn.md)
 
 ### Table of Contents
 - [Characteristics](characteristics)
-  - [Example](#example)
-  - [Performance](#performance)
-  - [Features](#features)
-  - [Manual](#manual)
-  - [TODO](#todo)
-  - [Support](#support)
+- [Example](#example)
+- [Performance](#performance)
+- [Features](#features)
+- [Manual](#manual)
+- [TODO](#todo)
+- [Support](#support)
 
 #### Characteristics
 * Cross platform: support Linux32/64, OSX64, Win64 platforms;
