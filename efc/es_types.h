@@ -12,7 +12,7 @@ extern "C" {
 
 //==============================================================================
 
-#if defined(WIN32) || defined(__arm)
+#if defined(WIN32) || defined(__MTK__)
 
 #ifndef __WORDSIZE
 #define __WORDSIZE 32
@@ -301,7 +301,7 @@ extern es_bool_t ES_BIG_ENDIAN;  /*seted at eso_initialize(), default is FALSE.*
 #elif defined(__GNUC__)
 #define ES_ALIGN       __attribute__((aligned(SIZEOF_VOID_P)));
 #define ES_ALIGNN(n)   __attribute__((aligned(n)))
-#elif defined(__arm)
+#elif defined(__MTK__)
 #define ES_ALIGN       __align(SIZEOF_VOID_P)
 #define ES_ALIGNN(n)   __align(n)
 #endif

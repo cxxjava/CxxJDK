@@ -12,6 +12,7 @@
 #include "EDataOutput.hh"
 #include "EDataInput.hh"
 #include "EFile.hh"
+#include "ESynchronizeable.hh"
 #include "EFileNotFoundException.hh"
 #include "EIOException.hh"
 #include "EIllegalArgumentException.hh"
@@ -45,7 +46,14 @@ namespace efc {
  * @since   JDK1.0
  */
 
-class ERandomAccessFile : public EDataOutput, public EDataInput, virtual public ECloseable {
+namespace nio {
+class EFileChannel;
+}
+
+class ERandomAccessFile: public EDataOutput,
+		public EDataInput,
+		public ESynchronizeable,
+		virtual public ECloseable {
 public:
 	virtual ~ERandomAccessFile();
 	
@@ -654,11 +662,40 @@ public:
      */
     void writeBytes(const char* s) THROWS(EIOException);
 
+    /**
+	 * Returns the unique {@link java.nio.channels.FileChannel FileChannel}
+	 * object associated with this file.
+	 *
+	 * <p> The {@link java.nio.channels.FileChannel#position()
+	 * position} of the returned channel will always be equal to
+	 * this object's file-pointer offset as returned by the {@link
+	 * #getFilePointer getFilePointer} method.  Changing this object's
+	 * file-pointer offset, whether explicitly or by reading or writing bytes,
+	 * will change the position of the channel, and vice versa.  Changing the
+	 * file's length via this object will change the length seen via the file
+	 * channel, and vice versa.
+	 *
+	 * @return  the file channel associated with this file
+	 *
+	 * @since 1.4
+	 * @spec JSR-51
+	 */
+    nio::EFileChannel* getChannel();
+
 private:
     es_os_file_t mFD;
     es_file_t *mFile;
     boolean mSync;
     
+    boolean rw;
+    EReentrantLock closeLock;
+	volatile boolean closed;// = false;
+
+    /**
+	 * The associated channel, initialized lazily.
+	 */
+	nio::EFileChannel* channel;
+
     void open0(const char *name, const char *mode) THROWS(EFileNotFoundException);
 
     void fsync0() THROWS(EIOException);

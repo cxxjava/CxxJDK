@@ -10,7 +10,7 @@
 
 #include "EA.hh"
 #include "EThread.hh"
-#include "ESynchronizeable.hh"
+#include "ESimpleLock.hh"
 
 namespace efc {
 
@@ -38,8 +38,7 @@ namespace efc {
  * while we work on the children.
  */
 
-class EThreadGroup: public EThread::UncaughtExceptionHandler,
-		public ESynchronizeable {
+class EThreadGroup: public EThread::UncaughtExceptionHandler {
 public:
 	virtual ~EThreadGroup();
 
@@ -473,6 +472,9 @@ private:
 
 private:
 	EThreadGroup();
+
+	ESimpleLock lock;
+	ECondition* cond; // = lock.newCondition();
 };
 
 } /* namespace efc */

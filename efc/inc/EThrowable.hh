@@ -338,9 +338,13 @@ public:
      *
      * The format of the backtrace information depends on the implementation.
      */
-
     virtual void printStackTrace();
     
+    /**
+     * Set stack trace flag to true or flase, if true then can get stack trace.
+     */
+    static void setStackTrace(boolean on);
+
 protected:
 	/**
 	 * It is set by system calls and some library functions in the event of
@@ -418,6 +422,8 @@ private:
 private:
 
 	SpinLock spin;
+
+	static volatile boolean stackTraceFlag;
 
 	EThrowable& operator=(const EThrowable& estr); //not support.
 

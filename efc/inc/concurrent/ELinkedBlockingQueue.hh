@@ -410,7 +410,7 @@ public:
 		fullyLock();
 		try {
 			for (sp<Node> p, h = head; (p = h->next) != null; h = p) {
-				h->next = null; //!! h->next = h;
+				h->next = xxxx; //!! h->next = h;
 				p->item = null;
 			}
 			head = last;
@@ -446,6 +446,8 @@ public:
 			throw ENullPointerException(__FILE__, __LINE__);
 		if (c == dynamic_cast<ECollection<sp<E> >*>(this))
 			throw EIllegalArgumentException(__FILE__, __LINE__);
+		if (maxElements <= 0)
+			return 0;
 		boolean signalNotFull_ = false;
 		takeLock.lock(); //lock!
 		int n = ES_MIN(maxElements, count.get());
@@ -457,7 +459,7 @@ public:
 				sp<Node> p = h->next;
 				c->add(p->item);
 				p->item = null;
-				h->next = null; //!! h->next = h;
+				h->next = xxxx; //!! h->next = h;
 				h = p;
 				++i;
 			}
@@ -670,6 +672,8 @@ private:
 	 */
 	sp<Node> last;
 
+	sp<Node> xxxx;
+
 	/** Lock held by take, poll, etc */
 	EReentrantLock takeLock;
 
@@ -689,6 +693,8 @@ private:
 
 		notEmpty = takeLock.newCondition();
 		notFull = putLock.newCondition();
+
+		xxxx = new Node(null);
 	}
 
 	/**
@@ -731,7 +737,7 @@ private:
         // assert head.item == null;
     	sp<Node> h = head;
         sp<Node> first = h->next;
-        h->next = null; //!! h->next = h; // help GC
+        h->next = xxxx; //!! h->next = h; // help GC
         head = first;
         sp<E> x = first->item;
         first->item = null;
@@ -778,7 +784,7 @@ private:
 		sp<Node> nextNode(sp<Node> p) {
 			for (;;) {
 				sp<Node> s = p->next;
-				if (s == null && p != self->last) //!! if (s == p)
+				if (s == self->xxxx) //!! if (s == p)
 					return self->head->next;
 				if (s == null || s->item != null)
 					return s;

@@ -384,82 +384,6 @@ static void test_secureRandom() {
 	LOG("d=%lf", d);
 }
 
-#define LOCKED_WORK_THREADS 10
-#define MAX_LOCKED_COUNTE 10000000
-static long locked_counter = 0L;
-static EReentrantLock locked_counter_lock;
-#if defined(__linux__)
-static pthread_mutex_t locked_counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-static void test_lock_benchmark() {
-	class Thread: public EThread {
-	public:
-		virtual void run() {
-			while (true) {
-				//1. use ELockPool
-				//mac: 10 thread run 10000000 times, cost 1494 ms
-				//linux: 10 thread run 10000000 times, cost 1737 ms
-				//linux2: 10 thread run 10000000 times, cost 3554 ms/1 thread run 10000000 times, cost 160 ms/2 thread run 10000000 times, cost 2582 ms
-				if (0) {
-					SCOPED_SLOCK5(&locked_counter) {
-						locked_counter++;
-						if (locked_counter > MAX_LOCKED_COUNTE) {
-							break;
-						}
-					}}
-				}
-
-				//2. use EReentrantLock
-				//mac: 10 thread run 10000000 times, cost 3276 ms
-				//linux: 10 thread run 10000000 times, cost 1512 ms
-				//linux2: 10 thread run 10000000 times, cost 1588 ms/1 thread run 10000000 times, cost 595 ms/2 thread run 10000000 times, cost 6031 ms
-				if (1) {
-					SYNCBLOCK(&locked_counter_lock) {
-						locked_counter++;
-						if (locked_counter > MAX_LOCKED_COUNTE) {
-							break;
-						}
-					}}
-				}
-
-#if defined(__linux__)
-				//4. pthread mutex
-				//mac: 10 thread run 10000000 times, cost 46415 ms
-				//linux: 10 thread run 10000000 times, cost 975 ms
-				//linux2: 10 thread run 10000000 times, cost 1096 ms/1 thread run 10000000 times, cost 241 ms/2 thread run 10000000 times, cost 1047 ms
-				if (0) {
-					pthread_mutex_lock( &locked_counter_mutex );
-					locked_counter++;
-					if (locked_counter > MAX_LOCKED_COUNTE) {
-						pthread_mutex_unlock( &locked_counter_mutex );
-						break;
-					}
-					pthread_mutex_unlock( &locked_counter_mutex );
-				}
-#endif
-			}
-		}
-	};
-
-	llong t1 = ESystem::currentTimeMillis();
-
-	EArrayList<sp<Thread> > arrs;
-	for (int i=0; i<LOCKED_WORK_THREADS; i++) {
-		sp<Thread> t = new Thread();
-		arrs.add(t);
-		t->start();
-	}
-
-	for (int i=0; i<LOCKED_WORK_THREADS; i++) {
-		arrs.getAt(i)->join();
-	}
-
-	llong t2 = ESystem::currentTimeMillis();
-
-	LOG("%d thread run %ld times, cost %ld ms\nper second op times: %f",
-			LOCKED_WORK_THREADS, MAX_LOCKED_COUNTE, t2 - t1, ((double)MAX_LOCKED_COUNTE)/(t2-t1)*1000);
-}
-
 static void test_lock(int flag) {
 	//1. ESynchronizeable
 	class A : public ESynchronizeable
@@ -4226,7 +4150,23 @@ static void test_sequencestream() {
 	}
 }
 
+static void split(EString& demo){
+	EArray<EString*> result = EPattern::split("-", demo.c_str());
+	int len = result.size();
+	printf("\"%s\" len：%d", demo.c_str(), len);
+	if(len >= 0)
+	{
+		printf(", result: ");
+		for(int i=0; i<len; i++)
+		{
+			printf(" \"%s\"", result[i]->c_str());
+		}
+	}
+	LOG("");
+}
+
 static void test_pattern() {
+	//1.
 	const char* orig = "From:regular.expressions@example.com\r\n"\
             "From:exddd@43434.com\r\n"\
             "From:7853456@exgem.com\r\n";
@@ -4239,6 +4179,32 @@ static void test_pattern() {
 		LOG("m1=%s", matcher.group(1).c_str());
 		LOG("m2=%s\n", matcher.group(2).c_str());
 	}
+
+	//2.
+	const char* line = "aXXbcXX";
+	EArray<EString*> result = EPattern::split("XX", line);
+	LOG("pattern result size=%d", result.size());
+	for (int i=0; i<result.size(); i++) {
+		LOG("%s", result[i]->c_str());
+	}
+
+	EString str1 = "a-b";
+	EString str2 = "a-b-";
+	EString str3 = "-a-b";
+	EString str4 = "-a-b-";
+	EString str5 = "a";
+	EString str6 = "-";
+	EString str7 = "--";
+	EString str8 = "";
+
+	split(str1);
+	split(str2);
+	split(str3);
+	split(str4);
+	split(str5);
+	split(str6);
+	split(str7);
+	split(str8);
 }
 
 class CountAtomicThread: public EThread
@@ -7419,7 +7385,7 @@ static void test_linkedBlockingQueue() {
 			int i = 1;
 			try {
 				while (true) {
-//				for (i=0; i<100000; i++) {
+//				for (i=0; i<10000; i++) {
 					queue->put(new EInteger(i));
 //					boolean r = queue->add(new EInteger(i));
 //					boolean r = queue->offer(new EInteger(i));
@@ -7463,8 +7429,8 @@ static void test_linkedBlockingQueue() {
 //					sp<EInteger> si = queue->poll();
 //					sp<EInteger> si = (i %3) == 0 ? queue->poll() : queue->take();
 					if (si == null) {
-						continue;
-//						break;
+//						continue;
+						break;
 					}
 //					LOG("poll si=%d", si->intValue());
 
@@ -7554,14 +7520,10 @@ static void test_linkedBlockingQueue() {
 		ProbeThread* pt = new ProbeThread(c); //
 		pt->start();
 		arr.add(pt);
-
-		for (i = 0; i < arr.length(); i++) {
-			arr.getAt(i)->join();
-		}
-
+//
 //		LOG("queue size=%d", queue->size());
 //
-//		sp<ELinkedBlockingQueue<EInteger> > iter = queue->iterator();
+//		sp<EIterator<sp<EInteger> > > iter = queue->iterator();
 //		while (iter->hasNext()) {
 //			sp<EInteger> i = iter->next();
 //			LOG("i=%d", i->intValue());
@@ -7571,6 +7533,10 @@ static void test_linkedBlockingQueue() {
 //		while ((I = queue->poll()) != null) {
 //			LOG("I=%d", I->intValue());
 //		}
+
+		for (i = 0; i < arr.length(); i++) {
+			arr.getAt(i)->join();
+		}
 
 		delete queue;
 		delete c;
@@ -9729,8 +9695,6 @@ static void test_multicastSocket(void) {
 }
 
 static void* execute_c_thread(es_thread_t* t) {
-	sp<EThread> cxxthread = EThread::c_init();
-
 	try {
 		EThread* thread = EThread::currentThread();
 		LOG("current is %s thread, name: %s", thread->isMainThread() ? "main" : "sub", thread->getName());
@@ -10347,7 +10311,7 @@ static void test_test(int argc, const char** argv) {
 //	test_thread2();
 //	test_thread3();
 //	test_thread4();
-	test_thread5();
+//	test_thread5();
 //	test_threadlocal1();
 //	test_threadlocal2();
 //	test_threadlocal3();
@@ -10355,7 +10319,6 @@ static void test_test(int argc, const char** argv) {
 //	test_threadlocal5();
 //	test_threadJoin();
 //	test_threadState();
-//	test_lock_benchmark();
 //	test_lock(0);
 //	test_lock();
 //	test_tryLock();
@@ -10458,7 +10421,7 @@ static void test_test(int argc, const char** argv) {
 //	test_networkInferface();
 //	test_datagramSocket();
 //	test_multicastSocket();
-//	test_c_thread();
+	test_c_thread();
 //	test_biginteger();
 //	test_bigdecimal();
 //	test_pushbackInputStream();

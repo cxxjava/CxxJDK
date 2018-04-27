@@ -864,11 +864,6 @@ public:
 	static int getThreadsCount();
 
 	/**
-	 * C thread initialize.
-	 */
-	static sp<EThread> c_init() THROWS(EThreadUnCInitException);
-
-	/**
 	 * Returns count of alive c threads.
 	 */
 	static int getCThreadsCount();
@@ -893,6 +888,13 @@ public:
 	 *          thread cannot modify this thread
 	 */
 	static void setDaemon(sp<EThread> thread, boolean on);
+
+	/**
+	 * Set the default thread stack size.
+	 *
+	 * @param  size The desired stack size for the new thread.
+	 */
+	static void setDefaultStackSize(int size);
 
 public:
 	/**
@@ -1056,6 +1058,9 @@ private:
 	static volatile int threadsCount;
 	static volatile int c_threadsCount;
 
+	// Default thread stack size, unit: byte.
+	static volatile int defaultStackSize; //= -1;
+
 	/**
 	 * Initializes a Thread.
 	 *
@@ -1104,8 +1109,9 @@ public:
 
 #ifdef CPP11_SUPPORT
 public:
-	static sp<EThread> executeX(std::function<void()> func) {
+	static sp<EThread> executeX(std::function<void()> func, boolean daemon=false) {
 		sp<EThread> thread = new EThread(new ERunnableTarget(func));
+		if (daemon) EThread::setDaemon(thread, true);
 		thread->start();
 		return thread;
 	}

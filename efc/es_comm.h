@@ -79,7 +79,7 @@ Standard C system should have one. */
 	#define va_arg(ap,t)    ( *(t *)((ap += _INTSIZEOF(t)) - _INTSIZEOF(t)) )
 	#define va_end(ap)      ( ap = (va_list)0 )
 	#endif
-#elif defined(__arm)
+#elif defined(__MTK__)
 	typedef int *va_list[1];
 	#define va_start(ap, parmN) (void)(*(ap) = __va_start(parmN))
 	#define va_arg(ap, type) __va_arg(*(ap), type)
@@ -144,13 +144,13 @@ Standard C system should have one. */
 #endif
 #endif
 
-#if defined(__arm)
+#if defined(__MTK__)
 #define ES_PATH_MAX        512
 #else
 #define ES_PATH_MAX        4096
 #endif
 
-#if defined(WIN32) || defined(__arm)
+#if defined(WIN32) || defined(__MTK__)
 #define ES_FILE_PATH_SEPARATOR  "\\"
 #define ES_FILE_PATH_SEPARATOR_CHAR  '\\'
 #define ES_LINE_SEPARATOR  "\r\n"

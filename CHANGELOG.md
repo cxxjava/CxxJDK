@@ -1,3 +1,17 @@
+2018/04/22
+
+1. fixed a bug for EFileOutputStream & EFileInputStream close() when channel is opened;
+
+2. optimization for EPattern::split(xxx);
+
+3. add Range-based for loops in C++11;
+
+4. removed EThread::c_init() api;
+
+5. add daemon param for EThread::executeX();
+
+   ​
+
 2018/03/02
 
 1. fixed a bug for efc::EInetAddress::getAllByName();
