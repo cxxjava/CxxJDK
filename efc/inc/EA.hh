@@ -11,8 +11,13 @@
 #include "EBase.hh"
 #include "ESharedPtr.hh"
 #include "EComparable.hh"
+#include "EIterable.hh"
 #include "EIndexOutOfBoundsException.hh"
 #include "EIllegalArgumentException.hh"
+
+#ifdef CPP11_SUPPORT
+#include <initializer_list>
+#endif
 
 namespace efc {
 
@@ -28,7 +33,7 @@ namespace efc {
 //Primitive Types.
 
 template<typename E>
-class EA : public EObject
+class EA : public EIterable<E>
 {
 public:
 	virtual ~EA() {
@@ -68,6 +73,17 @@ public:
 	EA(E* data, int length, boolean owned, MEMType type) :
 		_array(data), _length(length), _owned(owned), _type(type) {
 	}
+
+#ifdef CPP11_SUPPORT
+	EA(std::initializer_list<E> l) :
+		_length(l.size()), _owned(true), _type(MEM_NEW) {
+		_array = new E[_length];
+		int i=0;
+		for (auto v : l) {
+			_array[i++] = v;
+		}
+	}
+#endif
 
 	EA(const EA<E>& that) {
 		EA<E>* t = (EA<E>*)&that;
@@ -246,12 +262,38 @@ public:
 		return ea;
 	}
 
+	virtual sp<EIterator<E> > iterator(int index=0) {
+		return new Iter(this, index);
+	}
+
 private:
 	E* _array;
 	int _length;
 	boolean _owned;
 	MEMType _type;
 	E _defval;
+
+	class Iter : public EIterator<E> {
+	public:
+		EA<E>* self;
+		int index;
+		Iter(EA<E>* a, int i) {
+			self = a;
+			index = i;
+		}
+		virtual boolean hasNext() {
+			return index < self->length();
+		}
+		virtual E next() {
+			return (*self)[index++];
+		}
+		virtual void remove() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+		virtual E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+	};
 
 	/**
 	 * Check that fromIndex and toIndex are in range, and throw an
@@ -307,7 +349,7 @@ private:
 //Native pointer type.
 
 template<typename T>
-class EA<T*> : public EObject
+class EA<T*> : public EIterable<T*>
 {
 public:
 	typedef T* E;
@@ -322,6 +364,17 @@ public:
 			_length(length), _autoFree(autoFree) {
 		_array = new E[_length]();
 	}
+
+#ifdef CPP11_SUPPORT
+	EA(std::initializer_list<E> l) :
+		_length(l.size()), _autoFree(true) {
+		_array = new E[_length];
+		int i=0;
+		for (auto v : l) {
+			_array[i++] = v;
+		}
+	}
+#endif
 
 	EA(const EA<E>& that) : _autoFree(true) {
 		EA<E>* t = (EA<E>*)&that;
@@ -526,10 +579,36 @@ public:
 		return _autoFree;
 	}
 
+	virtual sp<EIterator<E> > iterator(int index=0) {
+		return new Iter(this, index);
+	}
+
 private:
 	E* _array;
 	int _length;
 	boolean _autoFree;
+
+	class Iter : public EIterator<E> {
+	public:
+		EA<E>* self;
+		int index;
+		Iter(EA<E>* a, int i) {
+			self = a;
+			index = i;
+		}
+		virtual boolean hasNext() {
+			return index < self->length();
+		}
+		virtual E next() {
+			return (*self)[index++];
+		}
+		virtual void remove() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+		virtual E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+	};
 
 	/**
 	 * Check that fromIndex and toIndex are in range, and throw an
@@ -586,7 +665,7 @@ private:
 //SharedPtr Types.
 
 template<typename T>
-class EA<sp<T> > : public EObject
+class EA<sp<T> > : public EIterable<sp<T> >
 {
 	typedef sp<T> E;
 public:
@@ -597,6 +676,17 @@ public:
 	EA(int length) : _length(length) {
 		_array = new E[_length]();
 	}
+
+#ifdef CPP11_SUPPORT
+	EA(std::initializer_list<E> l) :
+		_length(l.size()) {
+		_array = new E[_length];
+		int i=0;
+		for (auto v : l) {
+			_array[i++] = v;
+		}
+	}
+#endif
 
 	EA(const EA<E>& that) {
 		EA<E>* t = (EA<E>*)&that;
@@ -790,9 +880,35 @@ public:
 		atomic_store(&_array[index], e);
 	}
 
+	virtual sp<EIterator<E> > iterator(int index=0) {
+		return new Iter(this, index);
+	}
+
 private:
 	E* _array;
 	int _length;
+
+	class Iter : public EIterator<E> {
+	public:
+		EA<E>* self;
+		int index;
+		Iter(EA<E>* a, int i) {
+			self = a;
+			index = i;
+		}
+		virtual boolean hasNext() {
+			return index < self->length();
+		}
+		virtual E next() {
+			return (*self)[index++];
+		}
+		virtual void remove() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+		virtual E moveOut() {
+			throw EUnsupportedOperationException(__FILE__, __LINE__);
+		}
+	};
 
 	/**
 	 * Check that fromIndex and toIndex are in range, and throw an

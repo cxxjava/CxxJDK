@@ -1,3 +1,9 @@
+2018/06/2
+
+1. add iterator & initializer_list (c++11) constructor for EA<>
+
+
+
 2018/04/22
 
 1. fixed a bug for EFileOutputStream & EFileInputStream close() when channel is opened;

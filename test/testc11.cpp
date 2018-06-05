@@ -373,6 +373,42 @@ static void test_foreach() {
 #endif
 }
 
+static void test_initializer_list() {
+	EA<int> arr = {1,2,3};
+
+	for (int i=0; i<arr.length(); i++) {
+		LOG("i=%d", arr[i]);
+	}
+	LOG("===");
+	sp<EIterator<int> > iter = arr.iterator(1);
+	while (iter->hasNext()) {
+		LOG("i=%d", iter->next());
+	}
+	LOG("===");
+	for (int i : arr) {
+		LOG("i=%d", i);
+	}
+	LOG("===");
+
+	EA<EString> arr2 = {"a", "b", "c"};
+	for (EString s : arr2) {
+		LOG("s=%s", s.c_str());
+	}
+	LOG("===");
+
+	EA<EString*> arr3 = {new EString("a"), new EString("b"), new EString("c")};
+	for (EString* s : arr3) {
+		LOG("s=%s", s->c_str());
+	}
+	LOG("===");
+
+	EA<sp<EString>> arr4 = {new EString("a"), new EString("b"), new EString("c")};
+	for (auto s : arr3) {
+		LOG("s=%s", s->c_str());
+	}
+	LOG("===");
+}
+
 MAIN_IMPL(testc11) {
 	printf("main()\n");
 
@@ -385,11 +421,12 @@ MAIN_IMPL(testc11) {
 //			test_lock_benchmark();
 //			test_scopeExit();
 //			test_finally();
-			test_threadx();
+//			test_threadx();
 //			test_timerx();
 //			test_executors();
 //			test_socketpair();
 //			test_foreach();
+			test_initializer_list();
 		} catch (EException& e) {
 			LOG("exception: %s", e.getMessage());
 		} catch (...) {
