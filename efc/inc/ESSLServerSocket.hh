@@ -45,6 +45,15 @@ namespace efc {
 
 class ESSLServerSocket: public EServerSocket {
 public:
+	// see: https://wiki.mozilla.org/Security/Server_Side_TLS
+
+	enum CipherSuiteModel {
+		Intermediate = 0x000,
+		Modern = 0x001,
+		Old = 0x002
+	};
+
+public:
 	virtual ~ESSLServerSocket();
 
 	/**
@@ -100,11 +109,19 @@ public:
 	ESSLServerSocket& operator= (const ESSLServerSocket& that);
 
 	/**
-	 *
+	 * Set SSL parameters.
+	 * if CAfile is not null then need verify client cert.
 	 */
-	boolean setSSLParameters(const char* dh_file, const char* cert_file,
+	boolean setSSLParameters(const char* cert_file,
 			const char* private_key_file, const char* passwd,
-			const char* CAfile);
+			const char* CAfile=NULL, const char* DHfile=NULL, CipherSuiteModel mode=Intermediate);
+
+	/**
+	 * Negotiated for npn or alpn...
+	 * The protocol is like "h2" or "h2c" or "http/1.1" and other.
+	 * !!! The last one must be set to NULL !!!
+	 */
+	void setNegotiatedProtocols(const char* protocol, ...);
 
 	/**
 	 *
@@ -155,39 +172,12 @@ public:
 protected:
 	SSL_CTX* ctx;
 	X509_STORE* store;
-	int renegotiations, ciphersuite_model;
+	EString protocols;
 
 private:
 	void init();
-	boolean useDHFile(const char* dh_file);
-
-	static int nextProto(SSL* ssl, const unsigned char** data, unsigned int* len, void* arg) {
-		*data = (unsigned char*) arg;
-		*len = (unsigned int)(sizeof("\x2h2\x5h2-16\x5h2-14")-1);
-		return SSL_TLSEXT_ERR_OK;
-	}
-
-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
-	static int selectProto(SSL* ssl, const unsigned char** out,
-			unsigned char* outlen, const unsigned char* in, unsigned int inlen,
-			void* arg) {
-		const unsigned char* p;
-		const unsigned char* end;
-
-		for (p = in, end = in + inlen; p <= end; p += *p + 1) {
-			if (memcmp(p, "\x2h2", 3) == 0
-					|| memcmp(p, "\x5h2-16", 6) == 0
-					|| memcmp(p, "\x5h2-14", 6) == 0) {
-				*out = p + 1;
-				*outlen = *p;
-
-				return SSL_TLSEXT_ERR_OK;
-			}
-		}
-
-		return SSL_TLSEXT_ERR_NOACK;
-	}
-#endif
+	void setSSLNextProtos();
+	boolean useDHFile(const char* dh_file, CipherSuiteModel mode);
 };
 
 } /* namespace efc */

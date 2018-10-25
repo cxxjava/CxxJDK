@@ -10295,6 +10295,41 @@ static void test_arrayBlockingQueue() {
 	gt2.join();
 }
 
+static void test_threadGroup() {
+	sp<EThreadGroup> tg = EThread::currentThread()->getThreadGroup();
+	EString name = tg->getName();
+	LOG("thread group name: %s", name.c_str());
+
+	EThread t1(tg, new Worker(1));
+	t1.start();
+	EA<EThread*> threads(tg->activeCount());
+	int n = tg->enumerate(&threads);
+	for (int i=0; i<n; i++) {
+		EThread* t = threads[i];
+		LOG("thread name=%s", t->getName());
+	}
+	t1.join();
+
+	class Worker2 : public ERunnable {
+	public:
+		virtual void run() {
+			throw EException(__FILE__, __LINE__);
+		}
+	};
+
+	class ThreadGroup : public EThreadGroup {
+	public:
+		ThreadGroup() : EThreadGroup("mygroup") {}
+		void uncaughtException(EThread* t, EThrowable* e) {
+			LOG("thread %s : %s", t->getName(), e->getMessage());
+		}
+	};
+	sp<ThreadGroup> tg2 = new ThreadGroup();
+	EThread t2(tg2, new Worker2());
+	t2.start();
+	t2.join();
+}
+
 static void test_test(int argc, const char** argv) {
 //	test_null();
 //	test_cmpxchg();
@@ -10428,6 +10463,7 @@ static void test_test(int argc, const char** argv) {
 //	test_proterties();
 //	test_arrays();
 //	test_arrayBlockingQueue();
+//	test_threadGroup();
 //
 //	EThread::sleep(3000);
 }

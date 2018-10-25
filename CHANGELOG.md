@@ -1,3 +1,9 @@
+2018/06/24
+
+1. support two side authentication for ESSLXXX;
+
+
+
 2018/06/2
 
 1. add iterator & initializer_list (c++11) constructor for EA<>

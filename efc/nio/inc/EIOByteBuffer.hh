@@ -20,7 +20,7 @@ public:
 	virtual ~EIOByteBuffer();
 
 	static EIOByteBuffer* allocate(int capacity=512);
-	static EIOByteBuffer* wrap(void* address, int capacity, int offset=0);
+	static EIOByteBuffer* wrap(const void* address, int capacity, int offset=0);
 
 	/**
 	 * Default is to use heap allocted memory and need to free.
@@ -32,7 +32,7 @@ public:
 	 * Use external allocted memory and not need to free.
 	 * @see allocateDirect() and wrap() api
 	 */
-	EIOByteBuffer(void* address, int capacity, int offset=0);
+	EIOByteBuffer(const void* address, int capacity, int offset=0);
 
 	/**
 	 * Creates a new byte buffer whose content is a shared subsequence of

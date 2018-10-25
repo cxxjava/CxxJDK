@@ -38,7 +38,8 @@ namespace efc {
  * while we work on the children.
  */
 
-class EThreadGroup: public EThread::UncaughtExceptionHandler {
+class EThreadGroup: public EThread::UncaughtExceptionHandler,
+		public enable_shared_from_this<EThreadGroup> {
 public:
 	virtual ~EThreadGroup();
 
@@ -184,16 +185,20 @@ public:
 	void checkAccess();
 
 	/**
-	 * Returns an estimate of the number of active threads in this
-	 * thread group.  The result might not reflect concurrent activity,
-	 * and might be affected by the presence of certain system threads.
-	 * <p>
-	 * Due to the inherently imprecise nature of the result, it is
-	 * recommended that this method only be used for informational purposes.
+	 * Returns an estimate of the number of active threads in this thread
+	 * group and its subgroups. Recursively iterates over all subgroups in
+	 * this thread group.
+	 *
+	 * <p> The value returned is only an estimate because the number of
+	 * threads may change dynamically while this method traverses internal
+	 * data structures, and might be affected by the presence of certain
+	 * system threads. This method is intended primarily for debugging
+	 * and monitoring purposes.
 	 *
 	 * @return  an estimate of the number of active threads in this thread
 	 *          group and in any other thread group that has this thread
-	 *          group as an ancestor.
+	 *          group as an ancestor
+	 *
 	 * @since   JDK1.0
 	 */
 	int activeCount();
@@ -201,133 +206,134 @@ public:
 	/**
 	 * Copies into the specified array every active thread in this
 	 * thread group and its subgroups.
-	 * <p>
-	 * First, the <code>checkAccess</code> method of this thread group is
-	 * called with no arguments; this may result in a security exception.
-	 * <p>
-	 * An application might use the <code>activeCount</code> method to
-	 * get an estimate of how big the array should be, however <i>if the
-	 * array is too short to hold all the threads, the extra threads are
-	 * silently ignored.</i>  If it is critical to obtain every active
-	 * thread in this thread group and its subgroups, the caller should
-	 * verify that the returned int value is strictly less than the length
-	 * of <tt>list</tt>.
-	 * <p>
-	 * Due to the inherent race condition in this method, it is recommended
-	 * that the method only be used for informational purposes.
 	 *
-	 * @param   list   an array into which to place the list of threads.
-	 * @return  the number of threads put into the array.
-	 * @exception  SecurityException  if the current thread does not
-	 *               have permission to enumerate this thread group.
-	 * @see     java.lang.ThreadGroup#activeCount()
-	 * @see     java.lang.ThreadGroup#checkAccess()
+	 * <p> An invocation of this method behaves in exactly the same
+	 * way as the invocation
+	 *
+	 * <blockquote>
+	 * {@linkplain #enumerate(Thread[], boolean) enumerate}{@code (list, true)}
+	 * </blockquote>
+	 *
+	 * @param  list
+	 *         an array into which to put the list of threads
+	 *
+	 * @return  the number of threads put into the array
+	 *
+	 * @throws  SecurityException
+	 *          if {@linkplain #checkAccess checkAccess} determines that
+	 *          the current thread cannot access this thread group
+	 *
 	 * @since   JDK1.0
 	 */
 	int enumerate(EA<EThread*>* list);
 
 	/**
 	 * Copies into the specified array every active thread in this
-	 * thread group. If the <code>recurse</code> flag is
-	 * <code>true</code>, references to every active thread in this
-	 * thread's subgroups are also included. If the array is too short to
+	 * thread group. If {@code recurse} is {@code true},
+	 * this method recursively enumerates all subgroups of this
+	 * thread group and references to every active thread in these
+	 * subgroups are also included. If the array is too short to
 	 * hold all the threads, the extra threads are silently ignored.
-	 * <p>
-	 * First, the <code>checkAccess</code> method of this thread group is
-	 * called with no arguments; this may result in a security exception.
-	 * <p>
-	 * An application might use the <code>activeCount</code> method to
-	 * get an estimate of how big the array should be, however <i>if the
-	 * array is too short to hold all the threads, the extra threads are
-	 * silently ignored.</i>  If it is critical to obtain every active thread
-	 * in this thread group, the caller should verify that the returned int
-	 * value is strictly less than the length of <tt>list</tt>.
-	 * <p>
-	 * Due to the inherent race condition in this method, it is recommended
-	 * that the method only be used for informational purposes.
 	 *
-	 * @param   list      an array into which to place the list of threads.
-	 * @param   recurse   a flag indicating whether also to include threads
-	 *                    in thread groups that are subgroups of this
-	 *                    thread group.
-	 * @return  the number of threads placed into the array.
-	 * @exception  SecurityException  if the current thread does not
-	 *               have permission to enumerate this thread group.
-	 * @see     java.lang.ThreadGroup#activeCount()
-	 * @see     java.lang.ThreadGroup#checkAccess()
+	 * <p> An application might use the {@linkplain #activeCount activeCount}
+	 * method to get an estimate of how big the array should be, however
+	 * <i>if the array is too short to hold all the threads, the extra threads
+	 * are silently ignored.</i>  If it is critical to obtain every active
+	 * thread in this thread group, the caller should verify that the returned
+	 * int value is strictly less than the length of {@code list}.
+	 *
+	 * <p> Due to the inherent race condition in this method, it is recommended
+	 * that the method only be used for debugging and monitoring purposes.
+	 *
+	 * @param  list
+	 *         an array into which to put the list of threads
+	 *
+	 * @param  recurse
+	 *         if {@code true}, recursively enumerate all subgroups of this
+	 *         thread group
+	 *
+	 * @return  the number of threads put into the array
+	 *
+	 * @throws  SecurityException
+	 *          if {@linkplain #checkAccess checkAccess} determines that
+	 *          the current thread cannot access this thread group
+	 *
 	 * @since   JDK1.0
-	 */
+	     */
 	int enumerate(EA<EThread*>* list, boolean recurse);
 
 	/**
 	 * Returns an estimate of the number of active groups in this
-	 * thread group.  The result might not reflect concurrent activity.
-	 * <p>
-	 * Due to the inherently imprecise nature of the result, it is
-	 * recommended that this method only be used for informational purposes.
+	 * thread group and its subgroups. Recursively iterates over
+	 * all subgroups in this thread group.
+	 *
+	 * <p> The value returned is only an estimate because the number of
+	 * thread groups may change dynamically while this method traverses
+	 * internal data structures. This method is intended primarily for
+	 * debugging and monitoring purposes.
 	 *
 	 * @return  the number of active thread groups with this thread group as
-	 *          an ancestor.
+	 *          an ancestor
+	 *
 	 * @since   JDK1.0
 	 */
 	int activeGroupCount();
 
 	/**
 	 * Copies into the specified array references to every active
-	 * subgroup in this thread group.
-	 * <p>
-	 * First, the <code>checkAccess</code> method of this thread group is
-	 * called with no arguments; this may result in a security exception.
-	 * <p>
-	 * An application might use the <code>activeGroupCount</code> method to
-	 * get an estimate of how big the array should be, however <i>if the
-	 * array is too short to hold all the thread groups, the extra thread
-	 * groups are silently ignored.</i>  If it is critical to obtain every
-	 * active subgroup in this thread group, the caller should verify that
-	 * the returned int value is strictly less than the length of
-	 * <tt>list</tt>.
-	 * <p>
-	 * Due to the inherent race condition in this method, it is recommended
-	 * that the method only be used for informational purposes.
+	 * subgroup in this thread group and its subgroups.
 	 *
-	 * @param   list   an array into which to place the list of thread groups.
-	 * @return  the number of thread groups put into the array.
-	 * @exception  SecurityException  if the current thread does not
-	 *               have permission to enumerate this thread group.
-	 * @see     java.lang.ThreadGroup#activeGroupCount()
-	 * @see     java.lang.ThreadGroup#checkAccess()
+	 * <p> An invocation of this method behaves in exactly the same
+	 * way as the invocation
+	 *
+	 * <blockquote>
+	 * {@linkplain #enumerate(ThreadGroup[], boolean) enumerate}{@code (list, true)}
+	 * </blockquote>
+	 *
+	 * @param  list
+	 *         an array into which to put the list of thread groups
+	 *
+	 * @return  the number of thread groups put into the array
+	 *
+	 * @throws  SecurityException
+	 *          if {@linkplain #checkAccess checkAccess} determines that
+	 *          the current thread cannot access this thread group
+	 *
 	 * @since   JDK1.0
 	 */
 	int enumerate(EA<sp<EThreadGroup> >* list);
 
 	/**
 	 * Copies into the specified array references to every active
-	 * subgroup in this thread group. If the <code>recurse</code> flag is
-	 * <code>true</code>, references to all active subgroups of the
-	 * subgroups and so forth are also included.
-	 * <p>
-	 * First, the <code>checkAccess</code> method of this thread group is
-	 * called with no arguments; this may result in a security exception.
-	 * <p>
-	 * An application might use the <code>activeGroupCount</code> method to
+	 * subgroup in this thread group. If {@code recurse} is
+	 * {@code true}, this method recursively enumerates all subgroups of this
+	 * thread group and references to every active thread group in these
+	 * subgroups are also included.
+	 *
+	 * <p> An application might use the
+	 * {@linkplain #activeGroupCount activeGroupCount} method to
 	 * get an estimate of how big the array should be, however <i>if the
 	 * array is too short to hold all the thread groups, the extra thread
 	 * groups are silently ignored.</i>  If it is critical to obtain every
 	 * active subgroup in this thread group, the caller should verify that
 	 * the returned int value is strictly less than the length of
-	 * <tt>list</tt>.
-	 * <p>
-	 * Due to the inherent race condition in this method, it is recommended
-	 * that the method only be used for informational purposes.
+	 * {@code list}.
 	 *
-	 * @param   list      an array into which to place the list of threads.
-	 * @param   recurse   a flag indicating whether to recursively enumerate
-	 *                    all included thread groups.
-	 * @return  the number of thread groups put into the array.
-	 * @exception  SecurityException  if the current thread does not
-	 *               have permission to enumerate this thread group.
-	 * @see     java.lang.ThreadGroup#activeGroupCount()
-	 * @see     java.lang.ThreadGroup#checkAccess()
+	 * <p> Due to the inherent race condition in this method, it is recommended
+	 * that the method only be used for debugging and monitoring purposes.
+	 *
+	 * @param  list
+	 *         an array into which to put the list of thread groups
+	 *
+	 * @param  recurse
+	 *         if {@code true}, recursively enumerate all subgroups
+	 *
+	 * @return  the number of thread groups put into the array
+	 *
+	 * @throws  SecurityException
+	 *          if {@linkplain #checkAccess checkAccess} determines that
+	 *          the current thread cannot access this thread group
+	 *
 	 * @since   JDK1.0
 	 */
 	int enumerate(EA<sp<EThreadGroup> >* list, boolean recurse);
@@ -411,7 +417,7 @@ public:
 	 * @return  a string representation of this thread group.
 	 * @since   JDK1.0
 	 */
-	EString toString();
+	virtual EString toString();
 
 protected:
 	friend class EThread;
@@ -437,16 +443,26 @@ protected:
 	void addUnstarted();
 
 	/**
-	 * Adds the specified Thread to this group.
-	 * @param t the Thread to be added
-	 * @exception IllegalThreadStateException If the Thread group has been destroyed.
+	 * Adds the specified thread to this thread group.
+	 *
+	 * <p> Note: This method is called from both library code
+	 * and the Virtual Machine. It is called from VM to add
+	 * certain system threads to the system thread group.
+	 *
+	 * @param  t
+	 *         the Thread to be added
+	 *
+	 * @throws  IllegalThreadStateException
+	 *          if the Thread group has been destroyed
 	 */
 	void add(EThread* t);
 
 	/**
-	 * Removes the specified Thread from this group.
-	 * @param t the Thread to be removed
-	 * @return if the Thread has already been destroyed.
+	 * Removes the specified Thread from this group. Invoking this method
+	 * on a thread group that has been destroyed has no effect.
+	 *
+	 * @param  t
+	 *         the Thread to be removed
 	 */
 	void remove(EThread* t);
 

@@ -84,13 +84,19 @@
 	#define ALWAYS_INLINE __attribute__ ((__visibility__("hidden"), __always_inline__))
 #endif
 
+//@see: https://zh.cppreference.com/w/cpp/compiler_support
 #ifdef WIN32
+//@see: https://msdn.microsoft.com/en-us/library/hh567368.aspx#featurelist
 #if _MSC_VER >= 1600 //__cplusplus >= 199711L
 	#define CPP11_SUPPORT
+#endif
+#if _MSC_VER >= 1900 //vs2015
+	#define CPP11_SUPPORT_FULL
 #endif
 #else
 #if __cplusplus >= 201103L
 	#define CPP11_SUPPORT
+	#define CPP11_SUPPORT_FULL //?
 #endif
 #endif
 
@@ -246,6 +252,17 @@ inline ALWAYS_INLINE es_nullptr_t es_get_nullptr_t() {return es_nullptr_t(0);}
 } while(0)
 #endif
 
+/**
+ * Mixin class that makes derived classes not copyable.
+ */
+class NonCopyable {
+protected:
+  NonCopyable() {}
+
+private:
+  NonCopyable(const NonCopyable&);
+  NonCopyable& operator=(const NonCopyable&);
+};
 
 /**
  * helper for variable initialization

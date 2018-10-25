@@ -11,14 +11,16 @@
 
 #define LOG(fmt,...) ESystem::out->printfln(fmt, ##__VA_ARGS__)
 
-#define SSL_FILE_PATH ""
-
 static void test_sslsocket() {
 	char buffer[4096];
 	int ret;
 	ESSLSocket *socket = new ESSLSocket();
+	socket->setSSLParameters(
+				"./certs/client/client-cert.pem",
+				"./certs/client/client-key.pem",
+				null);
 	socket->setReceiveBufferSize(10240);
-	socket->connect("www.baidu.com", 443, 3000);
+	socket->connect("localhost", 8443, 3000);
 	socket->setSoTimeout(3000);
 	char *get_str = "GET / HTTP/1.1\r\n"
 					"Accept: image/gif, image/jpeg, image/pjpeg, image/pjpeg, application/x-shockwave-flash, application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, application/xaml+xml, application/x-ms-xbap, application/x-ms-application, */*\r\n"
@@ -47,10 +49,11 @@ static void test_sslsocket() {
 
 static void test_sslserversocket() {
 	ESSLServerSocket *serverSocket = new ESSLServerSocket();
-	serverSocket->setSSLParameters(null,
-			SSL_FILE_PATH "./certs/tests-cert.pem",
-			SSL_FILE_PATH "./certs/tests-key.pem",
-			null, null);
+	serverSocket->setSSLParameters(
+			"./certs/server/server-cert.pem",
+			"./certs/server/server-key.pem",
+			null,
+			"./certs/ca/ca-cert.pem");
 	serverSocket->setReuseAddress(true);
 	serverSocket->setSoTimeout(3000);
 	serverSocket->bind(8443);

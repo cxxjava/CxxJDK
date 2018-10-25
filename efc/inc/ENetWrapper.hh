@@ -38,11 +38,7 @@ public:
 	static const short POLLHUP_      = 0x0010;
 	static const short POLLNVAL_     = 0x0020;
 	static const short POLLREMOVE_   = 0x0800;
-#ifdef WIN32
-	static const short POLLCONN_     = 0x0002;
-#else
 	static const short POLLCONN_     = POLLOUT_;
-#endif
 
 public:
 	/**

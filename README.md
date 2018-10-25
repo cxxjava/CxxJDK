@@ -348,17 +348,8 @@ Total Number of Cores:	2
 | TimeoutException                | ETimeoutException                |
 | TransferQueue                   | ETransferQueue                   |
 | Unsafe                          | EUnsafe                          |
-| Collection*                     | EConcurrentCollection            |
-| Enumeration*                    | EConcurrentEnumeration           |
-| Iterator*                       | EConcurrentIterator              |
-| List*                           | EConcurrentList                  |
 | Map*                            | EConcurrentMap                   |
-| ListIterator*                   | EConcurrentListIterator          |
-| NavigableSet*                   | EConcurrentNavigableSet          |
-| Queue*                          | EConcurrentQueue                 |
-| Set*                            | EConcurrentSet                   |
 | SortedMap*                      | EConcurrentSortedMap             |
-| SortedSet*                      | EConcurrentSortedSet             |
 
 
 ###### nio:

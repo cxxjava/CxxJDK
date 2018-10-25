@@ -248,6 +248,14 @@ static void test_threadx() {
 	auto ths4 = EThread::executeX(std::bind(thread_worker2, 4));
 	ths4->join();
 
+	sp<EThread> ths5 = new EEThreadTarget([](){
+		EThread* t = EThread::currentThread();
+		LOG("%s running...", t->getName());
+	});
+	ths5->setName("thread5");
+	ths5->start();
+	ths5->join();
+
 	LOG("end of test_threadx().");
 }
 
@@ -374,6 +382,7 @@ static void test_foreach() {
 }
 
 static void test_initializer_list() {
+#if !defined(_MSC_VER) || (_MSC_VER>=1800) //VS2013
 	EA<int> arr = {1,2,3};
 
 	for (int i=0; i<arr.length(); i++) {
@@ -391,22 +400,28 @@ static void test_initializer_list() {
 	LOG("===");
 
 	EA<EString> arr2 = {"a", "b", "c"};
+	arr2.setAt(0, "aa");
 	for (EString s : arr2) {
 		LOG("s=%s", s.c_str());
 	}
 	LOG("===");
 
-	EA<EString*> arr3 = {new EString("a"), new EString("b"), new EString("c")};
+//	EA<EString*> arr3 = {new EString("a"), new EString("b"), new EString("c")};
+	EA<EString*> arr3 = {"a", "b", "c"};
+	arr3.setAt(0, "aa");
 	for (EString* s : arr3) {
 		LOG("s=%s", s->c_str());
 	}
 	LOG("===");
 
-	EA<sp<EString>> arr4 = {new EString("a"), new EString("b"), new EString("c")};
-	for (auto s : arr3) {
+//	EA<sp<EString>> arr4 = {new EString("a"), new EString("b"), new EString("c")};
+	EA<sp<EString>> arr4 = {"a", "b", "c"};
+	arr4.setAt(0, "aa");
+	for (auto s : arr4) {
 		LOG("s=%s", s->c_str());
 	}
 	LOG("===");
+#endif
 }
 
 MAIN_IMPL(testc11) {

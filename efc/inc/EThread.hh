@@ -1118,6 +1118,20 @@ public:
 #endif
 };
 
+#ifdef CPP11_SUPPORT
+class EEThreadTarget: public EThread {
+public:
+	EEThreadTarget(std::function<void()> f) {
+		this->f = f;
+	}
+	virtual void run() {
+		f();
+	}
+private:
+	std::function<void()> f;
+};
+#endif
+
 } /* namespace efc */
 #endif /* ETHREAD_HH_ */
 

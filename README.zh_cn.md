@@ -299,7 +299,7 @@ put 20线程 && get 20线程
 
 ###### concurrent:
 
-| jdk类                            | cxxjdk类                          |
+| jdk类                           | cxxjdk类                         |
 | ------------------------------- | -------------------------------- |
 | synchronized                    | SYNCHRONIZED                     |
 | AbstractConcurrentCollection    | EAbstractConcurrentCollection    |
@@ -350,17 +350,8 @@ put 20线程 && get 20线程
 | TimeoutException                | ETimeoutException                |
 | TransferQueue                   | ETransferQueue                   |
 | Unsafe                          | EUnsafe                          |
-| Collection*                     | EConcurrentCollection            |
-| Enumeration*                    | EConcurrentEnumeration           |
-| Iterator*                       | EConcurrentIterator              |
-| List*                           | EConcurrentList                  |
 | Map*                            | EConcurrentMap                   |
-| ListIterator*                   | EConcurrentListIterator          |
-| NavigableSet*                   | EConcurrentNavigableSet          |
-| Queue*                          | EConcurrentQueue                 |
-| Set*                            | EConcurrentSet                   |
 | SortedMap*                      | EConcurrentSortedMap             |
-| SortedSet*                      | EConcurrentSortedSet             |
 
 
 ###### nio:

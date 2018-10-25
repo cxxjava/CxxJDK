@@ -234,6 +234,12 @@ public:
 	ESSLSocket& operator= (const ESSLSocket& that);
 
 	/**
+	 *
+	 */
+	boolean setSSLParameters(const char* cert_file,
+			const char* private_key_file, const char* passwd);
+
+	/**
 	 * Connects this socket to the server with a specified timeout
 	 * value.
 	 *
@@ -345,6 +351,7 @@ protected:
 
 private:
 	void doneConnect() THROWS(EIOException);
+	boolean useDHFile(const char* dh_file);
 };
 
 } /* namespace efc */

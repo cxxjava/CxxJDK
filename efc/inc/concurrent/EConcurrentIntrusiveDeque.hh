@@ -88,16 +88,19 @@ public:
      */
     boolean offer(E e) {
     	sp<EQueueEntry> entry = dynamic_pointer_cast<EQueueEntry>(e);
-    	if (!entry || entry->getOwner()) {
-    		throw EIllegalArgumentException(__FILE__, __LINE__);
-    	}
+        if (!entry) {
+            throw EIllegalArgumentException(__FILE__, __LINE__);
+        }
+        SYNCBLOCK(&lock) {
+        	EObject* owner = entry->getOwner();
+        	if (owner && (owner != (EObject*)this)) {
+        		throw ERuntimeException(__FILE__, __LINE__);
+        	}
 
-    	entry->setOwner((EObject*)this);
-
-    	SYNCBLOCK(&lock) {
 			tail->setNext(entry);
 			entry->setPrev(tail);
 			entry->setNext(null);
+            entry->setOwner((EObject*)this);
 			tail = entry;
 			size_++;
     	}}
@@ -327,15 +330,18 @@ public:
 
 	boolean offerFirst(E e) {
 		sp<EQueueEntry> entry = dynamic_pointer_cast<EQueueEntry>(e);
-		if (!entry || entry->getOwner()) {
-			throw EIllegalArgumentException(__FILE__, __LINE__);
-		}
+        if (!entry) {
+            throw EIllegalArgumentException(__FILE__, __LINE__);
+        }
+        SYNCBLOCK(&lock) {
+        	EObject* owner = entry->getOwner();
+			if (owner && (owner != (EObject*)this)) {
+				throw ERuntimeException(__FILE__, __LINE__);
+			}
 
-		entry->setOwner((EObject*)this);
-
-		SYNCBLOCK(&lock) {
 			entry->setPrev(head);
 			entry->setNext(head->getNext());
+            entry->setOwner((EObject*)this);
 			head->setNext(entry);
 			size_++;
 		}}
