@@ -1,0 +1,146 @@
+CCOMPILE = gcc
+#COMPILEOPTION = -m32 -c -O2 -W -fPIC
+COMPILEOPTION = -c -O2 -W -fPIC
+
+KERNEL:=$(shell uname)
+LIBDIR = linux
+OUTPUT32 = libeso32.a
+OUTPUT64 = libeso64.a
+
+ARCH:=$(shell uname -m)
+RC:=$(ARCH)
+BIT32:=i686
+BIT64:=x86_64
+
+$(info KERNEL=$(KERNEL))
+$(info ARCH=$(ARCH))
+
+ifeq ($(KERNEL),Darwin)
+    LIBDIR = osx
+endif
+
+$(info LIBDIR=$(LIBDIR))
+
+OBJS = ../libc/src/eso_alogger.o \
+	../libc/src/eso_array.o \
+	../libc/src/eso_array_int.o \
+	../libc/src/eso_array_ptr.o \
+	../libc/src/eso_atomic.o \
+	../libc/src/eso_base64.o \
+	../libc/src/eso_bitset.o \
+	../libc/src/eso_buffer.o \
+	../libc/src/eso_canonicalize.o \
+	../libc/src/eso_conf.o \
+	../libc/src/eso_crc32.o \
+	../libc/src/eso_datetime.o \
+	../libc/src/eso_debug.o \
+	../libc/src/eso_dso.o \
+	../libc/src/eso_bson.o \
+	../libc/src/eso_bson_ext.o \
+	../libc/src/eso_encode.o \
+	../libc/src/eso_except.o \
+	../libc/src/eso_file.o \
+	../libc/src/eso_flip_buffer.o \
+	../libc/src/eso_fmttime.o \
+	../libc/src/eso_hash.o \
+	../libc/src/eso_ini.o \
+	../libc/src/eso_json.o \
+	../libc/src/eso_lz77.o \
+	../libc/src/eso_lzma.o \
+	../libc/src/eso_map.o \
+	../libc/src/eso_md4.o \
+	../libc/src/eso_md5.o \
+	../libc/src/eso_mem.o \
+	../libc/src/eso_mmap.o \
+	../libc/src/eso_mpool.o \
+	../libc/src/eso_net.o \
+	../libc/src/eso_object.o \
+	../libc/src/eso_pcre.o \
+	../libc/src/eso_pipe.o \
+	../libc/src/eso_poll.o \
+	../libc/src/eso_printf_upper_bound.o \
+	../libc/src/eso_proc.o \
+	../libc/src/eso_proc_mutex.o \
+	../libc/src/eso_queue.o \
+	../libc/src/eso_ring_buffer.o \
+	../libc/src/eso_sha1.o \
+	../libc/src/eso_sha2.o \
+	../libc/src/eso_shm.o \
+	../libc/src/eso_signal.o \
+	../libc/src/eso_sigsegv.o \
+	../libc/src/eso_stack.o \
+	../libc/src/eso_string.o \
+	../libc/src/eso_sys.o \
+	../libc/src/eso_thread.o \
+	../libc/src/eso_thread_cond.o \
+	../libc/src/eso_thread_mutex.o \
+	../libc/src/eso_thread_rwlock.o \
+	../libc/src/eso_thread_spin.o \
+	../libc/src/eso_util.o \
+	../libc/src/eso_uuid.o \
+	../libc/src/eso_vector.o \
+	../libc/src/eso_zlib.o \
+	../libc/src/lzma/LzFind.o \
+	../libc/src/lzma/LzmaDec.o \
+	../libc/src/lzma/LzmaEnc.o \
+	../libc/src/pcre/pcre_chartables.o \
+	../libc/src/pcre/pcre_compile.o \
+	../libc/src/pcre/pcre_config.o \
+	../libc/src/pcre/pcre_exec.o \
+	../libc/src/pcre/pcre_fullinfo.o \
+	../libc/src/pcre/pcre_get.o \
+	../libc/src/pcre/pcre_globals.o \
+	../libc/src/pcre/pcre_maketables.o \
+	../libc/src/pcre/pcre_newline.o \
+	../libc/src/pcre/pcre_ord2utf8.o \
+	../libc/src/pcre/pcre_refcount.o \
+	../libc/src/pcre/pcre_study.o \
+	../libc/src/pcre/pcre_tables.o \
+	../libc/src/pcre/pcre_ucd.o \
+	../libc/src/pcre/pcre_valid_utf8.o \
+	../libc/src/pcre/pcre_version.o \
+	../libc/src/pcre/pcre_xclass.o \
+	../libc/src/zlib/adler32.o \
+	../libc/src/zlib/compress.o \
+	../libc/src/zlib/crc32.o \
+	../libc/src/zlib/deflate.o \
+	../libc/src/zlib/gzclose.o \
+	../libc/src/zlib/gzlib.o \
+	../libc/src/zlib/gzread.o \
+	../libc/src/zlib/gzwrite.o \
+	../libc/src/zlib/infback.o \
+	../libc/src/zlib/inffast.o \
+	../libc/src/zlib/inflate.o \
+	../libc/src/zlib/inftrees.o \
+	../libc/src/zlib/trees.o \
+	../libc/src/zlib/uncompr.o \
+	../libc/src/zlib/zutil.o \
+	
+INCLUDEDIR = -I../ -I../libc/inc
+
+.PHONY : clean
+
+all : $(OUTPUT32) clear
+.PRECIOUS:%.S %.c %.C
+.SUFFIXES:	.S .o
+.SUFFIXES:  .c .o
+
+$(OUTPUT32):$(OBJS)
+	@rm -f ${LIBDIR}/$@
+ifeq ($(RC),$(BIT32))
+	ar rcs ${LIBDIR}/$@ $?
+else
+	ar rcs ${LIBDIR}/$(OUTPUT64) $?
+endif
+
+.c.o:
+	$(CCOMPILE) -o $*.o $(COMPILEOPTION) $(INCLUDEDIR) $*.c
+
+.S.o:
+	$(CCOMPILE) -o $*.o -gstabs $(COMPILEOPTION) $*.S
+
+clean: 
+	rm -f $(OBJS)
+
+clear:
+	rm -f $(OBJS)

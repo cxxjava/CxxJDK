@@ -1,0 +1,202 @@
+CPPCOMPILE = g++
+#COMPILEOPTION = -std=c++11 -m32 -c -O2 -W -fPIC
+COMPILEOPTION = -std=c++11 -c -O2 -W -fPIC
+
+KERNEL:=$(shell uname)
+LIBDIR = linux
+OUTPUT32 = libefc32.a
+OUTPUT64 = libefc64.a
+
+ARCH:=$(shell uname -m)
+RC:=$(ARCH)
+BIT32:=i686
+BIT64:=x86_64
+
+$(info KERNEL=$(KERNEL))
+$(info ARCH=$(ARCH))
+
+ifeq ($(KERNEL),Darwin)
+    LIBDIR = osx
+endif
+
+$(info LIBDIR=$(LIBDIR))
+
+OBJS = 	\
+	../src/EAdler32.obj \
+	../src/EBase64.obj \
+	../src/EBigDecimal.obj \
+	../src/EBigInteger.obj \
+	../src/EBitSet.obj \
+	../src/EBits.obj \
+	../src/EBoolean.obj \
+	../src/EBufferedInputStream.obj \
+	../src/EBufferedOutputStream.obj \
+	../src/EByte.obj \
+	../src/EByteBuffer.obj \
+	../src/EByteArrayInputStream.obj \
+	../src/EByteArrayOutputStream.obj \
+	../src/ECRC32.obj \
+	../src/ECalendar.obj \
+	../src/ECharacter.obj \
+	../src/ECheckedInputStream.obj \
+	../src/ECheckedOutputStream.obj \
+	../src/EConfig.obj \
+	../src/EDatagramPacket.obj \
+	../src/EDatagramSocket.obj \
+	../src/EDataInputStream.obj \
+	../src/EDataOutputStream.obj \
+	../src/EDate.obj \
+	../src/EDeflater.obj \
+	../src/EDeflaterOutputStream.obj \
+	../src/EDouble.obj \
+	../src/EBson.obj \
+	../src/EBsonParser.obj \
+	../src/EEventObject.obj \
+	../src/EFile.obj \
+	../src/EFileInputStream.obj \
+	../src/EFileOutputStream.obj \
+	../src/EFilterInputStream.obj \
+	../src/EFilterOutputStream.obj \
+	../src/EFloat.obj \
+	../src/EFork.obj \
+	../src/EGZIPInputStream.obj \
+	../src/EGZIPOutputStream.obj \
+	../src/EIdentityHashMap.obj \
+	../src/EIPAddressUtil.obj \
+	../src/EInetAddress.obj \
+	../src/EInetSocketAddress.obj \
+	../src/EInflater.obj \
+	../src/EInflaterInputStream.obj \
+	../src/EInputStream.obj \
+	../src/EInteger.obj \
+	../src/EInterfaceAddress.obj \
+	../src/ELLong.obj \
+	../src/EMatcher.obj \
+	../src/EMath.obj \
+	../src/EMulticastSocket.obj \
+	../src/ENetworkInterface.obj \
+	../src/ENetWrapper.obj \
+	../src/EOS.obj \
+	../src/EObject.obj \
+	../src/EObservable.obj \
+	../src/EOutputStream.obj \
+	../src/EPark.obj \
+	../src/EPattern.obj \
+	../src/EPipedInputStream.obj \
+	../src/EPipedOutputStream.obj \
+	../src/EPrintStream.obj \
+	../src/EProcess.obj \
+	../src/EProperties.obj \
+	../src/EPushbackInputStream.obj \
+	../src/ERandom.obj \
+	../src/ERandomAccessFile.obj \
+	../src/ERuntime.obj \
+	../src/ESecureRandom.obj \
+	../src/ESentry.obj \
+	../src/ESequenceInputStream.obj \
+	../src/EServerSocket.obj \
+	../src/ESharedPtr.obj \
+	../src/EShort.obj \
+	../src/ESimpleCondition.obj \
+	../src/ESimpleLock.obj \
+	../src/ESimpleMap.obj \
+	../src/ESimpleStack.obj \
+	../src/ESimpleVector.obj \
+	../src/ESocket.obj \
+	../src/ESocketOptions.obj \
+	../src/ESpinLock.obj \
+	../src/ESSLCommon.obj \
+	../src/ESSLServerSocket.obj \
+	../src/ESSLSocket.obj \
+	../src/EStream.obj \
+	../src/EString.obj \
+	../src/EStringTokenizer.obj \
+	../src/ESystem.obj \
+	../src/EThread.obj \
+	../src/EThreadLocal.obj \
+	../src/EThreadGroup.obj \
+	../src/EThreadLocalStorage.obj \
+	../src/EThrowable.obj \
+	../src/ETimeUnit.obj \
+	../src/ETimer.obj \
+	../src/ETimerTask.obj \
+	../src/EURI.obj \
+	../src/EURLDecoder.obj \
+	../src/EURLEncoder.obj \
+	../src/EURLString.obj \
+	../src/concurrent/EAbstractQueuedSynchronizer.obj \
+	../src/concurrent/EAtomic.obj \
+	../src/concurrent/EAtomicBoolean.obj \
+	../src/concurrent/EAtomicCounter.obj \
+	../src/concurrent/EAtomicDouble.obj \
+	../src/concurrent/EAtomicInteger.obj \
+	../src/concurrent/EAtomicLLong.obj \
+	../src/concurrent/ECountDownLatch.obj \
+	../src/concurrent/ECyclicBarrier.obj \
+	../src/concurrent/EExecutors.obj \
+	../src/concurrent/ELockSupport.obj \
+	../src/concurrent/EOrderAccess.obj \
+	../src/concurrent/EReentrantLock.obj \
+	../src/concurrent/EReentrantReadWriteLock.obj \
+	../src/concurrent/ESemaphore.obj \
+	../src/concurrent/EThreadLocalRandom.obj \
+	../src/concurrent/EThreadPoolExecutor.obj \
+	../src/concurrent/EUnsafe.obj \
+	../nio/src/EChannelInputStream.obj \
+	../nio/src/EDatagramChannel.obj \
+	../nio/src/EDatagramDispatcher.obj \
+	../nio/src/EDatagramSocketAdaptor.obj \
+	../nio/src/EEPollArrayWrapper.obj \
+	../nio/src/EEPollSelectorImpl.obj \
+	../nio/src/EFileChannel.obj \
+	../nio/src/EFileDispatcher.obj \
+	../nio/src/EFileKey.obj \
+	../nio/src/EFileLock.obj \
+	../nio/src/EIOByteBuffer.obj \
+	../nio/src/EIONetWrapper.obj \
+	../nio/src/EInterruptibleChannel.obj \
+	../nio/src/EMembershipKey.obj \
+	../nio/src/EMembershipRegistry.obj \
+	../nio/src/EKQueueArrayWrapper.obj \
+	../nio/src/EKQueueSelectorImpl.obj \
+	../nio/src/EMappedByteBuffer.obj \
+	../nio/src/ENIOUtil.obj \
+	../nio/src/ENativeThread.obj \
+	../nio/src/ENativeThreadSet.obj \
+	../nio/src/EPipeWrapper.obj \
+	../nio/src/EPollArrayWrapper.obj \
+	../nio/src/EPollSelectorImpl.obj \
+	../nio/src/ESelectableChannel.obj \
+	../nio/src/ESelectionKey.obj \
+	../nio/src/ESelector.obj \
+	../nio/src/EServerSocketAdaptor.obj \
+	../nio/src/EServerSocketChannel.obj \
+	../nio/src/ESocketAdaptor.obj \
+	../nio/src/ESocketChannel.obj \
+	../nio/src/ESocketDispatcher.obj \
+
+INCLUDEDIR = -I../ -I../inc -I/usr/local/Cellar/openssl/1.0.2g/include
+
+.PHONY : clean
+
+all : $(OUTPUT32) clear
+.PRECIOUS:%.cpp %.c %.C
+.SUFFIXES:
+.SUFFIXES:  .c .obj .cpp .ecpp .pc .ec .C .cc .cxx
+
+$(OUTPUT32):$(OBJS)
+	@rm -f ${LIBDIR}/$@
+ifeq ($(RC),$(BIT32))
+	ar rcs ${LIBDIR}/$@ $?
+else
+	ar rcs ${LIBDIR}/$(OUTPUT64) $?
+endif
+
+.cpp.obj:
+	$(CPPCOMPILE) -o $*.obj $(COMPILEOPTION) $(INCLUDEDIR)  $*.cpp
+
+clean: 
+	rm -f $(OBJS)
+
+clear: 
+	rm -f $(OBJS)

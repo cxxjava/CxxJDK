@@ -1113,6 +1113,8 @@ public:
 	 * @since 1.5
 	 */
 	virtual E peek() THROWS(ENoSuchElementException) {
+		if (listSize == 0)
+			return null;
 		return getFirst();
 	}
 
@@ -1193,6 +1195,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E peekFirst() {
+		if (listSize == 0)
+			return null;
 		return getFirst();
 	}
 
@@ -1205,6 +1209,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E peekLast() {
+		if (listSize == 0)
+			return null;
 		return getLast();
 	}
 
@@ -1217,6 +1223,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E pollFirst() {
+		if (listSize == 0)
+			return null;
 		return removeFirst();
 	}
 
@@ -1229,6 +1237,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E pollLast() {
+		if (listSize == 0)
+			return null;
 		return removeLast();
 	}
 
@@ -1834,6 +1844,8 @@ public:
 	 * @since 1.5
 	 */
 	virtual E peek() THROWS(ENoSuchElementException) {
+		if (listSize == 0)
+			return null;
 		return getFirst();
 	}
 
@@ -1914,6 +1926,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E peekFirst() {
+		if (listSize == 0)
+			return null;
 		return getFirst();
 	}
 
@@ -1926,6 +1940,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E peekLast() {
+		if (listSize == 0)
+			return null;
 		return getLast();
 	}
 
@@ -1938,6 +1954,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E pollFirst() {
+		if (listSize == 0)
+			return null;
 		return removeFirst();
 	}
 
@@ -1950,6 +1968,8 @@ public:
 	 * @since 1.6
 	 */
 	virtual E pollLast() {
+		if (listSize == 0)
+			return null;
 		return removeLast();
 	}
 

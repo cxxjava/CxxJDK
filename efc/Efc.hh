@@ -1,7 +1,7 @@
 #ifndef __EFC_H__
 #define __EFC_H__
 
-#define EFC_VERSION "0.8.3"
+#define EFC_VERSION "0.8.4"
 
 #include "./EBase.hh"
 

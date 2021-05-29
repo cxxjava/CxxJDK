@@ -150,7 +150,7 @@ static int aeApiPoll(aeEventLoop *eventLoop, struct timeval *tvp) {
             if (e->filter == EVFILT_READ) mask |= ES_POLL_READABLE;
             if (e->filter == EVFILT_WRITE) mask |= ES_POLL_WRITABLE;
             eventLoop->fired[j].fd = e->ident; 
-            eventLoop->fired[j].mask = mask;           
+            eventLoop->fired[j].mask = mask;
         }
     }
     return numevents;

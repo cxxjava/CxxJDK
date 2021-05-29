@@ -304,6 +304,13 @@ public:
 	virtual void close() THROWS(EIOException);
 
 	/**
+	 * Wrap the sendfile with copy data mode.
+	 */
+	virtual long sendfile(const char* filename, long position=0, long count=-1);
+	virtual long sendfile(EFile* file, long position=0, long count=-1);
+	virtual long sendfile(int in_fd, long position, long count);
+
+	/**
 	 * Returns the names of the cipher suites which could be enabled for use
 	 * on this connection.  Normally, only a subset of these will actually
 	 * be enabled by default, since this list may include cipher suites which

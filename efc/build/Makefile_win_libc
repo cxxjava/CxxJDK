@@ -1,0 +1,151 @@
+###################################
+# 
+# make eso win lib
+# 
+###################################
+
+ASMCOMPILE = ml.exe
+CCOMPILE = cl.exe
+LINK = link.exe
+
+LIBDIR = win
+
+CCOMPILEVER = 0
+!IF [cl_version_LE.bat 16]
+CCOMPILEVER = 16
+!ELSEIF [cl_version_LE.bat 17]
+CCOMPILEVER = 17
+!ELSEIF [cl_version_LE.bat 18]
+CCOMPILEVER = 18
+!ELSEIF [cl_version_LE.bat 19]
+CCOMPILEVER = 19
+!ELSEIF [cl_version_LE.bat 20]
+CCOMPILEVER = 20
+!ENDIF
+
+
+COMPILEOPTION = -c -Zp8 -nologo -W3 -Od -MD -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS -D_LIB -DES_DECLARE_EXPORT
+LIBNAME=eso$(CCOMPILEVER).lib
+LINKOPTION = -lib /nologo
+
+LIBDIRS = 
+INCLUDEDIR = -I..\ -I..\libc\inc
+
+SHAREDLIB = 
+APPENDLIB = 
+
+OBJS_BASE = ..\libc\src\eso_alogger.obj \
+	..\libc\src\eso_array.obj \
+	..\libc\src\eso_array_int.obj \
+	..\libc\src\eso_array_ptr.obj \
+	..\libc\src\eso_atomic.obj \
+	..\libc\src\eso_base64.obj \
+	..\libc\src\eso_bitset.obj \
+	..\libc\src\eso_buffer.obj \
+	..\libc\src\eso_canonicalize.obj \
+	..\libc\src\eso_conf.obj \
+	..\libc\src\eso_crc32.obj \
+	..\libc\src\eso_datetime.obj \
+	..\libc\src\eso_debug.obj \
+	..\libc\src\eso_dso.obj \
+	..\libc\src\eso_bson.obj \
+	..\libc\src\eso_bson_ext.obj \
+	..\libc\src\eso_encode.obj \
+	..\libc\src\eso_except.obj \
+	..\libc\src\eso_file.obj \
+	..\libc\src\eso_flip_buffer.obj \
+	..\libc\src\eso_fmttime.obj \
+	..\libc\src\eso_hash.obj \
+	..\libc\src\eso_ini.obj \
+	..\libc\src\eso_json.obj \
+	..\libc\src\eso_lz77.obj \
+	..\libc\src\eso_lzma.obj \
+	..\libc\src\eso_map.obj \
+	..\libc\src\eso_md4.obj \
+	..\libc\src\eso_md5.obj \
+	..\libc\src\eso_mem.obj \
+	..\libc\src\eso_mmap.obj \
+	..\libc\src\eso_mpool.obj \
+	..\libc\src\eso_net.obj \
+	..\libc\src\eso_object.obj \
+	..\libc\src\eso_pcre.obj \
+	..\libc\src\eso_pipe.obj \
+	..\libc\src\eso_poll.obj \
+	..\libc\src\eso_printf_upper_bound.obj \
+	..\libc\src\eso_proc.obj \
+	..\libc\src\eso_proc_mutex.obj \
+	..\libc\src\eso_queue.obj \
+	..\libc\src\eso_ring_buffer.obj \
+	..\libc\src\eso_sha1.obj \
+	..\libc\src\eso_sha2.obj \
+	..\libc\src\eso_shm.obj \
+	..\libc\src\eso_signal.obj \
+	..\libc\src\eso_sigsegv.obj \
+	..\libc\src\eso_stack.obj \
+	..\libc\src\eso_string.obj \
+	..\libc\src\eso_sys.obj \
+	..\libc\src\eso_thread.obj \
+	..\libc\src\eso_thread_mutex.obj \
+	..\libc\src\eso_thread_cond.obj \
+	..\libc\src\eso_thread_rwlock.obj \
+	..\libc\src\eso_thread_spin.obj \
+	..\libc\src\eso_util.obj \
+	..\libc\src\eso_uuid.obj \
+	..\libc\src\eso_vector.obj \
+	..\libc\src\eso_zlib.obj \
+	..\libc\src\lzma\LzFind.obj \
+	..\libc\src\lzma\LzmaDec.obj \
+	..\libc\src\lzma\LzmaEnc.obj \
+	..\libc\src\zlib\adler32.obj \
+	..\libc\src\zlib\compress.obj \
+	..\libc\src\zlib\crc32.obj \
+	..\libc\src\zlib\deflate.obj \
+	..\libc\src\zlib\gzclose.obj \
+	..\libc\src\zlib\gzlib.obj \
+	..\libc\src\zlib\gzread.obj \
+	..\libc\src\zlib\gzwrite.obj \
+	..\libc\src\zlib\infback.obj \
+	..\libc\src\zlib\inffast.obj \
+	..\libc\src\zlib\inflate.obj \
+	..\libc\src\zlib\inftrees.obj \
+	..\libc\src\zlib\trees.obj \
+	..\libc\src\zlib\uncompr.obj \
+	..\libc\src\zlib\zutil.obj \
+	..\libc\src\pcre\pcre_chartables.obj \
+	..\libc\src\pcre\pcre_compile.obj \
+	..\libc\src\pcre\pcre_config.obj \
+	..\libc\src\pcre\pcre_exec.obj \
+	..\libc\src\pcre\pcre_fullinfo.obj \
+	..\libc\src\pcre\pcre_get.obj \
+	..\libc\src\pcre\pcre_globals.obj \
+	..\libc\src\pcre\pcre_maketables.obj \
+	..\libc\src\pcre\pcre_newline.obj \
+	..\libc\src\pcre\pcre_ord2utf8.obj \
+	..\libc\src\pcre\pcre_refcount.obj \
+	..\libc\src\pcre\pcre_study.obj \
+	..\libc\src\pcre\pcre_tables.obj \
+	..\libc\src\pcre\pcre_ucd.obj \
+	..\libc\src\pcre\pcre_valid_utf8.obj \
+	..\libc\src\pcre\pcre_version.obj \
+	..\libc\src\pcre\pcre_xclass.obj \
+
+libeso: $(OBJS_BASE) $(APPENDLIB)
+	$(LINK) $(LINKOPTION) /out:"$(LIBDIR)\$(LIBNAME)" $(OBJS_BASE) $(LIBDIRS) $(SHAREDLIB) $(APPENDLIB)
+	del $(OBJS_BASE)
+
+clean: 
+	del $(OBJS_BASE)
+	if exist $(LIBDIR)\$(LIBNAME) del $(LIBDIR)\$(LIBNAME)
+
+clear:
+	del $(OBJS_BASE)
+
+all: clean libeso
+.PRECIOUS:%.cpp %.c %.C
+.SUFFIXES:
+.SUFFIXES:  .c .obj .s
+
+.c.obj:
+	$(CCOMPILE) -c -Fo$* -o $*.obj $(COMPILEOPTION) $(INCLUDEDIR) $*.c
+.s.obj:
+	$(ASMCOMPILE) -coff -Fo$* -c $*.s $*.obj

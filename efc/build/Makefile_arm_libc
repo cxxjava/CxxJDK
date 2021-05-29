@@ -1,0 +1,65 @@
+################OPTION###################
+ASMCOMPILE = armasm.exe
+CCOMPILE = tcc.exe
+ARMAR = armar.exe
+COMPILEOPTION = -O2 -Otime -Wb
+#ENDIANMODE = 
+
+OBJS_BASE = ..\libc\src\eso_array.o \
+	..\libc\src\eso_array_ptr.o \
+	..\libc\src\eso_array_int.o \
+	..\libc\src\eso_base64.o \
+	..\libc\src\eso_buffer.o \
+	..\libc\src\eso_debug.o \
+	..\libc\src\eso_bson.o \
+	..\libc\src\eso_bson_ext.o \
+	..\libc\src\eso_encode.o \
+	..\libc\src\eso_except.o \
+	..\libc\src\eso_hash.o \
+	..\libc\src\eso_ini.o \
+	..\libc\src\eso_lz77.o \
+	..\libc\src\eso_map.o \
+	..\libc\src\eso_object.o \
+	..\libc\src\eso_printf_upper_bound.o \
+	..\libc\src\eso_queue.o \
+	..\libc\src\eso_stack.o \
+	..\libc\src\eso_string.o \
+	..\libc\src\eso_util.o \
+	..\libc\src\eso_datetime.o \
+	..\libc\src\eso_fmttime.o \
+	..\libc\src\eso_vector.o \
+	..\libc\src\eso_mpool.o \
+	..\libc\src\eso_mem.o \
+	..\libc\src\eso_lzma.o \
+	..\libc\src\lzma\LzFind.o \
+	..\libc\src\lzma\LzmaDec.o \
+	..\libc\src\lzma\LzmaEnc.o \
+	..\libc\src\eso_conf.o \
+	..\libc\src\eso_md4.o \
+	..\libc\src\eso_md5.o \
+	..\libc\src\eso_bitset.o \
+	..\libc\src\eso_crc32.o \
+	..\libc\src\eso_sys.o \
+	..\libc\src\eso_sigsegv.o \
+
+INCLUDEDIR = -I..\ -I..\libc\inc
+
+libesoa: $(OBJS_BASE)
+	$(ARMAR) -create arm\$(LIBNAME) $(OBJS_BASE)
+
+clean: 
+	if exist ..\libc\src\*.o  del ..\libc\src\*.o
+	if exist arm\$(LIBNAME) del arm\$(LIBNAME)
+
+clear:
+	if exist ..\libc\src\*.o  del ..\libc\src\*.o
+	
+all: clean libesoa clear
+.PRECIOUS:%.cpp %.c %.C
+.SUFFIXES:
+.SUFFIXES:  .c .o .s
+
+.c.o:
+	$(CCOMPILE) -c -cpu ARM7EJ-S -$(ENDIANMODE) -fpu None -zo -fa -apcs /inter $(COMPILEOPTION) $(INCLUDEDIR) $< -o $@
+.s.o:
+	$(ASMCOMPILE) -32 -cpu ARM7EJ-S -$(ENDIANMODE) -apcs /inter -fpu None $< -o $@
