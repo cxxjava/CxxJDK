@@ -733,8 +733,7 @@ void ESocket::shutdownInput() THROWS(EIOException)
 		throw ESocketException(__FILE__, __LINE__, "Socket is not connected");
 	if (isInputShutdown())
 		return; //throw ESocketException(__FILE__, __LINE__, "Socket input is already shutdown");
-	int r =::shutdown(socket, 0); //0-SHUT_RD
-    printf("xxxxxxxxxxxxx ri=%d\n", r);
+	::shutdown(socket, 0); //0-SHUT_RD
 	status.shutIn = 1;
 }
 
@@ -748,8 +747,7 @@ void ESocket::shutdownOutput() THROWS(EIOException)
 		throw ESocketException(__FILE__, __LINE__, "Socket is not connected");
 	if (isOutputShutdown())
 		return; //throw ESocketException(__FILE__, __LINE__, "Socket output is already shutdown");
-	int r = ::shutdown(socket, 1); //1-SHUT_WR
-    printf("xxxxxxxxxxxxx ro=%d\n", r);
+	::shutdown(socket, 1); //1-SHUT_WR
 	status.shutOut = 1;
 }
 
@@ -758,8 +756,7 @@ void ESocket::shutdown() {
 		throw ESocketException(__FILE__, __LINE__, "Socket is closed");
 	if (!isConnected())
 		throw ESocketException(__FILE__, __LINE__, "Socket is not connected");
-	int r = ::shutdown(socket, 2); //2-SHUT_RDWR
-    printf("xxxxxxxxxxxxx r=%d\n", r);
+	::shutdown(socket, 2); //2-SHUT_RDWR
 	status.shutIn = 1;
 	status.shutOut = 1;
 }
@@ -821,9 +818,7 @@ int ESocket::read(void *b, int len) THROWS(EIOException)
 		throw ESocketException(__FILE__, __LINE__, "Socket is closed");
 	}
 
-    printf("socket=%d, eso_net_read b...\n", socket);
 	int n = eso_net_read(socket, b, len);
-    printf("socket=%d, eso_net_read n=%d\n", socket, n);
 	if (n < 0) {
 		if (n == -2) {
 			throw ESocketTimeoutException(__FILE__, __LINE__, "read timed out");
